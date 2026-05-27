@@ -1,0 +1,2215 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>TOC-RST PM Generator V1</title>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+/* =====================================================
+   CSS CUSTOM PROPERTIES — TRUE|DTAC BRAND THEME
+   Change :root variables to retheme the whole deck
+   ===================================================== */
+:root{
+  --red:#E8192C;        /* True red */
+  --cyan:#00AEEF;       /* dtac cyan */
+  --bg:#070b16;
+  --card:rgba(255,255,255,0.04);
+  --border:rgba(255,255,255,0.08);
+  --txt:#fff;
+  --txt2:rgba(255,255,255,0.65);
+  --txt3:rgba(255,255,255,0.38);
+  --green:#2ecc71;
+  --yellow:#f1c40f;
+  --orange:#e67e22;
+  --teal:#1abc9c;
+  --font:'Kanit',sans-serif;
+  --ease:cubic-bezier(.16,1,.3,1);
+}
+
+/* =====================================================
+   RESET
+   ===================================================== */
+*{margin:0;padding:0;box-sizing:border-box}
+
+/* =====================================================
+   viewport-base.css — MANDATORY FIXED 16:9 STAGE
+   Slides authored at 1920×1080, scaled as one unit
+   ===================================================== */
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg)}
+.deck-viewport{position:fixed;inset:0;overflow:hidden;background:var(--bg)}
+.deck-stage{
+  position:absolute;left:0;top:0;
+  width:1920px;height:1080px;
+  overflow:hidden;transform-origin:0 0;
+  background:var(--bg);
+}
+.slide{
+  position:absolute;inset:0;
+  width:1920px;height:1080px;
+  overflow:hidden;display:block;
+  visibility:hidden;opacity:0;pointer-events:none;
+}
+.slide.active,.slide.visible{visibility:visible;opacity:1;pointer-events:auto;z-index:1}
+img,video,canvas,svg{max-width:100%;max-height:100%}
+@media print{
+  html,body{width:1920px;height:auto;overflow:visible;background:#fff}
+  .deck-viewport{position:static;overflow:visible}
+  .deck-stage{position:static;width:auto;height:auto;transform:none!important}
+  .slide{position:relative;display:block!important;visibility:visible!important;opacity:1!important;
+    pointer-events:auto!important;width:1920px;height:1080px;break-after:page}
+  .deck-controls,.progress-bar{display:none!important}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.2s!important}}
+
+/* =====================================================
+   SLIDE BACKGROUND — layered red/cyan glow on navy
+   ===================================================== */
+.slide{
+  background:
+    radial-gradient(ellipse at 8% 20%,rgba(232,25,44,.07) 0%,transparent 42%),
+    radial-gradient(ellipse at 92% 80%,rgba(0,174,239,.07) 0%,transparent 42%),
+    linear-gradient(140deg,#060a14 0%,#0d1528 55%,#060a14 100%);
+}
+
+/* =====================================================
+   SLIDE HEADER/FOOTER CHROME — consistent brand bar
+   ===================================================== */
+.sh{/* slide header */
+  position:absolute;top:0;left:0;right:0;height:68px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 56px;
+  border-bottom:1px solid rgba(255,255,255,0.05);
+  background:rgba(0,0,0,.18);
+}
+.sh-tag{font-family:var(--font);font-size:20px;font-weight:600;color:var(--txt3);letter-spacing:2px;text-transform:uppercase}
+.brand{display:flex;align-items:center;gap:4px;font-family:var(--font);font-size:24px;font-weight:700}
+.br{color:var(--red)}.bs{color:var(--txt3);font-size:20px;margin:0 2px}.bc{color:var(--cyan)}
+
+.sf{/* slide footer */
+  position:absolute;bottom:0;left:0;right:0;height:44px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 56px;
+  border-top:1px solid rgba(255,255,255,0.04);
+  background:rgba(0,0,0,.12);
+}
+.sf-note{font-family:var(--font);font-size:13px;font-weight:300;color:var(--txt3)}
+.sf-num{font-family:var(--font);font-size:15px;font-weight:500;color:var(--txt3)}
+
+/* =====================================================
+   CONTENT WRAPPER — lives between header and footer
+   ===================================================== */
+.ca{/* content area */
+  position:absolute;top:68px;bottom:44px;left:0;right:0;
+  padding:32px 56px;
+  display:flex;flex-direction:column;gap:20px;
+}
+
+/* =====================================================
+   TYPOGRAPHY HELPERS
+   ===================================================== */
+.stitle{font-family:var(--font);font-size:52px;font-weight:700;color:var(--txt);line-height:1.1}
+.stitle .r{color:var(--red)}.stitle .c{color:var(--cyan)}
+.slabel{font-family:var(--font);font-size:17px;font-weight:600;color:var(--cyan);letter-spacing:3px;text-transform:uppercase;margin-bottom:8px}
+
+/* =====================================================
+   PM PROCEDURE TABLE (12-step standard)
+   ===================================================== */
+.pmt{width:100%;border-collapse:collapse;font-family:var(--font)}
+.pmt th{
+  background:var(--red);color:#fff;
+  font-size:21px;font-weight:600;
+  padding:10px 14px;text-align:center;
+  border:1px solid rgba(255,255,255,.12);
+}
+.pmt th.tl{text-align:left}
+.pmt td{
+  color:var(--txt);font-size:19px;font-weight:400;
+  padding:8px 14px;
+  border:1px solid rgba(255,255,255,.07);
+  background:rgba(255,255,255,.025);
+}
+.pmt tr:nth-child(even) td{background:rgba(255,255,255,.05)}
+.pmt td.tn{text-align:center;font-weight:600;color:var(--cyan);width:60px}
+.pmt td.tt{text-align:center;color:var(--yellow);width:110px}
+.pmt td.rem{text-align:center;width:120px}
+.pmt td.off{color:var(--red);font-weight:600}
+.pmt td.on{color:var(--green);font-weight:600}
+.pmt tr.total td{
+  background:rgba(0,174,239,.1)!important;
+  color:var(--cyan);font-weight:700;font-size:20px;
+  border-top:2px solid var(--cyan);
+}
+.pmt tr.total td:first-child{text-align:right;padding-right:20px}
+
+/* =====================================================
+   GENERATOR LIST TABLE (cover slide)
+   ===================================================== */
+.glt{width:100%;border-collapse:collapse;font-family:var(--font)}
+.glt th{
+  background:rgba(232,25,44,.7);color:#fff;
+  font-size:22px;font-weight:600;padding:12px 14px;
+  text-align:center;border:1px solid rgba(255,255,255,.15);
+}
+.glt td{
+  padding:10px 14px;text-align:center;
+  border:1px solid rgba(255,255,255,.07);
+  background:rgba(255,255,255,.025);
+  color:var(--txt);font-family:var(--font);font-size:20px;font-weight:400;
+}
+.glt tr:nth-child(even) td{background:rgba(255,255,255,.05)}
+.badge{display:inline-block;padding:3px 14px;border-radius:20px;font-size:17px;font-weight:700}
+.bc-g{background:var(--green);color:#fff}
+.bc-m{background:var(--teal);color:#fff}
+
+/* =====================================================
+   GENERATOR INFO LAYOUT (two-column)
+   ===================================================== */
+.gil{display:grid;grid-template-columns:460px 1fr;gap:36px;height:100%;align-items:center}
+.gen-vis{
+  background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);
+  border-radius:14px;height:560px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  position:relative;overflow:hidden;
+}
+.gen-vis::before{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 50%,rgba(0,174,239,.05) 0%,transparent 70%);
+}
+.gen-vis-num{
+  font-family:var(--font);font-size:100px;font-weight:800;
+  color:rgba(255,255,255,.06);line-height:1;position:relative;z-index:1;
+}
+.gen-vis-icon{
+  width:100px;height:100px;border-radius:50%;
+  background:linear-gradient(135deg,rgba(232,25,44,.25),rgba(0,174,239,.25));
+  border:2px solid rgba(255,255,255,.12);
+  display:flex;align-items:center;justify-content:center;
+  font-size:44px;position:relative;z-index:1;
+}
+.gen-vis-label{
+  font-family:var(--font);font-size:28px;font-weight:700;color:rgba(255,255,255,.3);
+  letter-spacing:3px;position:relative;z-index:1;
+}
+.git{width:100%;border-collapse:collapse;font-family:var(--font)}
+.git td{padding:14px 18px;font-size:25px;border-bottom:1px solid rgba(255,255,255,.06)}
+.git td:first-child{color:var(--txt2);font-weight:400;width:42%}
+.git td:last-child{color:var(--txt);font-weight:600}
+.gen-title-block{display:flex;flex-direction:column;gap:10px;margin-bottom:20px}
+.gen-title-block .gtnum{
+  font-family:var(--font);font-size:13px;font-weight:600;color:var(--cyan);
+  letter-spacing:3px;text-transform:uppercase;
+}
+.gen-title-block .gtname{
+  font-family:var(--font);font-size:48px;font-weight:800;color:var(--txt);line-height:1.05;
+}
+.gen-title-block .gtname .r{color:var(--red)}
+.gen-title-block .gtname .c{color:var(--cyan)}
+
+/* =====================================================
+   CONSUMABLES LAYOUT (two-column panels)
+   ===================================================== */
+.consl{display:grid;grid-template-columns:1fr 1fr;gap:32px;height:100%}
+.consp{
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:28px 30px;display:flex;flex-direction:column;gap:0;
+}
+.consp h3{
+  font-family:var(--font);font-size:24px;font-weight:700;color:var(--cyan);
+  margin-bottom:14px;padding-bottom:12px;
+  border-bottom:1px solid rgba(0,174,239,.25);
+}
+.consp.new h3{color:var(--green);border-bottom-color:rgba(46,204,113,.25)}
+.pl{list-style:none;display:flex;flex-direction:column;gap:0}
+.pl li{
+  display:flex;align-items:center;gap:14px;
+  font-family:var(--font);font-size:22px;font-weight:400;color:var(--txt);
+  padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04);
+}
+.pl li::before{content:'▪';color:var(--cyan);font-size:11px;flex-shrink:0}
+.consp.new .pl li::before{color:var(--green)}
+.pl li .pn{color:var(--yellow);font-weight:600;margin-right:4px}
+.pl li .pd{color:var(--txt2);font-size:19px;margin-left:2px}
+.pl li .pq{
+  margin-left:auto;background:rgba(255,255,255,.08);padding:2px 10px;
+  border-radius:20px;font-size:17px;color:var(--txt2);white-space:nowrap;
+}
+
+/* =====================================================
+   TIE ACB GDB DIAGRAM (switchgear schematic)
+   ===================================================== */
+.tied{/* tie diagram wrapper */
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  height:100%;gap:24px;
+}
+.tie-desc{
+  font-family:var(--font);font-size:24px;font-weight:400;
+  color:var(--txt2);text-align:center;max-width:1400px;line-height:1.55;
+}
+.tie-panel{
+  display:flex;border:2px solid rgba(255,255,255,.12);border-radius:10px;overflow:hidden;
+}
+.tie-col{
+  display:flex;flex-direction:column;min-width:220px;
+  border-right:2px solid rgba(255,255,255,.1);
+}
+.tie-col:last-child{border-right:none}
+.tie-ch{/* column header */
+  background:rgba(255,255,255,.06);padding:14px 22px;
+  font-family:var(--font);font-size:19px;font-weight:600;color:var(--txt2);text-align:center;
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+.tie-ch.rc{background:rgba(232,25,44,.12);color:var(--red)}
+.tie-ch.cc{background:rgba(0,174,239,.12);color:var(--cyan)}
+.tie-cv{/* column value */
+  flex:1;display:flex;align-items:center;justify-content:center;
+  padding:22px 30px;
+  font-family:var(--font);font-size:34px;font-weight:800;
+  min-height:110px;
+}
+.cv-open{color:var(--red);background:rgba(232,25,44,.06)}
+.cv-close{color:var(--green);background:rgba(46,204,113,.05)}
+.cv-close-c{color:var(--cyan);background:rgba(0,174,239,.05)}
+.tie-ats{
+  padding:10px 16px;text-align:center;
+  font-family:var(--font);font-size:17px;font-weight:600;color:var(--yellow);
+  border-top:1px dashed rgba(255,255,255,.08);background:rgba(241,196,15,.04);
+}
+.tie-center{min-width:180px;background:rgba(255,255,255,.02)}
+.tie-legend{
+  display:flex;gap:32px;
+  font-family:var(--font);font-size:18px;font-weight:500;color:var(--txt3);
+}
+.tleg-item{display:flex;align-items:center;gap:8px}
+.tleg-dot{width:12px;height:12px;border-radius:50%}
+
+/* =====================================================
+   LOAD DISTRIBUTION / PM DIAGRAM SLIDES
+   ===================================================== */
+.load-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:24px;
+  align-items:start;
+}
+.load-group{
+  background:var(--card);border:1px solid var(--border);border-radius:12px;padding:22px;
+  display:flex;flex-direction:column;gap:14px;
+}
+.lg-title{font-family:var(--font);font-size:19px;font-weight:700;color:var(--cyan);letter-spacing:1px;margin-bottom:6px}
+.lg-gen-row{display:flex;align-items:center;gap:12px}
+.gen-pill{
+  padding:6px 18px;border-radius:20px;
+  font-family:var(--font);font-size:20px;font-weight:700;color:#fff;
+}
+.gp-act{background:linear-gradient(135deg,var(--red),#b0121f)}
+.gp-std{background:linear-gradient(135deg,var(--cyan),#0080c0)}
+.gp-nrm{background:rgba(46,204,113,.2);border:1px solid var(--green);color:var(--green)}
+.gp-pm{background:rgba(232,25,44,.15);border:1px solid var(--red);color:var(--red)}
+.load-kw{font-family:var(--font);font-size:22px;font-weight:600;color:var(--yellow)}
+.load-pct{font-family:var(--font);font-size:18px;font-weight:400;color:var(--txt2)}
+.redundancy-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(241,196,15,.12);border:1px solid rgba(241,196,15,.35);
+  color:var(--yellow);border-radius:8px;padding:8px 16px;
+  font-family:var(--font);font-size:20px;font-weight:700;
+}
+.redundancy-badge.g{background:rgba(46,204,113,.1);border-color:rgba(46,204,113,.3);color:var(--green)}
+.info-card{
+  background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 20px;
+  font-family:var(--font);font-size:19px;color:var(--txt);
+}
+.info-card.highlight{background:rgba(232,25,44,.07);border-color:rgba(232,25,44,.25);color:var(--red)}
+.info-card.highlight.g{background:rgba(46,204,113,.07);border-color:rgba(46,204,113,.25);color:var(--green)}
+.info-card.highlight.c{background:rgba(0,174,239,.07);border-color:rgba(0,174,239,.25);color:var(--cyan)}
+
+/* =====================================================
+   COVER SLIDE SPECIFIC
+   ===================================================== */
+.cover-slide{
+  display:flex;flex-direction:column;
+  background:
+    radial-gradient(ellipse at 4% 50%,rgba(232,25,44,.16) 0%,transparent 38%),
+    radial-gradient(ellipse at 96% 50%,rgba(0,174,239,.13) 0%,transparent 38%),
+    linear-gradient(155deg,#060a14 0%,#0e1830 50%,#060a14 100%);
+}
+.ctopbar{height:7px;background:linear-gradient(90deg,var(--red) 0%,var(--cyan) 100%)}
+.cmain{flex:1;display:grid;grid-template-columns:1fr 1.38fr;gap:0;align-items:stretch}
+.cleft{
+  padding:52px 52px 52px 72px;
+  display:flex;flex-direction:column;justify-content:center;gap:20px;
+  border-right:1px solid rgba(255,255,255,.07);
+}
+.cright{padding:44px 64px;display:flex;flex-direction:column;justify-content:center;gap:22px}
+.cbrand{
+  display:flex;align-items:center;gap:8px;
+  font-family:var(--font);font-size:30px;font-weight:700;margin-bottom:8px;
+}
+.ctitle{
+  font-family:var(--font);font-size:72px;font-weight:800;
+  line-height:1.02;color:var(--txt);
+}
+.ctitle .r{color:var(--red)}.ctitle .c{color:var(--cyan)}
+.csub{font-family:var(--font);font-size:30px;font-weight:400;color:var(--txt2)}
+.cdur{
+  display:flex;align-items:center;gap:14px;
+  background:rgba(232,25,44,.1);border:1px solid rgba(232,25,44,.3);
+  border-radius:8px;padding:12px 18px;
+  font-family:var(--font);font-size:26px;font-weight:700;color:var(--red);
+}
+.cbotbar{height:5px;background:linear-gradient(90deg,var(--cyan) 0%,var(--red) 100%)}
+
+/* =====================================================
+   TEAM SLIDE
+   ===================================================== */
+.teamg{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.teamcard{
+  background:var(--card);border:1px solid var(--border);border-radius:11px;
+  padding:20px 26px;display:flex;flex-direction:column;gap:6px;
+}
+.tc-floor{font-family:var(--font);font-size:16px;font-weight:600;color:var(--cyan);text-transform:uppercase;letter-spacing:1px}
+.tc-names{font-family:var(--font);font-size:22px;font-weight:600;color:var(--txt)}
+.tc-role{font-family:var(--font);font-size:18px;font-weight:400;color:var(--txt2)}
+
+/* =====================================================
+   EQUIPMENT SLIDE
+   ===================================================== */
+.eqg{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.eqc{
+  background:var(--card);border:1px solid var(--border);border-radius:11px;
+  padding:26px 24px;display:flex;flex-direction:column;align-items:center;
+  gap:10px;text-align:center;
+}
+.eqicon{font-size:44px;margin-bottom:4px}
+.eqname{font-family:var(--font);font-size:22px;font-weight:600;color:var(--txt)}
+.eqdet{font-family:var(--font);font-size:17px;font-weight:300;color:var(--txt2);line-height:1.45}
+
+/* =====================================================
+   THANK YOU SLIDE
+   ===================================================== */
+.ty-slide{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  height:100%;gap:26px;text-align:center;
+}
+.ty-main{font-family:var(--font);font-size:110px;font-weight:800;line-height:1}
+.ty-main .t1{color:var(--red)}.ty-main .t2{color:var(--cyan)}
+.ty-line{width:100px;height:4px;background:linear-gradient(90deg,var(--red),var(--cyan));border-radius:2px}
+.ty-sub{font-family:var(--font);font-size:34px;font-weight:300;color:var(--txt2)}
+
+/* =====================================================
+   SECTION DIVIDER SLIDES
+   ===================================================== */
+.sec-slide{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;
+  background:
+    radial-gradient(ellipse at 50% 50%,rgba(232,25,44,.1) 0%,transparent 55%),
+    linear-gradient(140deg,#060a14 0%,#0d1528 55%,#060a14 100%);
+}
+.sec-bg-num{
+  position:absolute;font-family:var(--font);font-size:380px;font-weight:800;
+  color:rgba(255,255,255,.025);line-height:1;user-select:none;pointer-events:none;
+}
+.sec-title{
+  font-family:var(--font);font-size:88px;font-weight:800;
+  color:var(--txt);text-align:center;position:relative;z-index:1;
+}
+.sec-title .r{color:var(--red)}.sec-title .c{color:var(--cyan)}
+.sec-strip{width:120px;height:4px;background:linear-gradient(90deg,var(--red),var(--cyan));border-radius:2px;position:relative;z-index:1}
+.sec-info{font-family:var(--font);font-size:30px;font-weight:400;color:var(--txt2);text-align:center;position:relative;z-index:1}
+
+/* =====================================================
+   REVEAL ANIMATIONS — staggered fade+slide-up
+   ===================================================== */
+.r{opacity:0;transform:translateY(18px);transition:opacity .5s var(--ease),transform .5s var(--ease)}
+.slide.visible .r{opacity:1;transform:translateY(0)}
+.slide.visible .r:nth-child(1){transition-delay:.08s}
+.slide.visible .r:nth-child(2){transition-delay:.15s}
+.slide.visible .r:nth-child(3){transition-delay:.22s}
+.slide.visible .r:nth-child(4){transition-delay:.29s}
+.slide.visible .r:nth-child(5){transition-delay:.36s}
+.slide.visible .r:nth-child(6){transition-delay:.43s}
+.slide.visible .r:nth-child(7){transition-delay:.50s}
+.slide.visible .r:nth-child(8){transition-delay:.57s}
+.slide.visible .r:nth-child(9){transition-delay:.64s}
+.slide.visible .r:nth-child(10){transition-delay:.71s}
+.slide.visible .r:nth-child(11){transition-delay:.78s}
+.slide.visible .r:nth-child(12){transition-delay:.85s}
+.slide.visible .r:nth-child(13){transition-delay:.92s}
+
+/* =====================================================
+   PROGRESS BAR
+   ===================================================== */
+.progress-bar{
+  position:fixed;bottom:0;left:0;height:3px;
+  background:linear-gradient(90deg,var(--red),var(--cyan));
+  transition:width .28s ease;z-index:9999;
+}
+
+/* =====================================================
+   INLINE EDIT TOGGLE
+   ===================================================== */
+.edit-hotzone{position:fixed;top:0;left:0;width:80px;height:80px;z-index:10000;cursor:pointer}
+.edit-toggle{
+  position:fixed;top:10px;left:10px;z-index:10001;
+  background:rgba(0,0,0,.75);border:1px solid rgba(255,255,255,.2);
+  color:#fff;padding:5px 12px;border-radius:6px;font-size:15px;cursor:pointer;
+  opacity:0;pointer-events:none;transition:opacity .3s;font-family:var(--font);
+}
+.edit-toggle.show,.edit-toggle.active{opacity:1;pointer-events:auto}
+
+/* =====================================================
+   TWO-COLUMN INFO LAYOUT (for transfer/PM load slides)
+   ===================================================== */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:28px;height:100%}
+.info-section{display:flex;flex-direction:column;gap:14px}
+.is-title{font-family:var(--font);font-size:26px;font-weight:700;color:var(--cyan);margin-bottom:4px}
+.is-title.r{color:var(--red)}
+.kv-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05)}
+.kv-key{font-family:var(--font);font-size:20px;font-weight:400;color:var(--txt2)}
+.kv-val{font-family:var(--font);font-size:20px;font-weight:600;color:var(--txt)}
+.kv-val.y{color:var(--yellow)}.kv-val.g{color:var(--green)}.kv-val.r{color:var(--red)}.kv-val.c{color:var(--cyan)}
+</style>
+</head>
+<body>
+<div class="deck-viewport">
+<main class="deck-stage" id="deckStage">
+
+<!-- ====================================================
+     SLIDE 1 — COVER
+     ==================================================== -->
+<section class="slide active cover-slide">
+  <div class="ctopbar"></div>
+  <div class="cmain">
+    <div class="cleft">
+      <div class="cbrand">
+        <span class="br">true</span><span style="color:rgba(255,255,255,.3);font-size:26px;font-family:var(--font)"> | </span><span class="bc">dtac</span>
+      </div>
+      <div class="ctitle r"><span class="r">TOC-<span class="r">RST</span></span><br><span class="r">PM Generator</span></div>
+      <div class="csub r">Generator Preventive Maintenance</div>
+      <div class="csub r" style="font-size:22px;color:rgba(255,255,255,.45)">True Corporation Public Company Limited</div>
+      <div class="cdur r">⏱ ระยะเวลาดำเนินการ&nbsp;&nbsp;4 วัน</div>
+    </div>
+    <div class="cright">
+      <div class="r" style="font-family:var(--font);font-size:22px;font-weight:600;color:var(--cyan);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">Generator Summary — RST Rangsit</div>
+      <table class="glt r">
+        <tr><th>TOC</th><th>Site Name</th><th>Floor</th><th>Gen No</th><th style="text-align:left">GEN Brand</th><th>Rated (KVA)</th><th>Brand</th></tr>
+        <tr><td>RST</td><td>Rangsit</td><td>1F</td><td>Gen1</td><td style="text-align:left">Cummins (2000KVA) #1</td><td>2000 KVA</td><td><span class="badge bc-g">Cummins</span></td></tr>
+        <tr><td>RST</td><td>Rangsit</td><td>1F</td><td>Gen2</td><td style="text-align:left">Cummins (2000KVA) #2</td><td>2000 KVA</td><td><span class="badge bc-g">Cummins</span></td></tr>
+        <tr><td>RST</td><td>Rangsit</td><td>1F</td><td>Gen3</td><td style="text-align:left">MTU (1500KVA) #3</td><td>1500 KVA</td><td><span class="badge bc-m">MTU</span></td></tr>
+        <tr><td>RST</td><td>Rangsit</td><td>1F</td><td>Gen4</td><td style="text-align:left">Cummins (1500KVA) #4</td><td>1500 KVA</td><td><span class="badge bc-g">Cummins</span></td></tr>
+        <tr><td>RST</td><td>Rangsit</td><td>1F</td><td>Gen5</td><td style="text-align:left">Cummins (2500KVA) #5</td><td>2500 KVA</td><td><span class="badge bc-g">Cummins</span></td></tr>
+        <tr><td>RST</td><td>Rangsit</td><td>1F</td><td>Gen6</td><td style="text-align:left">Cummins (2500KVA) #6</td><td>2500 KVA</td><td><span class="badge bc-g">Cummins</span></td></tr>
+        <tr><td>RST</td><td>Rangsit</td><td>1F</td><td>Gen7</td><td style="text-align:left">Cummins-Onan (2000KVA) #7</td><td>2000 KVA</td><td><span class="badge bc-g">Cummins</span></td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="cbotbar"></div>
+</section>
+
+<!-- ====================================================
+     SLIDE 2 — LOAD GENERATOR OVERVIEW
+     ==================================================== -->
+<section class="slide">
+  <div class="sh"><span class="sh-tag">RST — Load Generator Overview</span><div class="brand"><span class="br">true</span><span class="bs">|</span><span class="bc">dtac</span></div></div>
+  <div class="ca">
+    <div class="stitle r">Load Generator</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px" class="r">
+      <div style="background:rgba(232,25,44,.08);border:1px solid rgba(232,25,44,.2);border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:8px">
+        <div style="font-family:var(--font);font-size:17px;font-weight:600;color:var(--red);letter-spacing:2px;text-transform:uppercase">Group A — Gen3 & Gen4</div>
+        <div style="font-family:var(--font);font-size:14px;color:var(--txt2)">1200KW + 1200KW</div>
+        <div style="display:flex;justify-content:space-between;font-family:var(--font);font-size:18px;color:var(--txt)">
+          <span>Load G3: <b style="color:var(--yellow)">39%</b> (468KW)</span>
+          <span>Load G4: <b style="color:var(--yellow)">33%</b> (401KW)</span>
+        </div>
+        <div style="background:rgba(241,196,15,.15);border:1px solid rgba(241,196,15,.35);border-radius:6px;padding:6px 12px;font-family:var(--font);font-size:17px;font-weight:700;color:var(--yellow);text-align:center">Redundancy Load 72%</div>
+      </div>
+      <div style="background:rgba(0,174,239,.07);border:1px solid rgba(0,174,239,.2);border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:8px">
+        <div style="font-family:var(--font);font-size:17px;font-weight:600;color:var(--cyan);letter-spacing:2px;text-transform:uppercase">Group B — Gen1 & Gen2</div>
+        <div style="font-family:var(--font);font-size:14px;color:var(--txt2)">1600KW + 1600KW</div>
+        <div style="display:flex;justify-content:space-between;font-family:var(--font);font-size:18px;color:var(--txt)">
+          <span>Load G1: <b style="color:var(--yellow)">45%</b> (725KW)</span>
+          <span>Load G2: <b style="color:var(--yellow)">46%</b> (750KW)</span>
+        </div>
+        <div style="background:rgba(241,196,15,.15);border:1px solid rgba(241,196,15,.35);border-radius:6px;padding:6px 12px;font-family:var(--font);font-size:17px;font-weight:700;color:var(--yellow);text-align:center">Redundancy Load 92%</div>
+      </div>
+      <div style="background:rgba(46,204,113,.07);border:1px solid rgba(46,204,113,.2);border-radius:10px;padding:18px 20px;display:flex;flex-direction:column;gap:8px">
+        <div style="font-family:var(--font);font-size:17px;font-weight:600;color:var(--green);letter-spacing:2px;text-transform:uppercase">Group C — Gen5, Gen6, Gen7</div>
+        <div style="font-family:var(--font);font-size:14px;color:var(--txt2)">2000KW + 2000KW + 1600KW</div>
+        <div style="display:flex;justify-content:space-between;font-family:var(--font);font-size:16px;color:var(--txt)">
+          <span>G5: <b style="color:var(--yellow)">25%</b></span>
+          <span>G6: <b style="color:var(--yellow)">25%</b></span>
+          <span>G7: <b style="color:var(--yellow)">39%</b></span>
+        </div>
+        <div style="background:rgba(46,204,113,.12);border:1px solid rgba(46,204,113,.35);border-radius:6px;padding:6px 12px;font-family:var(--font);font-size:17px;font-weight:700;color:var(--green);text-align:center">Redundancy Load 94%</div>
+      </div>
+    </div>
+    <div class="r" style="font-family:var(--font);font-size:18px;color:var(--txt3);text-align:center;margin-top:4px">
+      Load distribution at RST Rangsit Data Center — 7 generators across 4 floors
+    </div>
+    <div class="r" style="display:grid;grid-template-columns:repeat(7,1fr);gap:12px;margin-top:8px">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center"><div style="font-family:var(--font);font-size:15px;color:var(--cyan);font-weight:600">GEN 1</div><div style="font-family:var(--font);font-size:13px;color:var(--txt2)">1600kW</div><div style="font-family:var(--font);font-size:13px;color:var(--yellow)">725KW / 45%</div></div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center"><div style="font-family:var(--font);font-size:15px;color:var(--cyan);font-weight:600">GEN 2</div><div style="font-family:var(--font);font-size:13px;color:var(--txt2)">1600kW</div><div style="font-family:var(--font);font-size:13px;color:var(--yellow)">750KW / 46%</div></div>
+      <div style="background:var(--card);border:1px solid rgba(26,188,156,.3);border-radius:8px;padding:12px;text-align:center"><div style="font-family:var(--font);font-size:15px;color:var(--teal);font-weight:600">GEN 3</div><div style="font-family:var(--font);font-size:13px;color:var(--txt2)">1200kW</div><div style="font-family:var(--font);font-size:13px;color:var(--yellow)">468KW / 39%</div></div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center"><div style="font-family:var(--font);font-size:15px;color:var(--cyan);font-weight:600">GEN 4</div><div style="font-family:var(--font);font-size:13px;color:var(--txt2)">1200kW</div><div style="font-family:var(--font);font-size:13px;color:var(--yellow)">401KW / 33%</div></div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center"><div style="font-family:var(--font);font-size:15px;color:var(--cyan);font-weight:600">GEN 5</div><div style="font-family:var(--font);font-size:13px;color:var(--txt2)">2000kW</div><div style="font-family:var(--font);font-size:13px;color:var(--yellow)">512KW / 25%</div></div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center"><div style="font-family:var(--font);font-size:15px;color:var(--cyan);font-weight:600">GEN 6</div><div style="font-family:var(--font);font-size:13px;color:var(--txt2)">2000kW</div><div style="font-family:var(--font);font-size:13px;color:var(--yellow)">517KW / 25%</div></div>
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center"><div style="font-family:var(--font);font-size:15px;color:var(--cyan);font-weight:600">GEN 7</div><div style="font-family:var(--font);font-size:13px;color:var(--txt2)">1600kW</div><div style="font-family:var(--font);font-size:13px;color:var(--yellow)">630KW / 39%</div></div>
+    </div>
+  </div>
+  <div class="sf"><span class="sf-note">Total Access Communication PLC · True Corporation PLC</span><span class="sf-num">2 / 45</span></div>
+</section>
+
+<!-- ====================================================
+     SLIDE 3 — GEN 1 INFO
+     ==================================================== -->
+<section class="slide">
+  <div class="sh"><span class="sh-tag">RST — Generator 1</span><div class="brand"><span class="br">true</span><span class="bs">|</span><span class="bc">dtac</span></div></div>
+  <div class="ca">
+    <div class="gil r">
+      <div class="gen-vis">
+        <div class="gen-vis-num">1</div>
+        <div class="gen-vis-icon">⚡</div>
+        <div class="gen-vis-label">GEN.1</div>
+        <div style="font-family:var(--font);font-size:16px;color:rgba(255,255,255,.2);letter-spacing:2px;position:relative;z-index:1">CUMMINS</div>
+      </div>
+      <div style="display:flex;flex-direction:column;justify-content:center;gap:16px">
+        <div class="gen-title-block">
+          <div class="gtnum">TOC-RST</div>
+          <div class="gtname"><span class="r">TOC-RST</span> <span class="c">Gen 1</span></div>
+        </div>
+        <table class="git">
+          <tr><td>Manufacturer</td><td>Cummins Power Generation</td></tr>
+          <tr><td>Model</td><td>C2250 D5</td></tr>
+          <tr><td>Serial No</td><td>L14K779635</td></tr>
+          <tr><td>Gen Rated</td><td><b style="color:var(--yellow)">2000 kVA / 1600 kW</b></td></tr>
+          <tr><td>Volts</td><td>400 / 230 V</td></tr>
+          <tr><td>Frequency</td><td>50 Hz</td></tr>
+          <tr><td>Brand</td><td><span class="badge bc-g">Cummins</span></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="sf"><span class="sf-note">Total Access Communication PLC · True Corporation PLC</span><span class="sf-num">3 / 45</span></div>
+</section>
+
+<!-- ====================================================
+     SLIDE 4 — GEN 1 CONSUMABLES
+     ==================================================== -->
+<section class="slide">
+  <div class="sh"><span class="sh-tag">RST — Gen1 Consumables</span><div class="brand"><span class="br">true</span><span class="bs">|</span><span class="bc">dtac</span></div></div>
+  <div class="ca">
+    <div class="stitle r">Generator Consumable Part Lists <span class="r">(Gen1)</span></div>
+    <div class="consl r">
+      <div class="consp">
+        <h3>Current — Fleetguard Brand</h3>
+        <ul class="pl">
+          <li><span class="pn">LF9050</span><span class="pd">Lube Oil Filter</span><span class="pq">×4</span></li>
+          <li><span class="pn">FS1006</span><span class="pd">Fuel Separator Filter</span><span class="pq">×3</span></li>
+          <li><span class="pn">WF2075</span><span class="pd">Water Filter</span><span class="pq">×2</span></li>
+          <li><span class="pn">AF25708M</span><span class="pd">Air Filter</span><span class="pq">×4</span></li>
+          <li><span class="pn">Lube Oil</span><span class="pd">Engine Oil</span><span class="pq">×18</span></li>
+        </ul>
+      </div>
+      <div class="consp new">
+        <h3>New Replacement — Fleetguard Brand</h3>
+        <ul class="pl">
+          <li><span class="pn">LF9050</span><span class="pq">×4</span></li>
+          <li><span class="pn">FS1006</span><span class="pq">×3</span></li>
+          <li><span class="pn">WF2075</span><span class="pq">×2</span></li>
+          <li><span class="pn">AF25708M</span><span class="pq">×4</span></li>
+          <li><span class="pn">Cummins Premium Blue Lube Oil</span><span class="pq">×18</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="sf"><span class="sf-note">Total Access Communication PLC · True Corporation PLC</span><span class="sf-num">4 / 45</span></div>
+</section>
+
+<!-- ====================================================
+     SLIDE 5 — GEN 1 PM PROCEDURE
+     ==================================================== -->
+<section class="slide">
+  <div class="sh"><span class="sh-tag">RST — Gen1 PM Procedure</span><div class="brand"><span class="br">true</span><span class="bs">|</span><span class="bc">dtac</span></div></div>
+  <div class="ca">
+    <div class="stitle r">PM Generator with Consumable and Oil Change</div>
+    <table class="pmt r">
+      <tr><th class="tn" style="width:54px">ลำดับ</th><th class="tl">รายละเอียด</th><th class="tt">ระยะเวลา</th><th class="rem">หมายเหตุ</th></tr>
+      <tr class="r"><td class="tn">1</td><td>ตรวจสอบอุปกรณ์ที่เกี่ยวข้องก่อนเริ่มงาน</td><td class="tt">10 นาที</td><td class="rem"></td></tr>
+      <tr class="r"><td class="tn">2</td><td>ตรวจวัดค่า CCA Battery ให้แน่ใจว่าอยู่ในระดับปกติ</td><td class="tt">10 นาที</td><td class="rem"></td></tr>
+      <tr class="r"><td class="tn">3</td><td>ทำการทดสอบเครื่องกำเนิดไฟฟ้าตัวเปล่า</td><td class="tt">10 นาที</td><td class="rem"></td></tr>
+      <tr class="r"><td class="tn">4</td><td>ทำการ TIE ACB GDB เพื่อ Standby ให้ Gen2 พร้อมจ่ายโหลด</td><td class="tt">5 นาที</td><td class="rem"></td></tr>
+      <tr class="r"><td class="tn">5</td><td>ทำการ OFF GEN</td><td class="tt">5 นาที</td><td class="rem off">OFF GEN</td></tr>
+      <tr class="r"><td class="tn">6</td><td>ทำการถ่ายน้ำมันเครื่องเก่าออก และตรวจเช็คน้ำยาหม้อน้ำ</td><td class="tt">30 นาที</td><td class="rem off">OFF GEN</td></tr>
+      <tr class="r"><td class="tn">7</td><td>ทำการเปลี่ยนไส้กรองต่าง ๆ</td><td class="tt">20 นาที</td><td class="rem off">OFF GEN</td></tr>
+      <tr class="r"><td class="tn">8</td><td>ทำการเติมน้ำยาหม้อน้ำ (DCA) – กรณีพร่อง หรือต้องเติม additive</td><td class="tt">10 นาที</td><td class="rem off">OFF GEN</td></tr>
+      <tr class="r"><td class="tn">9</td><td>ทำการเติมน้ำมันเครื่องใหม่</td><td class="tt">20 นาที</td><td class="rem off">OFF GEN</td></tr>
+      <tr class="r"><td class="tn">10</td><td>ทำการตรวจเช็คความเรียบร้อย พร้อมทำความสะอาด</td><td class="tt">10 นาที</td><td class="rem off">OFF GEN</td></tr>
+      <tr class="r"><td class="tn">11</td><td>ทำการ ON GEN พร้อมทดสอบระบบ</td><td class="tt">10 นาที</td><td class="rem on">ON Gen</td></tr>
+      <tr class="r"><td class="tn">12</td><td>ทำการคืนระบบ</td><td class="tt">—</td><td class="rem"></td></tr>
+      <tr class="total r"><td colspan="2" style="text-align:right;padding-right:20px">เวลาดำเนินการรวม</td><td class="tt" style="font-weight:700">140 นาที</td><td></td></tr>
+    </table>
+  </div>
+  <div class="sf"><span class="sf-note">Total Access Communication PLC · True Corporation PLC</span><span class="sf-num">5 / 45</span></div>
+</section>
+
+<!-- ====================================================
+     SLIDE 6 — GEN 1 TIE ACB GDB (Gen2 Standby for Gen1)
+     ==================================================== -->
+<section class="slide">
+  <div class="sh"><span class="sh-tag">RST — Gen1 TIE ACB GDB</span><div class="brand"><span class="br">true</span><span class="bs">|</span><span class="bc">dtac</span></div></div>
+  <div class="ca">
+    <div class="stitle r">Tie ACB GDB — <span class="c">Generator2 Standby</span> จ่ายโหลดทดแทน <span class="r">Generator1</span></div>
+    <div class="tied">
+      <div class="tie-desc r">ทำการ TIE ACB GDB ไว้ก่อนทำ PM เพื่อหากไฟฟ้าดับขณะทำ PM Generator1<br>Generator2 จะเป็นตัวจ่ายโหลดทดแทน Generator1</div>
+      <div class="tie-panel r">
+        <div class="tie-col">
+          <div class="tie-ch rc">from Gen1</div>
+          <div class="tie-cv cv-open">OPEN</div>
+          <div class="tie-ats">↑ to ATS</div>
+        </div>
+        <div class="tie-col tie-center">
+          <div class="tie-ch" style="background:rgba(241,196,15,.1);color:var(--yellow)">TIE</div>
+          <div class="tie-cv cv-close-c">CLOSE</div>
+          <div class="tie-ats">↓ to ATS</div>
+        </div>
+        <div class="tie-col">
+          <div class="tie-ch cc">from Gen2</div>
+          <div class="tie-cv cv-close">CLOSE</div>
+          <div class="tie-ats">↑ to ATS</div>
+        </div>
+      </div>
+      <div class="tie-legend r">
+        <div class="tleg-item"><div class="tleg-dot" style="background:var(--red)"></div>OPEN = ตัด Gen1 ออก (PM)</div>
+        <div class="tleg-item"><div class="tleg-dot" style="background:var(--yellow)"></div>TIE CLOSE = เชื่อม Bus Bar</div>
+        <div class="tleg-item"><div class="tleg-dot" style="background:var(--green)"></div>CLOSE = Gen2 จ่ายโหลดทดแทน</div>
+      </div>
+    </div>
+  </div>
+  <div class="sf"><span class="sf-note">Total Access Communication PLC · True Corporation PLC</span><span class="sf-num">6 / 45</span></div>
+</section>
+
+<!-- ====================================================
+     SLIDE 7 — GEN 1 PM NORMAL CASE DIAGRAM
+     ==================================================== -->
+<section class="slide">
+  <div class="sh"><span class="sh-tag">RST — PM Generator1 Normal Case</span><div class="brand"><span class="br">true</span><span class="bs">|</span><span class="bc">dtac</span></div></div>
+  <div class="ca">
+    <div class="stitle r">PM Generator1 ปกติ <span style="color:var(--txt2);font-size:36px">กรณีไฟฟ้าไม่ดับขณะทำ PM</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:22px" class="r">
+      <div style="background:rgba(232,25,44,.07);border:1px solid rgba(232,25,44,.2);border-radius:12px;padding:22px">
+        <div style="font-family:var(--font);font-size:18px;font-weight:700;color:var(--red);margin-bottom:12px">GDB Gen1 Gen2 — TIE</div>
+        <div style="font-family:var(--font);font-size:15px;color:var(--txt2);margin-bottom:14px">TIE GDB เชื่อม Bus Bar Gen1 กับ Gen2</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);font-family:var(--font);font-size:18px;color:var(--txt)"><span>Gen1</span><span style="color:var(--red);font-weight:600">PM (OFF)</span></div>
+          <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);font-family:var(--font);font-size:18px;color:var(--txt)"><span>Gen2</span><span style="color:var(--green);font-weight:600">STANDBY → LOAD</span></div>
+          <div style="display:flex;justify-content:space-between;padding:7px 0;font-family:var(--font);font-size:18px;color:var(--txt)"><span>Rated Gen2</span><span style="color:var(--yellow)">1600 kW</span></div>
+        </div>
+      </div>
+      <div style="background:rgba(0,174,239,.07);border:1px solid rgba(0,174,239,.2);border-radius:12px;padding:22px">
+        <div style="font-family:var(--font);font-size:18px;font-weight:700;color:var(--cyan);margin-bottom:12px">Load Status During PM</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);font-family:var(--font);font-size:18px;color:var(--txt)"><span>Load Gen1</span><span style="color:var(--yellow)">725 KW / 45%</span></div>
+          <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);font-family:var(--font);font-size:18px;color:var(--txt)"><span>Load Gen2</span><span style="color:var(--yellow)">750 KW / 46%</span></div>
+        </div>
+        <div style="margin-top:12px;background:rgba(241,196,15,.12);border:1px solid rgba(241,196,15,.3);border-radius:6px;padding:8px;text-align:center;font-family:var(--font);font-size:17px;font-weight:700;color:var(--yellow)">Redundancy Load 92%</div>
+      </div>
+      <div style="background:rgba(46,204,113,.07);border:1px solid rgba(46,204,113,.2);border-radius:12px;padding:22px">
+        <div style="font-family:var(--font);font-size:18px;font-weight:700;color:var(--green);margin-bottom:12px">System Groups Active</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);font-family:var(--font);font-size:17px;color:var(--txt)"><b style="color:var(--green)">Gen3/Gen4 Group:</b> Redundancy 72%</div>
+          <div style="padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);font-family:var(--font);font-size:17px;color:var(--txt)"><b style="color:var(--green)">Gen5/Gen6 Group:</b> Redundancy 94%</div>
+          <div style="padding:7px 0;font-family:var(--font);font-size:17px;color:var(--txt)"><b style="color:var(--cyan)">Gen7:</b> Standalone 39% load</div>
+        </div>
+      </div>
+    </div>
+    <div class="r" style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:14px 20px;font-family:var(--font);font-size:17px;color:var(--txt2)">
+      💡 หากไฟฟ้าดับระหว่างทำ PM Generator1 → Generator2 ซึ่ง Standby อยู่ จะจ่ายโหลดทดแทนผ่าน TIE GDB ทันที
+    </div>
+  </div>
+  <div class="sf"><span class="sf-note">Total Access Communication PLC · True Corporation PLC</span><span class="sf-num">7 / 45</span></div>
+</section>
+
+<!-- ====================================================
+     SLIDE 8 — GEN 1 TRANSFER LOAD
+     ==================================================== -->
+<section class="slide">
+  <div class="sh"><span class="sh-tag">RST — Gen1 Transfer Load</span><div class="brand"><span class="br">true</span><span class="bs">|</span><span class="bc">dtac</span></div></div>
+  <div class="ca">
+    <div class="stitle r">Generator1 Transfer Load <span style="color:var(--txt2);font-size:34px">กรณีไฟฟ้าไม่ดับขณะทำ PM</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px" class="r">
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="is-title">TIE Transfer Load EB41A EB42A</div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px 20px">
+          <table style="width:100%;border-collapse:collapse;font-family:var(--font)">
+            <tr><td style="padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:18px;color:var(--txt2)">Before Transfer EB41A</td><td style="text-align:right;font-size:18px;color:var(--yellow);font-weight:600">147 KW</td></tr>
+            <tr><td style="padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:18px;color:var(--txt2)">Before Transfer EB42A</td><td style="text-align:right;font-size:18px;color:var(--yellow);font-weight:600">144 KW</td></tr>
+            <tr><td style="padding:7px 4px;font-size:18px;color:var(--txt2)">After Transfer — G1 Load</td><td style="text-align:right;font-size:18px;color:var(--green);font-weight:600">434 KW / 27%</td></tr>
+          </table>
+        </div>
+        <div style="background:rgba(46,204,113,.08);border:1px solid rgba(46,204,113,.25);border-radius:8px;padding:12px 16px;font-family:var(--font);font-size:19px;font-weight:700;color:var(--green)">
+          After Transfer EB41A EB42A — Redundancy 73%
+        </div>
+        <div style="font-family:var(--font);font-size:17px;color:var(--txt2)">Gen2 maintains: 750 KW / 46%</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="is-title">Load Redistribution After Transfer</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div style="background:rgba(0,174,239,.07);border:1px solid rgba(0,174,239,.2);border-radius:8px;padding:14px;text-align:center"><div style="font-family:var(--font);font-size:14px;color:var(--cyan);font-weight:600">GEN5</div><div style="font-family:var(--font);font-size:22px;font-weight:700;color:var(--yellow)">521 KW</div><div style="font-family:var(--font);font-size:14px;color:var(--txt2)">26%</div></div>
+          <div style="background:rgba(0,174,239,.07);border:1px solid rgba(0,174,239,.2);border-radius:8px;padding:14px;text-align:center"><div style="font-family:var(--font);font-size:14px;color:var(--cyan);font-weight:600">GEN6</div><div style="font-family:var(--font);font-size:22px;font-weight:700;color:var(--yellow)">480 KW</div><div style="font-family:var(--font);font-size:14px;color:var(--txt2)">24%</div></div>
+          <div style="background:rgba(232,25,44,.07);border:1px solid rgba(232,25,44,.2);border-radius:8px;padding:14px;text-align:center"><div style="font-family:var(--font);font-size:14px;color:var(--red);font-weight:600">GEN7 (after)</div><div style="font-family:var(--font);font-size:22px;font-weight:700;color:var(--yellow)">777 KW</div><div style="font-family:var(--font);font-size:14px;color:var(--txt2)">48%</div></div>
+          <div style="background:rgba(46,204,113,.07);border:1px solid rgba(46,204,113,.2);border-radius:8px;padding:14px;text-align:center"><div style="font-family:var(--font);font-size:14px;color:var(--green);font-weight:600">Redundancy</div><div style="font-family:var(--font);font-size:22px;font-weight:700;color:var(--green)">94%</div><div style="font-family:var(--font);font-size:14px;color:var(--txt2)">G5/G6/G7</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="sf"><span class="sf-note">Total Access Communication PLC · True Corporation PLC</span><span class="sf-num">8 / 45</span></div>
+</section>
+
+<!-- ====================================================
+     SLIDE 9 — GEN 2 INFO
+     ==================================================== -->
+<section class="slide">
+  <div class="sh"><span class="sh-tag">RST — Generator 2</span><div class="brand"><span class="br">true</span><span class="bs">|</span><span class="bc">dtac</span></div></div>
+  <div class="ca">
+    <div class="gil r">
+      <div class="gen-vis">
+        <div class="gen-vis-num">2</div>
+        <div class="gen-vis-icon">⚡</div>
+        <div class="gen-vis-label">GEN.2</div>
+        <div style="font-family:var(--font);font-size:16px;color:rgba(255,255,255,.2);letter-spacing:2px;position:relative;z-index:1">CUMMINS</div>
+      </div>
+      <div style="display:flex;flex-direction:column;justify-content:center;gap:16px">
+        <div class="gen-title-block">
+          <div class="gtnum">TOC-RST</div>
+          <div class="gtname"><span class="r">TOC-RST</span> <span class="c">Gen 2</span></div>
+        </div>
+        <table class="git">
+          <tr><td>Manufacturer</td><td>Cummins Power Generation</td></tr>
+          <tr><td>Model</td><td>C2250 D5</td></tr>
+          <tr><td>Serial No</td><td>H15K863074</td></tr>
+          <tr><td>Gen Rated</td><td><b style="color:var(--yellow)">2000 kVA / 1600 kW</b></td></tr>
+          <tr><td>Volts</td><td>400 / 230 V</td></tr>
+          <tr><td>Frequency</td><td>50 Hz</td></tr>
+          <tr><td>Brand</td><td><span class="badge bc-g">Cummins</span></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="sf"><span class="sf-note">Total Access Communication PLC · True Corporation PLC</span><span class="sf-num">9 / 45</span></div>
+</section>
+
+<!-- ====================================================
+     SLIDE 10 — GEN 2 CONSUMABLES
+     ==================================================== -->
+<section class="slide">
+  <div class="sh"><span class="sh-tag">RST — Gen2 Consumables</span><div class="brand"><span class="br">true</span><span class="bs">|</span><span class="bc">dtac</span></div></div>
+  <div class="ca">
+    <div class="stitle r">Generator Consumable Part Lists <span class="r">(Gen2)</span></div>
+    <div class="consl r">
+      <div class="consp">
+        <h3>Current — Fleetguard Brand</h3>
+        <ul class="pl">
+          <li><span class="pn">LF9050</span><span class="pd">Lube Oil Filter</span><span class="pq">×4</span></li>
+          <li><span class="pn">FS1006</span><span class="pd">Fuel Separator Filter</span><span class="pq">×3</span></li>
+          <li><span class="pn">WF2075</span><span class="pd">Water Filter</span><span class="pq">×2</span></li>
+          <li><span class="pn">AF25708M</span><span class="pd">Air Filter</span><span class="pq">×4</span></li>
+          <li><span class="pn">Lube Oil</span><span class="pd">Engine Oil</span><span class="pq">×18</span></li>
+        </ul>
+      </div>
+      <div class="consp new">
+        <h3>New Replacement — Fleetguard Brand</h3>
+        <ul class="pl">
+          <li><span class="pn">LF9050</span><span class="pq">×4</span></li>
+          <li><span class="pn">FS1006</span><span class="pq">×3</span></li>
+          <li><span class="pn">WF2075</span><span class="pq">×2</span></li>
+          <li><span class="pn">AF25708M</span><span class="pq">×4</span></li>
+          <li><span class="pn">Cummins Premium Blue Lube Oil</span><span class="pq">×18</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="sf"><span class="sf-note">Total Access Communication PLC · True Corporation PLC</span><span class="sf-num">10 / 45</span></div>
+</section>
+
+<!-- ====================================================
+     SLIDE 11 — GEN 2 PM PROCEDURE
+     ==================================================== -->
+<section class="slide">
+  <div class="sh"><span class="sh-tag">RST — Gen2 PM Procedure</span><div class="brand"><span class="br">true</span><span class="bs">|</span><span class="bc">dtac</span></div></div>
+  <div class="ca">
+    <div class="stitle r">PM Generator with Consumable and Oil Change</div>
+    <table class="pmt r">
+      <tr><th class="tn">ลำดับ</th><th class="tl">รายละเอียด</th><th class="tt">ระยะเวลา</th><th class="rem">หมายเหตุ</th></tr>
+      <tr class="r"><td class="tn">1</td><td>ตรวจสอบอุปกรณ์ที่เกี่ยวข้องก่อนเริ่มงาน</td><td class="tt">10 นาที</td><td class="rem"></td></tr>
+      <tr class="r"><td class="tn">2</td><td>ตรวจวัดค่า CCA Battery ให้แน่ใจว่าอยู่ในระดับปกติ</td><td class="tt">10 นาที</td><td class="rem"></td></tr>
+      <tr class="r"><td class="tn">3</td><td>ทำการทดสอบเครื่องกำเนิดไฟฟ้าตัวเปล่า</td><td class="tt">10 นาที</td><td class="rem"></td></tr>
+      <tr class="r"><td class="tn">4</td><td>ทำการ TIE ACB GDB เพื่อ Standby ให้ Gen1 พร้อมจ่ายโหลด</td><td class="tt">5 นาที</td><td class="rem"></td></tr>
+      <tr class="r"><td class="tn">5</td><td>ทำการ OFF GEN</td><td class="tt">5 นาที</td><td class="rem off">OFF GEN</td></tr>
+      <tr class="r"><td class="tn">6</td><td>ทำการถ่ายน้ำมันเครื่องเก่าออก และตรวจเช็คน้ำยาหม้อน้ำ</td><td class="tt">30 นาที</td><td class="rem off">OFF GEN</td></tr>
+      <tr class="r"><td class="tn">7</td><td>ทำการเปลี่ยนไส้กรองต่าง ๆ</td><td class="tt">20 นาที</td><td class="rem off">OFF GEN</td></tr>
+      <tr class="r"><td class="tn">8</td><td>ทำการเติมน้ำยาหม้อน้ำ (DCA) – กรณีพร่อง หรือต้องเติม additive</td><td class="tt">10 นาที</td><td class="rem off">OFF GEN</td></tr>
+      <tr class="r"><td class="tn">9</td><td>ทำการเติมน้ำมันเครื่องใหม่</td><td class="tt">20 นาที</td><td class="rem off">OFF GEN</td></tr>
+      <tr class="r"><td class="tn">10</td><td>ทำการตรวจเช็คความเรียบร้อย พร้อมทำความสะอาด</td><td class="tt">10 นาที</td><td class="rem off">OFF GEN</td></tr>
+      <tr class="r"><td class="tn">11</td><td>ทำการ ON GEN พร้อมทดสอบระบบ</td><td class="tt">10 นาที</td><td class="rem on">ON Gen</td></tr>
+      <tr class="r"><td class="tn">12</td><td>ทำการคืนระบบ</td><td class="tt">—</td><td class="rem"></td></tr>
+      <tr class="total r"><td colspan="2" style="text-align:right;padding-right:20px">เวลาดำเนินการรวม</td><td class="tt" style="font-weight:700">140 นาที</td><td></td></tr>
+    </table>
+  </div>
+  <div class="sf"><span class="sf-note">Total Access Communication PLC · True Corporation PLC</span><span class="sf-num">11 / 45</span></div>
+</section>
+
+<!-- ====================================================
+     SLIDE 12 — GEN 2 TIE (Gen1 Standby for Gen2)
+     ==================================================== -->
+<section class="slide">
+  <div class="sh"><span class="sh-tag">RST — Gen2 TIE ACB GDB</span><div class="brand"><span class="br">true</span><span class="bs">|</span><span class="bc">dtac</span></div></div>
+  <div class="ca">
+    <div class="stitle r">Tie ACB GDB — <span class="c">Generator1 Standby</span> จ่ายโหลดทดแทน <span class="r">Generator2</span></div>
+    <div class="tied">
+      <div class="tie-desc r">ทำการ TIE ACB GDB ไว้ก่อนทำ PM เพื่อหากไฟฟ้าดับขณะทำ PM Generator2<br>Generator1 จะเป็นตัวจ่ายโหลดทดแทน Generator2</div>
+      <div class="tie-panel r">
+        <div class="tie-col">
+          <div class="tie-ch cc">from Gen1</div>
+          <div class="tie-cv cv-close">CLOSE</div>
+          <div class="tie-ats">↑ to ATS</div>
+        </div>
+        <div class="tie-col tie-center">
+          <div class="tie-ch" style="background:rgba(241,196,15,.1);color:var(--yellow)">TIE</div>
+          <div class="tie-cv cv-close-c">CLOSE</div>
+          <div class="tie-ats">↓ to ATS</div>
+        </div>
+        <div class="tie-col">
+          <div class="tie-ch rc">from Gen2</div>
+          <div class="tie-cv cv-open">OPEN</div>
+          <div class="tie-ats">↑ to ATS</div>
+        </div>
+      </div>
+      <div class="tie-legend r">
+        <div class="tleg-item"><div class="tleg-dot" style="background:var(--green)"></div>CLOSE = Gen1 จ่ายโหลดทดแทน</div>
+        <div class="tleg-item"><div class="tleg-dot" style="background:var(--yellow)"></div>TIE CLOSE = เชื่อม Bus Bar</div>
+        <div class="tleg-item"><div class="tleg-dot" style="background:var(--red)"></div>OPEN = ตัด Gen2 ออก (PM)</div>
+      </div>
+    </div>
+  </div>
+  <div class="sf"><span class="sf-note">Total Access Communication PLC · True Corporation PLC</span><span class="sf-num">12 / 45</span></div>
+</section>
+
+<!-- ====================================================
+     SLIDE 13 — GEN 2 PM NORMAL CASE
+     ==================================================== -->
+<section class="slide">
+  <div class="sh"><span class="sh-tag">RST — PM Generator2 Normal Case</span><div class="brand"><span class="br">true</span><span class="bs">|</span><span class="bc">dtac</span></div></div>
+  <div class="ca">
+    <div class="stitle r">PM Generator2 ปกติ <span style="color:var(--txt2);font-size:36px">กรณีไฟฟ้าไม่ดับขณะทำ PM</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:22px" class="r">
+      <div style="background:rgba(232,25,44,.07);border:1px solid rgba(232,25,44,.2);border-radius:12px;padding:22px">
+        <div style="font-family:var(--font);font-size:18px;font-weight:700;color:var(--red);margin-bottom:12px">GDB Gen1 Gen2 — TIE</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);font-family:var(--font);font-size:18px;color:var(--txt)"><span>Gen1</span><span style="color:var(--green);font-weight:600">STANDBY → LOAD</span></div>
+          <div style="display:flex;justify-content:space-between;padding:7px 0;font-family:var(--font);font-size:18px;color:var(--txt)"><span>Gen2</span><span style="color:var(--red);font-weight:600">PM (OFF)</span></div>
+        </div>
+      </div>
+      <div style="background:rgba(0,174,239,.07);border:1px solid rgba(0,174,239,.2);border-radius:12px;padding:22px">
+        <div style="font-family:var(--font);font-size:18px;font-weight:700;color:var(--cyan);margin-bottom:12px">Load Status During PM</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);font-family:var(--font);font-size:18px;color:var(--txt)"><span>Load Gen1</span><span style="color:var(--yellow)">725 KW / 45%</span></div>
+          <div style="display:flex;justify-content:space-between;padding:7px 0;font-family:var(--font);font-size:18px;color:var(--txt)"><span>Load Gen2</span><span style="color:var(--yellow)">750 KW / 46%</span></div>
+        </div>
+        <div style="margin-top:12px;background:rgba(241,196,15,.12);border:1px solid rgba(241,196,15,.3);border-radius:6px;padding:8px;text-align:center;font-family:var(--font);font-size:17px;font-weight:700;color:var(--yellow)">Redundancy Load 92%</div>
+      </div>
+      <div style="background:rgba(46,204,113,.07);border:1px solid rgba(46,204,113,.2);border-radius:12px;padding:22px">
+        <div style="font-family:var(--font);font-size:18px;font-weight:700;color:var(--green);margin-bottom:12px">Transfer Load EB41A EB42A</div>
+        <div style="font-family:var(--font);font-size:16px;color:var(--txt2)">Load from Gen1 side transferred to G5/G6/G7 when needed</div>
+        <div style="margin-top:10px;background:rgba(46,204,113,.1);border:1px solid rgba(46,204,113,.25);border-radius:6px;padding:8px;text-align:center;font-family:var(--font);font-size:16px;font-weight:700;color:var(--green)">Gen5/Gen6 maintain Redundancy 94%</div>
+      </div>
+    </div>
+    <div class="r" style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:14px 20px;font-family:var(--font);font-size:17px;color:var(--txt2)">
+      💡 หากไฟฟ้าดับระหว่างทำ PM Generator2 → Generator1 ซึ่ง Standby อยู่ จะจ่ายโหลดทดแทนผ่าน TIE GDB ทันที
+    </div>
+  </div>
+  <div class="sf"><span class="sf-note">Total Access Communication PLC · True Corporation PLC</span><span class="sf-num">13 / 45</span></div>
+</section>
+
+<!-- ====================================================
+     SLIDE 14 — GEN 2 TRANSFER LOAD
+     ==================================================== -->
+<section class="slide">
+  <div class="sh"><span class="sh-tag">RST — Gen2 Transfer Load</span><div class="brand"><span class="br">true</span><span class="bs">|</span><span class="bc">dtac</span></div></div>
+  <div class="ca">
+    <div class="stitle r">Generator2 Transfer Load <span style="color:var(--txt2);font-size:34px">กรณีไฟฟ้าไม่ดับขณะทำ PM</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px" class="r">
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="is-title">TIE Transfer Load EB41A EB42A</div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:10px;padding:18px 20px">
+          <table style="width:100%;border-collapse:collapse;font-family:var(--font)">
+            <tr><td style="padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:18px;color:var(--txt2)">Before Transfer EB41A</td><td style="text-align:right;font-size:18px;color:var(--yellow);font-weight:600">147 KW</td></tr>
+            <tr><td style="padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:18px;color:var(--txt2)">Before Transfer EB42A</td><td style="text-align:right;font-size:18px;color:var(--yellow);font-weight:600">144 KW</td></tr>
+            <tr><td style="padding:7px 4px;font-size:18px;color:var(--txt2)">After Transfer — G1 Load</td><td style="text-align:right;font-size:18px;color:var(--green);font-weight:600">434 KW / 27%</td></tr>
+          </table>
+        </div>
+        <div style="background:rgba(46,204,113,.08);border:1px solid rgba(46,204,113,.25);border-radius:8px;padding:12px 16px;font-family:var(--font);font-size:19px;font-weight:700;color:var(--green)">After Transfer — Redundancy 73%</div>
+        <div style="font-family:var(--font);font-size:17px;color:var(--txt2)">Gen1 standby load: 434KW / 27%</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="is-title">Load after Transfer</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div style="background:rgba(0,174,239,.07);border:1px solid rgba(0,174,239,.2);border-radius:8px;padding:14px;text-align:center"><div style="font-family:var(--font);font-size:14px;color:var(--cyan);font-weight:600">GEN5</div><div style="font-family:var(--font);font-size:22px;font-weight:700;color:var(--yellow)">521 KW</div><div style="font-family:var(--font);font-size:14px;color:var(--txt2)">26%</div></div>
+          <div style="background:rgba(0,174,239,.07);border:1px solid rgba(0,174,239,.2);border-radius:8px;padding:14px;text-align:center"><div style="font-family:var(--font);font-size:14px;color:var(--cyan);font-weight:600">GEN6</div><div style="font-family:var(--font);font-size:22px;font-weight:700;color:var(--yellow)">480 KW</div><div style="font-family:var(--font);font-size:14px;color:var(--txt2)">24%</div></div>
+          <div style="background:rgba(232,25,44,.07);border:1px solid rgba(232,25,44,.2);border-radius:8px;padding:14px;text-align:center"><div style="font-family:var(--font);font-size:14px;color:var(--red);font-weight:600">GEN7</div><div style="font-family:var(--font);font-size:22px;font-weight:700;color:var(--yellow)">777 KW</div><div style="font-family:var(--font);font-size:14px;color:var(--txt2)">48%</div></div>
+          <div style="background:rgba(46,204,113,.07);border:1px solid rgba(46,204,113,.2);border-radius:8px;padding:14px;text-align:center"><div style="font-family:var(--font);font-size:14px;color:var(--green);font-weight:600">Redundancy</div><div style="font-family:var(--font);font-size:22px;font-weight:700;color:var(--green)">94%</div><div style="font-family:var(--font);font-size:14px;color:var(--txt2)">G5/G6/G7</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="sf"><span class="sf-note">Total Access Communication PLC · True Corporation PLC</span><span class="sf-num">14 / 45</span></div>
+</section>
+
+<!-- ====================================================
+     SLIDE 15 — GEN 3 INFO
+     ==================================================== -->
+<section class="slide">
+  <div class="sh"><span class="sh-tag">RST — Generator 3</span><div class="brand"><span class="br">true</span><span class="bs">|</span><span class="bc">dtac</span></div></div>
+  <div class="ca">
+    <div class="gil r">
+      <div class="gen-vis" style="border-color:rgba(26,188,156,.2)">
+        <div class="gen-vis-num" style="color:rgba(26,188,156,.08)">3</div>
+        <div class="gen-vis-icon" style="background:linear-gradient(135deg,rgba(26,188,156,.25),rgba(0,174,239,.25));border-color:rgba(26,188,156,.25)">⚡</div>
+        <div class="gen-vis-label">GEN.3</div>
+        <div style="font-family:var(--font);font-size:16px;color:rgba(255,255,255,.2);letter-spacing:2px;position:relative;z-index:1">MTU</div>
+      </div>
+      <div style="display:flex;flex-direction:column;justify-content:center;gap:16px">
+        <div class="gen-title-block">
+          <div class="gtnum">TOC-RST</div>
+          <div class="gtname"><span class="r">TOC-RST</span> <span class="c">Gen 3</span></div>
+        </div>
+        <table class="git">
+          <tr><td>Manufacturer</td><td>MTU Power Generation</td></tr>
+          <tr><td>Model</td><td>50.2VL10 C 6S/4</td></tr>
+          <tr><td>Serial No</td><td>238459/1</td></tr>
+          <tr><td>Gen Rated</td><td><b style="color:var(--yellow)">1500 kVA / 1200 kW</b></td></tr>
+          <tr><td>Volts</td><td>400 / 230 V</td></tr>
+          <tr><td>Frequency</td><td>50 Hz</td></tr>
+          <tr><td>Brand</td><td><span class="badge bc-m">MTU</span></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="sf"><span class="sf-note">Total Access Communication PLC · True Corporation PLC</span><span class="sf-num">15 / 45</span></div>
+</section>
+
+<!-- ====================================================
+     SLIDE 16 — GEN 3 CONSUMABLES
+     ==================================================== -->
+<section class="slide">
+  <div class="sh"><span class="sh-tag">RST — Gen3 Consumables</span><div class="brand"><span class="br">true</span><span class="bs">|</span><span class="bc">dtac</span></div></div>
+  <div class="ca">
+    <div class="stitle r">Generator Consumable Part Lists <span class="r">(Gen3)</span></div>
+    <div class="consl r">
+      <div class="consp">
+        <h3>Current — Fleetguard Brand</h3>
+        <ul class="pl">
+          <li><span class="pn">LF9050</span><span class="pd">Lube Oil Filter</span><span class="pq">×4</span></li>
+          <li><span class="pn">FS1006</span><span class="pd">Fuel Separator Filter</span><span class="pq">×3</span></li>
+          <li><span class="pn">WF2075</span><span class="pd">Water Filter</span><span class="pq">×2</span></li>
+          <li><span class="pn">AF25708M</span><span class="pd">Air Filter</span><span class="pq">×4</span></li>
+          <li><span class="pn">Lube Oil</span><span class="pd">Engine Oil</span><span class="pq">×18</span></li>
+        </ul>
+      </div>
+      <div class="consp new">
+        <h3>New Replacement — Fleetguard Brand</h3>
+        <ul class="pl">
+          <li><span class="pn">LF9050</span><span class="pq">×4</span></li>
+          <li><span class="pn">FS1006</span><span class="pq">×3</span></li>
+          <li><span class="pn">WF2075</span><span class="pq">×2</span></li>
+          <li><span class="pn">AF25708M</span><span class="pq">×4</span></li>
+          <li><span class="pn">Cummins Premium Blue Lube Oil</span><span class="pq">×18</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="sf"><span class="sf-note">Total Access Communication PLC · True Corporation PLC</span><span class="sf-num">16 / 45</span></div>
+</section>
+
+<!-- ====================================================
+     SLIDE 17 — GEN 3 PM PROCEDURE
+     ==================================================== -->
+<section class="slide">
+  <div class="sh"><span class="sh-tag">RST — Gen3 PM Procedure</span><div class="brand"><span class="br">true</span><span class="bs">|</span><span class="bc">dtac</span></div></div>
+  <div class="ca">
+    <div class="stitle r">PM Generator with Consumable and Oil Change</div>
+    <table class="pmt r">
+      <tr><th class="tn">ลำดับ</th><th class="tl">รายละเอียด</th><th class="tt">ระยะเวลา</th><th class="rem">หมายเหตุ</th></tr>
+      <tr class="r"><td class="tn">1</td><td>ตรวจสอบอุปกรณ์ที่เกี่ยวข้องก่อนเริ่มงาน</td><td class="tt">10 นาที</td><td class="rem"></td></tr>
+      <tr class="r"><td class="tn">2</td><td>ตรวจวัดค่า CCA Battery ให้แน่ใจว่าอยู่ในระดับปกติ</td><td class="tt">10 นาที</td><td class="rem"></td></tr>
+      <tr class="r"><td class="tn">3</td><td>ทำการทดสอบเครื่องกำเนิดไฟฟ้าตัวเปล่า</td><td class="tt">10 นาที</td><td class="rem"></td></tr>
+      <tr class="r"><td class="tn">4</td><td>ทำการ TIE ACB GDB เพื่อ Standby ให้ Gen4 พร้อมจ่ายโหลด</td><td class="tt">5 นาที</td><td class="rem"></td></tr>
+      <tr class="r"><td class="tn">5</td><td>ทำการ OFF GEN</td><td class="tt">5 นาที</td><td class="rem off">OFF GEN</td></tr>
+      <tr class="r"><td class="tn">6</td><td>ทำการถ่ายน้ำมันเครื่องเก่าออก และตรวจเช็คน้ำยาหม้อน้ำ</td><td class="tt">30 นาที</td><td class="rem off">OFF GEN</td></tr>
+      <tr class="r"><td class="tn">7</td><td>ทำการเปลี่ยนไส้กรองต่าง ๆ</td><td class="tt">20 นาที</td><td class="rem off">OFF GEN</td></tr>
+      <tr class="r"><td class="tn">8</td><td>ทำการเติมน้ำยาหม้อน้ำ (DCA) – กรณีพร่อง หรือต้องเติม additive</td><td class="tt">10 นาที</td><td class="rem off">OFF GEN</td></tr>
+      <tr class="r"><td class="tn">9</td><td>ทำการเติมน้ำมันเครื่องใหม่</td><td class="tt">20 นาที</td><td class="rem off">OFF GEN</td></tr>
+      <tr class="r"><td class="tn">10</td><td>ทำการตรวจเช็คความเรียบร้อย พร้อมทำความสะอาด</td><td class="tt">10 นาที</td><td class="rem off">OFF GEN</td></tr>
+      <tr class="r"><td class="tn">11</td><td>ทำการ ON GEN พร้อมทดสอบระบบ</td><td class="tt">10 นาที</td><td class="rem on">ON Gen</td></tr>
+      <tr class="r"><td class="tn">12</td><td>ทำการคืนระบบ</td><td class="tt">—</td><td class="rem"></td></tr>
+      <tr class="total r"><td colspan="2" style="text-align:right;padding-right:20px">เวลาดำเนินการรวม</td><td class="tt" style="font-weight:700">140 นาที</td><td></td></tr>
+    </table>
+  </div>
+  <div class="sf"><span class="sf-note">Total Access Communication PLC · True Corporation PLC</span><span class="sf-num">17 / 45</span></div>
+</section>
+
+<!-- ====================================================
+     SLIDE 18 — GEN 3 TIE (Gen4 Standby for Gen3)
+     ==================================================== -->
+<section class="slide">
+  <div class="sh"><span class="sh-tag">RST — Gen3 TIE ACB GDB</span><div class="brand"><span class="br">true</span><span class="bs">|</span><span class="bc">dtac</span></div></div>
+  <div class="ca">
+    <div class="stitle r">Tie ACB GDB — <span class="c">Generator4 Standby</span> จ่ายโหลดทดแทน <span class="r">Generator3</span></div>
+    <div class="tied">
+      <div class="tie-desc r">ทำการ TIE ACB GDB ไว้ก่อนทำ PM เพื่อหากไฟฟ้าดับขณะทำ PM Generator3<br>Generator4 จะเป็นตัวจ่ายโหลดทดแทน Generator3</div>
+      <div class="tie-panel r">
+        <div class="tie-col">
+          <div class="tie-ch rc">from Gen3</div>
+          <div class="tie-cv cv-open">OPEN</div>
+          <div class="tie-ats">↑ to ATS</div>
+        </div>
+        <div class="tie-col tie-center">
+          <div class="tie-ch" style="background:rgba(241,196,15,.1);color:var(--yellow)">TIE</div>
+          <div class="tie-cv cv-close-c">CLOSE</div>
+          <div class="tie-ats">↓ to ATS</div>
+        </div>
+        <div class="tie-col">
+          <div class="tie-ch cc">from Gen4</div>
+          <div class="tie-cv cv-close">CLOSE</div>
+          <div class="tie-ats">↑ to ATS</div>
+        </div>
+      </div>
+      <div class="tie-legend r">
+        <div class="tleg-item"><div class="tleg-dot" style="background:var(--red)"></div>OPEN = ตัด Gen3 ออก (PM)</div>
+        <div class="tleg-item"><div class="tleg-dot" style="background:var(--yellow)"></div>TIE CLOSE = เชื่อม Bus Bar</div>
+        <div class="tleg-item"><div class="tleg-dot" style="background:var(--green)"></div>CLOSE = Gen4 จ่ายโหลดทดแทน</div>
+      </div>
+    </div>
+  </div>
+  <div class="sf"><span class="sf-note">Total Access Communication PLC · True Corporation PLC</span><span class="sf-num">18 / 45</span></div>
+</section>
+
+<!-- ====================================================
+     SLIDE 19 — GEN 3 PM DIAGRAM
+     ==================================================== -->
+<section class="slide">
+  <div class="sh"><span class="sh-tag">RST — PM Generator3</span><div class="brand"><span class="br">true</span><span class="bs">|</span><span class="bc">dtac</span></div></div>
+  <div class="ca">
+    <div class="stitle r">PM Generator3 <span style="color:var(--txt2);font-size:36px">— TIE GDB Gen3 Gen4</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px" class="r">
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div style="background:rgba(232,25,44,.07);border:1px solid rgba(232,25,44,.2);border-radius:12px;padding:22px">
+          <div style="font-family:var(--font);font-size:18px;font-weight:700;color:var(--red);margin-bottom:12px">Gen3/Gen4 Group Status</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);font-family:var(--font);font-size:18px;color:var(--txt)"><span>Gen3 (PM)</span><span style="color:var(--red);font-weight:600">OFF — 468 KW</span></div>
+            <div style="display:flex;justify-content:space-between;padding:7px 0;font-family:var(--font);font-size:18px;color:var(--txt)"><span>Gen4 (TIE Standby)</span><span style="color:var(--green);font-weight:600">ON — 401 KW</span></div>
+          </div>
+          <div style="margin-top:12px;background:rgba(241,196,15,.12);border:1px solid rgba(241,196,15,.3);border-radius:6px;padding:8px;text-align:center;font-family:var(--font);font-size:17px;font-weight:700;color:var(--yellow)">Redundancy Load 72%</div>
+        </div>
+        <div style="background:rgba(0,174,239,.07);border:1px solid rgba(0,174,239,.2);border-radius:12px;padding:22px">
+          <div style="font-family:var(--font);font-size:18px;font-weight:700;color:var(--cyan);margin-bottom:10px">Load Gen3 (39%)</div>
+          <div style="font-family:var(--font);font-size:22px;font-weight:600;color:var(--yellow)">468 KW</div>
+          <div style="font-family:var(--font);font-size:16px;color:var(--txt2);margin-top:6px">MDB 11A/11B → TR1/TR2</div>
+        </div>
+        <div style="background:rgba(0,174,239,.07);border:1px solid rgba(0,174,239,.2);border-radius:12px;padding:22px">
+          <div style="font-family:var(--font);font-size:18px;font-weight:700;color:var(--cyan);margin-bottom:10px">Load Gen4 (33%)</div>
+          <div style="font-family:var(--font);font-size:22px;font-weight:600;color:var(--yellow)">401 KW</div>
+          <div style="font-family:var(--font);font-size:16px;color:var(--txt2);margin-top:6px">MDB 11A/11B → TR2</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div style="background:rgba(46,204,113,.07);border:1px solid rgba(46,204,113,.2);border-radius:12px;padding:22px">
+          <div style="font-family:var(--font);font-size:18px;font-weight:700;color:var(--green);margin-bottom:12px">Other Groups Status</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);font-family:var(--font);font-size:17px;color:var(--txt)"><b style="color:var(--cyan)">Gen1/Gen2:</b> Redundancy 92%</div>
+            <div style="padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);font-family:var(--font);font-size:17px;color:var(--txt)"><b style="color:var(--green)">Gen5/Gen6:</b> Redundancy 94%</div>
+            <div style="padding:7px 0;font-family:var(--font);font-size:17px;color:var(--txt)"><b style="color:var(--cyan)">Gen7:</b> 630KW / 39%</div>
+          </div>
+        </div>
+        <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:18px;font-family:var(--font);font-size:16px;color:var(--txt2);line-height:1.6">
+          <b style="color:var(--yellow)">หมายเหตุ:</b> Gen3/Gen4 มี Redundancy 72% ซึ่งต่ำกว่า Gen1/Gen2 (92%) และ Gen5/Gen6 (94%) เนื่องจาก Gen3 เป็น MTU 1500kVA และ Gen4 เป็น Cummins 1500kVA มีพิกัดต่ำกว่า Group อื่น
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="sf"><span class="sf-note">Total Access Communication PLC · True Corporation PLC</span><span class="sf-num">19 / 45</span></div>
+</section>
+
+<!-- ====================================================
+     SLIDE 20 — GEN 4 INFO
+     ==================================================== -->
+<section class="slide">
+  <div class="sh"><span class="sh-tag">RST — Generator 4</span><div class="brand"><span class="br">true</span><span class="bs">|</span><span class="bc">dtac</span></div></div>
+  <div class="ca">
+    <div class="gil r">
+      <div class="gen-vis">
+        <div class="gen-vis-num">4</div>
+        <div class="gen-vis-icon">⚡</div>
+        <div class="gen-vis-label">GEN.4</div>
+        <div style="font-family:var(--font);font-size:16px;color:rgba(255,255,255,.2);letter-spacing:2px;position:relative;z-index:1">CUMMINS</div>
+      </div>
+      <div style="display:flex;flex-direction:column;justify-content:center;gap:16px">
+        <div class="gen-title-block">
+          <div class="gtnum">TOC-RST</div>
+          <div class="gtname"><span class="r">TOC-RST</span> <span class="c">Gen 4</span></div>
+        </div>
+        <table class="git">
+          <tr><td>Manufacturer</td><td>Cummins Power Generation</td></tr>
+          <tr><td>Model</td><td>C1675 D5A</td></tr>
+          <tr><td>Serial No</td><td>L13K608210</td></tr>
+          <tr><td>Gen Rated</td><td><b style="color:var(--yellow)">1500 kVA / 1200 kW</b></td></tr>
+          <tr><td>Volts</td><td>400 / 230 V</td></tr>
+          <tr><td>Frequency</td><td>50 Hz</td></tr>
+          <tr><td>Brand</td><td><span class="badge bc-g">Cummins</span></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="sf"><span class="sf-note">Total Access Communication PLC · True Corporation PLC</span><span class="sf-num">20 / 45</span></div>
+</section>
+
+<!-- ====================================================
+     SLIDE 21 — GEN 4 CONSUMABLES
+     ==================================================== -->
+<section class="slide">
+  <div class="sh"><span class="sh-tag">RST — Gen4 Consumables</span><div class="brand"><span class="br">true</span><span class="bs">|</span><span class="bc">dtac</span></div></div>
+  <div class="ca">
+    <div class="stitle r">Generator Consumable Part Lists <span class="r">(Gen4)</span></div>
+    <div class="consl r">
+      <div class="consp">
+        <h3>Current — Fleetguard Brand</h3>
+        <ul class="pl">
+          <li><span class="pn">LF9050</span><span class="pd">Lube Oil Filter</span><span class="pq">×4</span></li>
+          <li><span class="pn">FS1006</span><span class="pd">Fuel Separator Filter</span><span class="pq">×3</span></li>
+          <li><span class="pn">WF2075</span><span class="pd">Water Filter</span><span class="pq">×2</span></li>
+          <li><span class="pn">AF25708M</span><span class="pd">Air Filter</span><span class="pq">×4</span></li>
+          <li><span class="pn">Lube Oil</span><span class="pd">Engine Oil</span><span class="pq">×18</span></li>
+        </ul>
+      </div>
+      <div class="consp new">
+        <h3>New Replacement — Fleetguard Brand</h3>
+        <ul class="pl">
+          <li><span class="pn">LF9050</span><span class="pq">×4</span></li>
+          <li><span class="pn">FS1006</span><span class="pq">×3</span></li>
+          <li><span class="pn">WF2075</span><span class="pq">×2</span></li>
+          <li><span class="pn">AF25708M</span><span class="pq">×4</span></li>
+          <li><span class="pn">Cummins Premium Blue Lube Oil</span><span class="pq">×18</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="sf"><span class="sf-note">Total Access Communication PLC · True Corporation PLC</span><span class="sf-num">21 / 45</span></div>
+</section>
+
+<!-- ====================================================
+     SLIDE 22 — GEN 4 PM PROCEDURE
+     ==================================================== -->
+<section class="slide">
+  <div class="sh"><span class="sh-tag">RST — Gen4 PM Procedure</span><div class="brand"><span class="br">true</span><span class="bs">|</span><span class="bc">dtac</span></div></div>
+  <div class="ca">
+    <div class="stitle r">PM Generator with Consumable and Oil Change</div>
+    <table class="pmt r">
+      <tr><th class="tn">ลำดับ</th><th class="tl">รายละเอียด</th><th class="tt">ระยะเวลา</th><th class="rem">หมายเหตุ</th></tr>
+      <tr class="r"><td class="tn">1</td><td>ตรวจสอบอุปกรณ์ที่เกี่ยวข้องก่อนเริ่มงาน</td><td class="tt">10 นาที</td><td class="rem"></td></tr>
+      <tr class="r"><td class="tn">2</td><td>ตรวจวัดค่า CCA Battery ให้แน่ใจว่าอยู่ในระดับปกติ</td><td class="tt">10 นาที</td><td class="rem"></td></tr>
+      <tr class="r"><td class="tn">3</td><td>ทำการทดสอบเครื่องกำเนิดไฟฟ้าตัวเปล่า</td><td class="tt">10 นาที</td><td class="rem"></td></tr>
+      <tr class="r"><td class="tn">4</td><td>ทำการ TIE ACB GDB เพื่อ Standby ให้ Gen3 พร้อมจ่ายโหลด</td><td class="tt">5 นาที</td><td class="rem"></td></tr>
+      <tr class="r"><td class="tn">5</td><td>ทำการ OFF GEN</td><td class="tt">5 นาที</td><td class="rem off">OFF GEN</td></tr>
+      <tr class="r"><td class="tn">6</td><td>ทำการถ่ายน้ำมันเครื่องเก่าออก และตรวจเช็คน้ำยาหม้อน้ำ</td><td class="tt">30 นาที</td><td class="rem off">OFF GEN</td></tr>
+      <tr class="r"><td class="tn">7</td><td>ทำการเปลี่ยนไส้กรองต่าง ๆ</td><td class="tt">20 นาที</td><td class="rem off">OFF GEN</td></tr>
+      <tr class="r"><td class="tn">8</td><td>ทำการเติมน้ำยาหม้อน้ำ (DCA) – กรณีพร่อง หรือต้องเติม additive</td><td class="tt">10 นาที</td><td class="rem off">OFF GEN</td></tr>
+      <tr class="r"><td class="tn">9</td><td>ทำการเติมน้ำมันเครื่องใหม่</td><td class="tt">20 นาที</td><td class="rem off">OFF GEN</td></tr>
+      <tr class="r"><td class="tn">10</td><td>ทำการตรวจเช็คความเรียบร้อย พร้อมทำความสะอาด</td><td class="tt">10 นาที</td><td class="rem off">OFF GEN</td></tr>
+      <tr class="r"><td class="tn">11</td><td>ทำการ ON GEN พร้อมทดสอบระบบ</td><td class="tt">10 นาที</td><td class="rem on">ON Gen</td></tr>
+      <tr class="r"><td class="tn">12</td><td>ทำการคืนระบบ</td><td class="tt">—</td><td class="rem"></td></tr>
+      <tr class="total r"><td colspan="2" style="text-align:right;padding-right:20px">เวลาดำเนินการรวม</td><td class="tt" style="font-weight:700">140 นาที</td><td></td></tr>
+    </table>
+  </div>
+  <div class="sf"><span class="sf-note">Total Access Communication PLC · True Corporation PLC</span><span class="sf-num">22 / 45</span></div>
+</section>
+
+<!-- ====================================================
+     SLIDE 23 — GEN 4 TIE (Gen3 Standby for Gen4)
+     ==================================================== -->
+<section class="slide">
+  <div class="sh"><span class="sh-tag">RST — Gen4 TIE ACB GDB</span><div class="brand"><span class="br">true</span><span class="bs">|</span><span class="bc">dtac</span></div></div>
+  <div class="ca">
+    <div class="stitle r">Tie ACB GDB — <span class="c">Generator3 Standby</span> จ่ายโหลดทดแทน <span class="r">Generator4</span></div>
+    <div class="tied">
+      <div class="tie-desc r">ทำการ TIE ACB GDB ไว้ก่อนทำ PM เพื่อหากไฟฟ้าดับขณะทำ PM Generator4<br>Generator3 จะเป็นตัวจ่ายโหลดทดแทน Generator4</div>
+      <div class="tie-panel r">
+        <div class="tie-col">
+          <div class="tie-ch cc">from Gen3</div>
+          <div class="tie-cv cv-close">CLOSE</div>
+          <div class="tie-ats">↑ to ATS</div>
+        </div>
+        <div class="tie-col tie-center">
+          <div class="tie-ch" style="background:rgba(241,196,15,.1);color:var(--yellow)">TIE</div>
+          <div class="tie-cv cv-close-c">CLOSE</div>
+          <div class="tie-ats">↓ to ATS</div>
+        </div>
+        <div class="tie-col">
+          <div class="tie-ch rc">from Gen4</div>
+          <div class="tie-cv cv-open">OPEN</div>
+          <div class="tie-ats">↑ to ATS</div>
+        </div>
+      </div>
+      <div class="tie-legend r">
+        <div class="tleg-item"><div class="tleg-dot" style="background:var(--green)"></div>CLOSE = Gen3 จ่ายโหลดทดแทน</div>
+        <div class="tleg-item"><div class="tleg-dot" style="background:var(--yellow)"></div>TIE CLOSE = เชื่อม Bus Bar</div>
+        <div class="tleg-item"><div class="tleg-dot" style="background:var(--red)"></div>OPEN = ตัด Gen4 ออก (PM)</div>
+      </div>
+    </div>
+  </div>
+  <div class="sf"><span class="sf-note">Total Access Communication PLC · True Corporation PLC</span><span class="sf-num">23 / 45</span></div>
+</section>
+
+<!-- ====================================================
+     SLIDE 24 — GEN 4 PM DIAGRAM
+     ==================================================== -->
+<section class="slide">
+  <div class="sh"><span class="sh-tag">RST — PM Generator4</span><div class="brand"><span class="br">true</span><span class="bs">|</span><span class="bc">dtac</span></div></div>
+  <div class="ca">
+    <div class="stitle r">PM Generator4 <span style="color:var(--txt2);font-size:36px">— TIE GDB Gen3 Gen4</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px" class="r">
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div style="background:rgba(232,25,44,.07);border:1px solid rgba(232,25,44,.2);border-radius:12px;padding:22px">
+          <div style="font-family:var(--font);font-size:18px;font-weight:700;color:var(--red);margin-bottom:12px">Gen3/Gen4 Group Status</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);font-family:var(--font);font-size:18px;color:var(--txt)"><span>Gen3 (TIE Standby)</span><span style="color:var(--green);font-weight:600">ON — 468 KW</span></div>
+            <div style="display:flex;justify-content:space-between;padding:7px 0;font-family:var(--font);font-size:18px;color:var(--txt)"><span>Gen4 (PM)</span><span style="color:var(--red);font-weight:600">OFF — 401 KW</span></div>
+          </div>
+          <div style="margin-top:12px;background:rgba(241,196,15,.12);border:1px solid rgba(241,196,15,.3);border-radius:6px;padding:8px;text-align:center;font-family:var(--font);font-size:17px;font-weight:700;color:var(--yellow)">Redundancy Load 72%</div>
+        </div>
+        <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:18px;font-family:var(--font);font-size:16px;color:var(--txt2);line-height:1.6">
+          <b style="color:var(--yellow)">หมายเหตุ:</b> กรณีเครื่องกำเนิดไฟฟ้ามีตัวเดียวหรือไม่สามารถ Tie Load ได้ จะต้องมีเครื่องกำเนิดไฟฟ้าสำรองมา Standby ระหว่างดำเนินการเปลี่ยนถ่ายของเหลว
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div style="background:rgba(0,174,239,.07);border:1px solid rgba(0,174,239,.2);border-radius:12px;padding:22px">
+          <div style="font-family:var(--font);font-size:18px;font-weight:700;color:var(--cyan);margin-bottom:10px">Load Gen3 (39%)</div>
+          <div style="font-family:var(--font);font-size:22px;font-weight:600;color:var(--yellow)">468 KW</div>
+          <div style="font-family:var(--font);font-size:16px;color:var(--txt2);margin-top:6px">MDB 11A/11B / EMDB 11A/11B</div>
+        </div>
+        <div style="background:rgba(0,174,239,.07);border:1px solid rgba(0,174,239,.2);border-radius:12px;padding:22px">
+          <div style="font-family:var(--font);font-size:18px;font-weight:700;color:var(--cyan);margin-bottom:10px">Load Gen4 (33%)</div>
+          <div style="font-family:var(--font);font-size:22px;font-weight:600;color:var(--yellow)">401 KW</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="sf"><span class="sf-note">Total Access Communication PLC · True Corporation PLC</span><span class="sf-num">24 / 45</span></div>
+</section>
+
+<!-- ====================================================
+     SLIDE 25 — GEN 5 INFO
+     ==================================================== -->
+<section class="slide">
+  <div class="sh"><span class="sh-tag">RST — Generator 5</span><div class="brand"><span class="br">true</span><span class="bs">|</span><span class="bc">dtac</span></div></div>
+  <div class="ca">
+    <div class="gil r">
+      <div class="gen-vis">
+        <div class="gen-vis-num">5</div>
+        <div class="gen-vis-icon">⚡</div>
+        <div class="gen-vis-label">GEN.5</div>
+        <div style="font-family:var(--font);font-size:16px;color:rgba(255,255,255,.2);letter-spacing:2px;position:relative;z-index:1">CUMMINS</div>
+      </div>
+      <div style="display:flex;flex-direction:column;justify-content:center;gap:16px">
+        <div class="gen-title-block">
+          <div class="gtnum">TOC-RST</div>
+          <div class="gtname"><span class="r">TOC-RST</span> <span class="c">Gen 5</span></div>
+        </div>
+        <table class="git">
+          <tr><td>Manufacturer</td><td>Cummins Power Generation</td></tr>
+          <tr><td>Model</td><td>C2750 D5B</td></tr>
+          <tr><td>Serial No</td><td>C17K161356</td></tr>
+          <tr><td>Gen Rated</td><td><b style="color:var(--yellow)">2500 kVA / 2000 kW</b></td></tr>
+          <tr><td>Volts</td><td>400 / 230 V</td></tr>
+          <tr><td>Frequency</td><td>50 Hz</td></tr>
+          <tr><td>Brand</td><td><span class="badge bc-g">Cummins</span></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="sf"><span class="sf-note">Total Access Communication PLC · True Corporation PLC</span><span class="sf-num">25 / 45</span></div>
+</section>
+
+<!-- ====================================================
+     SLIDE 26 — GEN 5 CONSUMABLES
+     ==================================================== -->
+<section class="slide">
+  <div class="sh"><span class="sh-tag">RST — Gen5 Consumables</span><div class="brand"><span class="br">true</span><span class="bs">|</span><span class="bc">dtac</span></div></div>
+  <div class="ca">
+    <div class="stitle r">Generator Consumable Part Lists <span class="r">(Gen5)</span></div>
+    <div class="consl r">
+      <div class="consp">
+        <h3>Current — Fleetguard Brand</h3>
+        <ul class="pl">
+          <li><span class="pn">LF9050</span><span class="pd">Lube Oil Filter</span><span class="pq">×4</span></li>
+          <li><span class="pn">FS1006</span><span class="pd">Fuel Separator Filter</span><span class="pq">×3</span></li>
+          <li><span class="pn">WF2075</span><span class="pd">Water Filter</span><span class="pq">×2</span></li>
+          <li><span class="pn">AF25708M</span><span class="pd">Air Filter</span><span class="pq">×4</span></li>
+          <li><span class="pn">Lube Oil</span><span class="pd">Engine Oil</span><span class="pq">×18</span></li>
+        </ul>
+      </div>
+      <div class="consp new">
+        <h3>New Replacement — Fleetguard Brand</h3>
+        <ul class="pl">
+          <li><span class="pn">LF9050</span><span class="pq">×4</span></li>
+          <li><span class="pn">FS1006</span><span class="pq">×3</span></li>
+          <li><span class="pn">WF2075</span><span class="pq">×2</span></li>
+          <li><span class="pn">AF25708M</span><span class="pq">×4</span></li>
+          <li><span class="pn">Cummins Premium Blue Lube Oil</span><span class="pq">×18</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="sf"><span class="sf-note">Total Access Communication PLC · True Corporation PLC</span><span class="sf-num">26 / 45</span></div>
+</section>
+
+<!-- ====================================================
+     SLIDE 27 — GEN 5 PM PROCEDURE
+     ==================================================== -->
+<section class="slide">
+  <div class="sh"><span class="sh-tag">RST — Gen5 PM Procedure</span><div class="brand"><span class="br">true</span><span class="bs">|</span><span class="bc">dtac</span></div></div>
+  <div class="ca">
+    <div class="stitle r">PM Generator with Consumable and Oil Change</div>
+    <table class="pmt r">
+      <tr><th class="tn">ลำดับ</th><th class="tl">รายละเอียด</th><th class="tt">ระยะเวลา</th><th class="rem">หมายเหตุ</th></tr>
+      <tr class="r"><td class="tn">1</td><td>ตรวจสอบอุปกรณ์ที่เกี่ยวข้องก่อนเริ่มงาน</td><td class="tt">10 นาที</td><td class="rem"></td></tr>
+      <tr class="r"><td class="tn">2</td><td>ตรวจวัดค่า CCA Battery ให้แน่ใจว่าอยู่ในระดับปกติ</td><td class="tt">10 นาที</td><td class="rem"></td></tr>
+      <tr class="r"><td class="tn">3</td><td>ทำการทดสอบเครื่องกำเนิดไฟฟ้าตัวเปล่า</td><td class="tt">10 นาที</td><td class="rem"></td></tr>
+      <tr class="r"><td class="tn">4</td><td>ทำการ TIE ACB GDB เพื่อ Standby ให้ Gen6 พร้อมจ่ายโหลด</td><td class="tt">5 นาที</td><td class="rem"></td></tr>
+      <tr class="r"><td class="tn">5</td><td>ทำการ OFF GEN</td><td class="tt">5 นาที</td><td class="rem off">OFF GEN</td></tr>
+      <tr class="r"><td class="tn">6</td><td>ทำการถ่ายน้ำมันเครื่องเก่าออก และตรวจเช็คน้ำยาหม้อน้ำ</td><td class="tt">30 นาที</td><td class="rem off">OFF GEN</td></tr>
+      <tr class="r"><td class="tn">7</td><td>ทำการเปลี่ยนไส้กรองต่าง ๆ</td><td class="tt">20 นาที</td><td class="rem off">OFF GEN</td></tr>
+      <tr class="r"><td class="tn">8</td><td>ทำการเติมน้ำยาหม้อน้ำ (DCA) – กรณีพร่อง หรือต้องเติม additive</td><td class="tt">10 นาที</td><td class="rem off">OFF GEN</td></tr>
+      <tr class="r"><td class="tn">9</td><td>ทำการเติมน้ำมันเครื่องใหม่</td><td class="tt">20 นาที</td><td class="rem off">OFF GEN</td></tr>
+      <tr class="r"><td class="tn">10</td><td>ทำการตรวจเช็คความเรียบร้อย พร้อมทำความสะอาด</td><td class="tt">10 นาที</td><td class="rem off">OFF GEN</td></tr>
+      <tr class="r"><td class="tn">11</td><td>ทำการ ON GEN พร้อมทดสอบระบบ</td><td class="tt">10 นาที</td><td class="rem on">ON Gen</td></tr>
+      <tr class="r"><td class="tn">12</td><td>ทำการคืนระบบ</td><td class="tt">—</td><td class="rem"></td></tr>
+      <tr class="total r"><td colspan="2" style="text-align:right;padding-right:20px">เวลาดำเนินการรวม</td><td class="tt" style="font-weight:700">140 นาที</td><td></td></tr>
+    </table>
+  </div>
+  <div class="sf"><span class="sf-note">Total Access Communication PLC · True Corporation PLC</span><span class="sf-num">27 / 45</span></div>
+</section>
+
+<!-- ====================================================
+     SLIDE 28 — GEN 5 TIE (Gen6 Standby for Gen5)
+     ==================================================== -->
+<section class="slide">
+  <div class="sh"><span class="sh-tag">RST — Gen5 TIE ACB GDB</span><div class="brand"><span class="br">true</span><span class="bs">|</span><span class="bc">dtac</span></div></div>
+  <div class="ca">
+    <div class="stitle r">Tie ACB GDB — <span class="c">Generator6 Standby</span> จ่ายโหลดทดแทน <span class="r">Generator5</span></div>
+    <div class="tied">
+      <div class="tie-desc r">ทำการ TIE ACB GDB ไว้ก่อนทำ PM เพื่อหากไฟฟ้าดับขณะทำ PM Generator5<br>Generator6 จะเป็นตัวจ่ายโหลดทดแทน Generator5</div>
+      <div class="tie-panel r">
+        <div class="tie-col">
+          <div class="tie-ch rc">from Gen5</div>
+          <div class="tie-cv cv-open">OPEN</div>
+          <div class="tie-ats">↑ to ATS</div>
+        </div>
+        <div class="tie-col tie-center">
+          <div class="tie-ch" style="background:rgba(241,196,15,.1);color:var(--yellow)">TIE</div>
+          <div class="tie-cv cv-close-c">CLOSE</div>
+          <div class="tie-ats">↓ to ATS</div>
+        </div>
+        <div class="tie-col">
+          <div class="tie-ch cc">from Gen6</div>
+          <div class="tie-cv cv-close">CLOSE</div>
+          <div class="tie-ats">↑ to ATS</div>
+        </div>
+      </div>
+      <div class="tie-legend r">
+        <div class="tleg-item"><div class="tleg-dot" style="background:var(--red)"></div>OPEN = ตัด Gen5 ออก (PM)</div>
+        <div class="tleg-item"><div class="tleg-dot" style="background:var(--yellow)"></div>TIE CLOSE = เชื่อม Bus Bar</div>
+        <div class="tleg-item"><div class="tleg-dot" style="background:var(--green)"></div>CLOSE = Gen6 จ่ายโหลดทดแทน</div>
+      </div>
+    </div>
+  </div>
+  <div class="sf"><span class="sf-note">Total Access Communication PLC · True Corporation PLC</span><span class="sf-num">28 / 45</span></div>
+</section>
+
+<!-- ====================================================
+     SLIDE 29 — GEN 5 PM NORMAL CASE
+     ==================================================== -->
+<section class="slide">
+  <div class="sh"><span class="sh-tag">RST — PM Generator5 Normal Case</span><div class="brand"><span class="br">true</span><span class="bs">|</span><span class="bc">dtac</span></div></div>
+  <div class="ca">
+    <div class="stitle r">PM Generator5 ปกติ <span style="color:var(--txt2);font-size:36px">กรณีไฟฟ้าไม่ดับขณะทำ PM</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px" class="r">
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div style="background:rgba(0,174,239,.07);border:1px solid rgba(0,174,239,.2);border-radius:12px;padding:22px">
+          <div style="font-family:var(--font);font-size:18px;font-weight:700;color:var(--cyan);margin-bottom:12px">TIE Gen5 Gen6</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);font-family:var(--font);font-size:18px;color:var(--txt)"><span>Gen5 (PM)</span><span style="color:var(--red);font-weight:600">OFF — 512 KW</span></div>
+            <div style="display:flex;justify-content:space-between;padding:7px 0;font-family:var(--font);font-size:18px;color:var(--txt)"><span>Gen6 (TIE Standby)</span><span style="color:var(--green);font-weight:600">ON — 517 KW</span></div>
+          </div>
+        </div>
+        <div style="background:rgba(46,204,113,.07);border:1px solid rgba(46,204,113,.2);border-radius:12px;padding:18px">
+          <div style="font-family:var(--font);font-size:17px;font-weight:600;color:var(--green);margin-bottom:8px">Load Status</div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="font-family:var(--font);font-size:17px;color:var(--txt)">Load G5: <b style="color:var(--yellow)">512 KW / 25%</b></div>
+            <div style="font-family:var(--font);font-size:17px;color:var(--txt)">Load G6: <b style="color:var(--yellow)">517 KW / 25%</b></div>
+          </div>
+          <div style="margin-top:10px;background:rgba(46,204,113,.12);border:1px solid rgba(46,204,113,.3);border-radius:6px;padding:7px;text-align:center;font-family:var(--font);font-size:16px;font-weight:700;color:var(--green)">Redundancy Load 94%</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:22px">
+          <div style="font-family:var(--font);font-size:17px;font-weight:700;color:var(--txt2);margin-bottom:10px">Also Active</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04);font-family:var(--font);font-size:17px;color:var(--txt)"><b style="color:var(--cyan)">Gen1/Gen2:</b> 725+750 KW / Redundancy 92%</div>
+            <div style="padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04);font-family:var(--font);font-size:17px;color:var(--txt)"><b style="color:var(--teal)">Gen3/Gen4:</b> 468+401 KW / Redundancy 72%</div>
+            <div style="padding:7px 0;font-family:var(--font);font-size:17px;color:var(--txt)"><b style="color:var(--cyan)">Gen7:</b> 630 KW / 39%</div>
+          </div>
+        </div>
+        <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:16px;font-family:var(--font);font-size:16px;color:var(--txt2);line-height:1.6">
+          💡 หากไฟฟ้าดับ → Gen6 จ่ายโหลดทดแทน Gen5 ผ่าน TIE GDB<br>กรณีไฟดับทั้งระบบ → โหลด EB42B/EB41B โอนไป Gen1/Gen5/Gen6
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="sf"><span class="sf-note">Total Access Communication PLC · True Corporation PLC</span><span class="sf-num">29 / 45</span></div>
+</section>
+
+<!-- ====================================================
+     SLIDE 30 — GEN 5 TRANSFER LOAD (Power Outage)
+     ==================================================== -->
+<section class="slide">
+  <div class="sh"><span class="sh-tag">RST — Gen5 Transfer Load</span><div class="brand"><span class="br">true</span><span class="bs">|</span><span class="bc">dtac</span></div></div>
+  <div class="ca">
+    <div class="stitle r">Generator5 Transfer Load <span style="color:var(--txt2);font-size:34px">กรณีไฟฟ้าดับขณะทำ PM</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px" class="r">
+      <div style="background:rgba(0,174,239,.07);border:1px solid rgba(0,174,239,.2);border-radius:11px;padding:18px">
+        <div style="font-family:var(--font);font-size:16px;font-weight:700;color:var(--cyan);margin-bottom:10px">TIE Transfer EB42B EB41B</div>
+        <div style="font-family:var(--font);font-size:15px;color:var(--txt2);margin-bottom:8px">EB42B: 108 KW → EB41B: 138 KW → to G1</div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <div style="font-family:var(--font);font-size:16px;color:var(--txt)">After Transfer G1: <b style="color:var(--yellow)">971 KW / 60%</b></div>
+          <div style="font-family:var(--font);font-size:16px;color:var(--txt)">Gen2: <b style="color:var(--yellow)">750 KW / 46%</b></div>
+        </div>
+        <div style="margin-top:10px;background:rgba(46,204,113,.1);border:1px solid rgba(46,204,113,.25);border-radius:6px;padding:7px;text-align:center;font-family:var(--font);font-size:15px;font-weight:700;color:var(--green)">G1/G2 Redundancy 92%</div>
+      </div>
+      <div style="background:rgba(46,204,113,.07);border:1px solid rgba(46,204,113,.2);border-radius:11px;padding:18px">
+        <div style="font-family:var(--font);font-size:16px;font-weight:700;color:var(--green);margin-bottom:10px">Gen5/Gen6 After PM</div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <div style="font-family:var(--font);font-size:16px;color:var(--txt)">Gen5 Load: <b style="color:var(--yellow)">512 KW / 25%</b></div>
+          <div style="font-family:var(--font);font-size:16px;color:var(--txt)">Gen6 Load: <b style="color:var(--yellow)">517 KW / 25%</b></div>
+        </div>
+        <div style="margin-top:10px;background:rgba(46,204,113,.12);border:1px solid rgba(46,204,113,.3);border-radius:6px;padding:7px;text-align:center;font-family:var(--font);font-size:15px;font-weight:700;color:var(--green)">Redundancy 94%</div>
+      </div>
+      <div style="background:rgba(232,25,44,.07);border:1px solid rgba(232,25,44,.2);border-radius:11px;padding:18px">
+        <div style="font-family:var(--font);font-size:16px;font-weight:700;color:var(--red);margin-bottom:10px">TIE EB Transfer to G7</div>
+        <div style="font-family:var(--font);font-size:15px;color:var(--txt2);margin-bottom:8px">EB32A/33A/34A/31A/23A/24B → G7</div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <div style="font-family:var(--font);font-size:15px;color:var(--txt)">G7 after transfer:</div>
+          <div style="font-family:var(--font);font-size:18px;font-weight:700;color:var(--red)">1241 KW / 77.5%</div>
+          <div style="font-family:var(--font);font-size:13px;color:var(--txt2)">(269+480+492 KW)</div>
+        </div>
+      </div>
+    </div>
+    <div class="r" style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:12px 18px;font-family:var(--font);font-size:16px;color:var(--txt2)">
+      💡 Load Gen7 = 630KW − 138KW (EB41B transferred) = 492KW + 269KW (G5 after) + 480KW (G6 after) = <b style="color:var(--red)">1241 KW / 77.5%</b>
+    </div>
+  </div>
+  <div class="sf"><span class="sf-note">Total Access Communication PLC · True Corporation PLC</span><span class="sf-num">30 / 45</span></div>
+</section>
+
+<!-- ====================================================
+     SLIDE 31 — GEN 6 INFO
+     ==================================================== -->
+<section class="slide">
+  <div class="sh"><span class="sh-tag">RST — Generator 6</span><div class="brand"><span class="br">true</span><span class="bs">|</span><span class="bc">dtac</span></div></div>
+  <div class="ca">
+    <div class="gil r">
+      <div class="gen-vis">
+        <div class="gen-vis-num">6</div>
+        <div class="gen-vis-icon">⚡</div>
+        <div class="gen-vis-label">GEN.6</div>
+        <div style="font-family:var(--font);font-size:16px;color:rgba(255,255,255,.2);letter-spacing:2px;position:relative;z-index:1">CUMMINS</div>
+      </div>
+      <div style="display:flex;flex-direction:column;justify-content:center;gap:16px">
+        <div class="gen-title-block">
+          <div class="gtnum">TOC-RST</div>
+          <div class="gtname"><span class="r">TOC-RST</span> <span class="c">Gen 6</span></div>
+        </div>
+        <table class="git">
+          <tr><td>Manufacturer</td><td>Cummins Power Generation</td></tr>
+          <tr><td>Model</td><td>C2750 D5B</td></tr>
+          <tr><td>Serial No</td><td>C17K161355</td></tr>
+          <tr><td>Gen Rated</td><td><b style="color:var(--yellow)">2500 kVA / 2000 kW</b></td></tr>
+          <tr><td>Volts</td><td>400 / 230 V</td></tr>
+          <tr><td>Frequency</td><td>50 Hz</td></tr>
+          <tr><td>Brand</td><td><span class="badge bc-g">Cummins</span></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="sf"><span class="sf-note">Total Access Communication PLC · True Corporation PLC</span><span class="sf-num">31 / 45</span></div>
+</section>
+
+<!-- ====================================================
+     SLIDE 32 — GEN 6 CONSUMABLES
+     ==================================================== -->
+<section class="slide">
+  <div class="sh"><span class="sh-tag">RST — Gen6 Consumables</span><div class="brand"><span class="br">true</span><span class="bs">|</span><span class="bc">dtac</span></div></div>
+  <div class="ca">
+    <div class="stitle r">Generator Consumable Part Lists <span class="r">(Gen6)</span></div>
+    <div class="consl r">
+      <div class="consp">
+        <h3>Current — Fleetguard Brand</h3>
+        <ul class="pl">
+          <li><span class="pn">LF9050</span><span class="pd">Lube Oil Filter</span><span class="pq">×4</span></li>
+          <li><span class="pn">FS1006</span><span class="pd">Fuel Separator Filter</span><span class="pq">×3</span></li>
+          <li><span class="pn">WF2075</span><span class="pd">Water Filter</span><span class="pq">×2</span></li>
+          <li><span class="pn">AF25708M</span><span class="pd">Air Filter</span><span class="pq">×4</span></li>
+          <li><span class="pn">Lube Oil</span><span class="pd">Engine Oil</span><span class="pq">×18</span></li>
+        </ul>
+      </div>
+      <div class="consp new">
+        <h3>New Replacement — Fleetguard Brand</h3>
+        <ul class="pl">
+          <li><span class="pn">LF9050</span><span class="pq">×4</span></li>
+          <li><span class="pn">FS1006</span><span class="pq">×3</span></li>
+          <li><span class="pn">WF2075</span><span class="pq">×2</span></li>
+          <li><span class="pn">AF25708M</span><span class="pq">×4</span></li>
+          <li><span class="pn">Cummins Premium Blue Lube Oil</span><span class="pq">×18</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="sf"><span class="sf-note">Total Access Communication PLC · True Corporation PLC</span><span class="sf-num">32 / 45</span></div>
+</section>
+
+<!-- ====================================================
+     SLIDE 33 — GEN 6 PM PROCEDURE
+     ==================================================== -->
+<section class="slide">
+  <div class="sh"><span class="sh-tag">RST — Gen6 PM Procedure</span><div class="brand"><span class="br">true</span><span class="bs">|</span><span class="bc">dtac</span></div></div>
+  <div class="ca">
+    <div class="stitle r">PM Generator with Consumable and Oil Change</div>
+    <table class="pmt r">
+      <tr><th class="tn">ลำดับ</th><th class="tl">รายละเอียด</th><th class="tt">ระยะเวลา</th><th class="rem">หมายเหตุ</th></tr>
+      <tr class="r"><td class="tn">1</td><td>ตรวจสอบอุปกรณ์ที่เกี่ยวข้องก่อนเริ่มงาน</td><td class="tt">10 นาที</td><td class="rem"></td></tr>
+      <tr class="r"><td class="tn">2</td><td>ตรวจวัดค่า CCA Battery ให้แน่ใจว่าอยู่ในระดับปกติ</td><td class="tt">10 นาที</td><td class="rem"></td></tr>
+      <tr class="r"><td class="tn">3</td><td>ทำการทดสอบเครื่องกำเนิดไฟฟ้าตัวเปล่า</td><td class="tt">10 นาที</td><td class="rem"></td></tr>
+      <tr class="r"><td class="tn">4</td><td>ทำการ TIE ACB GDB เพื่อ Standby ให้ Gen5 พร้อมจ่ายโหลด</td><td class="tt">5 นาที</td><td class="rem"></td></tr>
+      <tr class="r"><td class="tn">5</td><td>ทำการ OFF GEN</td><td class="tt">5 นาที</td><td class="rem off">OFF GEN</td></tr>
+      <tr class="r"><td class="tn">6</td><td>ทำการถ่ายน้ำมันเครื่องเก่าออก และตรวจเช็คน้ำยาหม้อน้ำ</td><td class="tt">30 นาที</td><td class="rem off">OFF GEN</td></tr>
+      <tr class="r"><td class="tn">7</td><td>ทำการเปลี่ยนไส้กรองต่าง ๆ</td><td class="tt">20 นาที</td><td class="rem off">OFF GEN</td></tr>
+      <tr class="r"><td class="tn">8</td><td>ทำการเติมน้ำยาหม้อน้ำ (DCA) – กรณีพร่อง หรือต้องเติม additive</td><td class="tt">10 นาที</td><td class="rem off">OFF GEN</td></tr>
+      <tr class="r"><td class="tn">9</td><td>ทำการเติมน้ำมันเครื่องใหม่</td><td class="tt">20 นาที</td><td class="rem off">OFF GEN</td></tr>
+      <tr class="r"><td class="tn">10</td><td>ทำการตรวจเช็คความเรียบร้อย พร้อมทำความสะอาด</td><td class="tt">10 นาที</td><td class="rem off">OFF GEN</td></tr>
+      <tr class="r"><td class="tn">11</td><td>ทำการ ON GEN พร้อมทดสอบระบบ</td><td class="tt">10 นาที</td><td class="rem on">ON Gen</td></tr>
+      <tr class="r"><td class="tn">12</td><td>ทำการคืนระบบ</td><td class="tt">—</td><td class="rem"></td></tr>
+      <tr class="total r"><td colspan="2" style="text-align:right;padding-right:20px">เวลาดำเนินการรวม</td><td class="tt" style="font-weight:700">140 นาที</td><td></td></tr>
+    </table>
+  </div>
+  <div class="sf"><span class="sf-note">Total Access Communication PLC · True Corporation PLC</span><span class="sf-num">33 / 45</span></div>
+</section>
+
+<!-- ====================================================
+     SLIDE 34 — GEN 6 TIE (Gen5 Standby for Gen6)
+     ==================================================== -->
+<section class="slide">
+  <div class="sh"><span class="sh-tag">RST — Gen6 TIE ACB GDB</span><div class="brand"><span class="br">true</span><span class="bs">|</span><span class="bc">dtac</span></div></div>
+  <div class="ca">
+    <div class="stitle r">Tie ACB GDB — <span class="c">Generator5 Standby</span> จ่ายโหลดทดแทน <span class="r">Generator6</span></div>
+    <div class="tied">
+      <div class="tie-desc r">ทำการ TIE ACB GDB ไว้ก่อนทำ PM เพื่อหากไฟฟ้าดับขณะทำ PM Generator6<br>Generator5 จะเป็นตัวจ่ายโหลดทดแทน Generator6</div>
+      <div class="tie-panel r">
+        <div class="tie-col">
+          <div class="tie-ch cc">from Gen5</div>
+          <div class="tie-cv cv-close">CLOSE</div>
+          <div class="tie-ats">↑ to ATS</div>
+        </div>
+        <div class="tie-col tie-center">
+          <div class="tie-ch" style="background:rgba(241,196,15,.1);color:var(--yellow)">TIE</div>
+          <div class="tie-cv cv-close-c">CLOSE</div>
+          <div class="tie-ats">↓ to ATS</div>
+        </div>
+        <div class="tie-col">
+          <div class="tie-ch rc">from Gen6</div>
+          <div class="tie-cv cv-open">OPEN</div>
+          <div class="tie-ats">↑ to ATS</div>
+        </div>
+      </div>
+      <div class="tie-legend r">
+        <div class="tleg-item"><div class="tleg-dot" style="background:var(--green)"></div>CLOSE = Gen5 จ่ายโหลดทดแทน</div>
+        <div class="tleg-item"><div class="tleg-dot" style="background:var(--yellow)"></div>TIE CLOSE = เชื่อม Bus Bar</div>
+        <div class="tleg-item"><div class="tleg-dot" style="background:var(--red)"></div>OPEN = ตัด Gen6 ออก (PM)</div>
+      </div>
+    </div>
+  </div>
+  <div class="sf"><span class="sf-note">Total Access Communication PLC · True Corporation PLC</span><span class="sf-num">34 / 45</span></div>
+</section>
+
+<!-- ====================================================
+     SLIDE 35 — GEN 6 PM NORMAL CASE
+     ==================================================== -->
+<section class="slide">
+  <div class="sh"><span class="sh-tag">RST — PM Generator6 Normal Case</span><div class="brand"><span class="br">true</span><span class="bs">|</span><span class="bc">dtac</span></div></div>
+  <div class="ca">
+    <div class="stitle r">PM Generator6 ปกติ <span style="color:var(--txt2);font-size:36px">กรณีไฟฟ้าไม่ดับขณะทำ PM</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px" class="r">
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div style="background:rgba(0,174,239,.07);border:1px solid rgba(0,174,239,.2);border-radius:12px;padding:22px">
+          <div style="font-family:var(--font);font-size:18px;font-weight:700;color:var(--cyan);margin-bottom:12px">TIE Gen5 Gen6</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);font-family:var(--font);font-size:18px;color:var(--txt)"><span>Gen5 (TIE Standby)</span><span style="color:var(--green);font-weight:600">ON — 512 KW</span></div>
+            <div style="display:flex;justify-content:space-between;padding:7px 0;font-family:var(--font);font-size:18px;color:var(--txt)"><span>Gen6 (PM)</span><span style="color:var(--red);font-weight:600">OFF — 517 KW</span></div>
+          </div>
+          <div style="margin-top:10px;background:rgba(46,204,113,.1);border:1px solid rgba(46,204,113,.25);border-radius:6px;padding:7px;text-align:center;font-family:var(--font);font-size:16px;font-weight:700;color:var(--green)">Redundancy Load 94%</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:20px">
+          <div style="font-family:var(--font);font-size:17px;font-weight:700;color:var(--txt2);margin-bottom:10px">System Overview</div>
+          <div style="display:flex;flex-direction:column;gap:7px">
+            <div style="font-family:var(--font);font-size:16px;color:var(--txt)"><b style="color:var(--cyan)">Gen1:</b> 725 KW / 45% &nbsp;&nbsp; <b style="color:var(--cyan)">Gen2:</b> 750 KW / 46%</div>
+            <div style="font-family:var(--font);font-size:16px;color:var(--txt)"><b style="color:var(--teal)">Gen3:</b> 468 KW / 39% &nbsp;&nbsp; <b style="color:var(--teal)">Gen4:</b> 401 KW / 33%</div>
+            <div style="font-family:var(--font);font-size:16px;color:var(--txt)"><b style="color:var(--green)">Gen5:</b> 512 KW / 25% (Standby)</div>
+            <div style="font-family:var(--font);font-size:16px;color:var(--txt)"><b style="color:var(--cyan)">Gen7:</b> 630 KW / 39%</div>
+          </div>
+        </div>
+        <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:16px;font-family:var(--font);font-size:15px;color:var(--txt2);line-height:1.6">
+          💡 กรณีไฟดับ → Gen5 จ่ายโหลดทดแทน Gen6 ผ่าน TIE GDB<br>กรณีไฟดับทั้งระบบ → โหลด EB42B/EB41B โอนไป Gen1/Gen5/Gen6
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="sf"><span class="sf-note">Total Access Communication PLC · True Corporation PLC</span><span class="sf-num">35 / 45</span></div>
+</section>
+
+<!-- ====================================================
+     SLIDE 36 — GEN 6 TRANSFER LOAD (Power Outage)
+     ==================================================== -->
+<section class="slide">
+  <div class="sh"><span class="sh-tag">RST — Gen6 Transfer Load</span><div class="brand"><span class="br">true</span><span class="bs">|</span><span class="bc">dtac</span></div></div>
+  <div class="ca">
+    <div class="stitle r">Generator6 Transfer Load <span style="color:var(--txt2);font-size:34px">กรณีไฟฟ้าดับขณะทำ PM</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px" class="r">
+      <div style="background:rgba(0,174,239,.07);border:1px solid rgba(0,174,239,.2);border-radius:11px;padding:18px">
+        <div style="font-family:var(--font);font-size:16px;font-weight:700;color:var(--cyan);margin-bottom:10px">TIE Transfer EB42B EB41B → G1</div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <div style="font-family:var(--font);font-size:16px;color:var(--txt)">EB42B: <b style="color:var(--yellow)">108 KW</b></div>
+          <div style="font-family:var(--font);font-size:16px;color:var(--txt)">EB41B: <b style="color:var(--yellow)">138 KW</b></div>
+          <div style="font-family:var(--font);font-size:16px;color:var(--txt)">G1 after: <b style="color:var(--red)">971 KW / 60%</b></div>
+          <div style="font-family:var(--font);font-size:16px;color:var(--txt)">Gen2: <b style="color:var(--yellow)">750 KW / 46%</b></div>
+        </div>
+        <div style="margin-top:8px;background:rgba(46,204,113,.1);border:1px solid rgba(46,204,113,.25);border-radius:6px;padding:6px;text-align:center;font-family:var(--font);font-size:14px;font-weight:700;color:var(--green)">G1/G2 Redundancy 92%</div>
+      </div>
+      <div style="background:rgba(46,204,113,.07);border:1px solid rgba(46,204,113,.2);border-radius:11px;padding:18px">
+        <div style="font-family:var(--font);font-size:16px;font-weight:700;color:var(--green);margin-bottom:10px">Gen5/Gen6 Status</div>
+        <div style="display:flex;flex-direction:column;gap:5px">
+          <div style="font-family:var(--font);font-size:16px;color:var(--txt)">Gen5 Load: <b style="color:var(--yellow)">512 KW / 25%</b></div>
+          <div style="font-family:var(--font);font-size:16px;color:var(--txt)">Gen6 Load: <b style="color:var(--yellow)">517 KW / 25%</b></div>
+        </div>
+        <div style="margin-top:8px;background:rgba(46,204,113,.12);border:1px solid rgba(46,204,113,.3);border-radius:6px;padding:6px;text-align:center;font-family:var(--font);font-size:14px;font-weight:700;color:var(--green)">Redundancy 94%</div>
+      </div>
+      <div style="background:rgba(232,25,44,.07);border:1px solid rgba(232,25,44,.2);border-radius:11px;padding:18px">
+        <div style="font-family:var(--font);font-size:16px;font-weight:700;color:var(--red);margin-bottom:10px">TIE EB → G7</div>
+        <div style="font-family:var(--font);font-size:15px;color:var(--txt2);margin-bottom:8px">EB32A/33A/34A/31A/23A/24B → G7</div>
+        <div style="font-family:var(--font);font-size:18px;font-weight:700;color:var(--red)">1241 KW / 77.5%</div>
+        <div style="font-family:var(--font);font-size:13px;color:var(--txt2);margin-top:4px">269 + 480 + 492 KW</div>
+      </div>
+    </div>
+    <div class="r" style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:12px 18px;font-family:var(--font);font-size:16px;color:var(--txt2)">
+      💡 Scenario: ไฟดับขณะทำ PM Gen6 — Gen5 (TIE Standby) จ่ายโหลดทดแทน Gen6 พร้อมโอนโหลด EB ไปยัง Gen1/Gen7
+    </div>
+  </div>
+  <div class="sf"><span class="sf-note">Total Access Communication PLC · True Corporation PLC</span><span class="sf-num">36 / 45</span></div>
+</section>
+
+<!-- ====================================================
+     SLIDE 37 — GEN 7 INFO
+     ==================================================== -->
+<section class="slide">
+  <div class="sh"><span class="sh-tag">RST — Generator 7</span><div class="brand"><span class="br">true</span><span class="bs">|</span><span class="bc">dtac</span></div></div>
+  <div class="ca">
+    <div class="gil r">
+      <div class="gen-vis">
+        <div class="gen-vis-num">7</div>
+        <div class="gen-vis-icon">⚡</div>
+        <div class="gen-vis-label">GEN.7</div>
+        <div style="font-family:var(--font);font-size:16px;color:rgba(255,255,255,.2);letter-spacing:2px;position:relative;z-index:1">CUMMINS</div>
+      </div>
+      <div style="display:flex;flex-direction:column;justify-content:center;gap:16px">
+        <div class="gen-title-block">
+          <div class="gtnum">TOC-RST</div>
+          <div class="gtname"><span class="r">TOC-RST</span> <span class="c">Gen 7</span></div>
+        </div>
+        <table class="git">
+          <tr><td>Manufacturer</td><td>Cummins Power Generation</td></tr>
+          <tr><td>Model</td><td>C2250 D5</td></tr>
+          <tr><td>Serial No</td><td>X12C102707</td></tr>
+          <tr><td>Gen Rated</td><td><b style="color:var(--yellow)">2000 kVA / 1600 kW</b></td></tr>
+          <tr><td>Volts</td><td>400 / 230 V</td></tr>
+          <tr><td>Frequency</td><td>50 Hz</td></tr>
+          <tr><td>Brand</td><td><span class="badge bc-g">Cummins</span></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+  <div class="sf"><span class="sf-note">Total Access Communication PLC · True Corporation PLC</span><span class="sf-num">37 / 45</span></div>
+</section>
+
+<!-- ====================================================
+     SLIDE 38 — GEN 7 CONSUMABLES
+     ==================================================== -->
+<section class="slide">
+  <div class="sh"><span class="sh-tag">RST — Gen7 Consumables</span><div class="brand"><span class="br">true</span><span class="bs">|</span><span class="bc">dtac</span></div></div>
+  <div class="ca">
+    <div class="stitle r">Generator Consumable Part Lists <span class="r">(Gen7)</span></div>
+    <div class="consl r">
+      <div class="consp">
+        <h3>Current — Fleetguard Brand</h3>
+        <ul class="pl">
+          <li><span class="pn">LF9050</span><span class="pd">Lube Oil Filter</span><span class="pq">×4</span></li>
+          <li><span class="pn">FS1006</span><span class="pd">Fuel Separator Filter</span><span class="pq">×3</span></li>
+          <li><span class="pn">WF2075</span><span class="pd">Water Filter</span><span class="pq">×2</span></li>
+          <li><span class="pn">AF25708M</span><span class="pd">Air Filter</span><span class="pq">×4</span></li>
+          <li><span class="pn">Lube Oil</span><span class="pd">Engine Oil</span><span class="pq">×18</span></li>
+        </ul>
+      </div>
+      <div class="consp new">
+        <h3>New Replacement — Fleetguard Brand</h3>
+        <ul class="pl">
+          <li><span class="pn">LF9050</span><span class="pq">×4</span></li>
+          <li><span class="pn">FS1006</span><span class="pq">×3</span></li>
+          <li><span class="pn">WF2075</span><span class="pq">×2</span></li>
+          <li><span class="pn">AF25708M</span><span class="pq">×4</span></li>
+          <li><span class="pn">Cummins Premium Blue Lube Oil</span><span class="pq">×18</span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="sf"><span class="sf-note">Total Access Communication PLC · True Corporation PLC</span><span class="sf-num">38 / 45</span></div>
+</section>
+
+<!-- ====================================================
+     SLIDE 39 — GEN 7 PM PROCEDURE
+     ==================================================== -->
+<section class="slide">
+  <div class="sh"><span class="sh-tag">RST — Gen7 PM Procedure</span><div class="brand"><span class="br">true</span><span class="bs">|</span><span class="bc">dtac</span></div></div>
+  <div class="ca">
+    <div class="stitle r">PM Generator with Consumable and Oil Change</div>
+    <table class="pmt r">
+      <tr><th class="tn">ลำดับ</th><th class="tl">รายละเอียด</th><th class="tt">ระยะเวลา</th><th class="rem">หมายเหตุ</th></tr>
+      <tr class="r"><td class="tn">1</td><td>ตรวจสอบอุปกรณ์ที่เกี่ยวข้องก่อนเริ่มงาน</td><td class="tt">10 นาที</td><td class="rem"></td></tr>
+      <tr class="r"><td class="tn">2</td><td>ตรวจวัดค่า CCA Battery ให้แน่ใจว่าอยู่ในระดับปกติ</td><td class="tt">10 นาที</td><td class="rem"></td></tr>
+      <tr class="r"><td class="tn">3</td><td>ทำการทดสอบเครื่องกำเนิดไฟฟ้าตัวเปล่า</td><td class="tt">10 นาที</td><td class="rem"></td></tr>
+      <tr class="r"><td class="tn">4</td><td>Standby คนไว้ TIE Load ที่ตู้ EB Floor 2-3-4 เพื่อ TIE Load ที่ตู้ EB หากเกิดไฟฟ้ากับขณะ PM Generator7</td><td class="tt">5 นาที</td><td class="rem"></td></tr>
+      <tr class="r"><td class="tn">5</td><td>ทำการ OFF GEN</td><td class="tt">5 นาที</td><td class="rem off">OFF GEN</td></tr>
+      <tr class="r"><td class="tn">6</td><td>ทำการถ่ายน้ำมันเครื่องเก่าออก และตรวจเช็คน้ำยาหม้อน้ำ</td><td class="tt">30 นาที</td><td class="rem off">OFF GEN</td></tr>
+      <tr class="r"><td class="tn">7</td><td>ทำการเปลี่ยนไส้กรองต่าง ๆ</td><td class="tt">20 นาที</td><td class="rem off">OFF GEN</td></tr>
+      <tr class="r"><td class="tn">8</td><td>ทำการเติมน้ำยาหม้อน้ำ (DCA) – กรณีพร่อง หรือต้องเติม additive</td><td class="tt">10 นาที</td><td class="rem off">OFF GEN</td></tr>
+      <tr class="r"><td class="tn">9</td><td>ทำการเติมน้ำมันเครื่องใหม่</td><td class="tt">20 นาที</td><td class="rem off">OFF GEN</td></tr>
+      <tr class="r"><td class="tn">10</td><td>ทำการตรวจเช็คความเรียบร้อย พร้อมทำความสะอาด</td><td class="tt">10 นาที</td><td class="rem off">OFF GEN</td></tr>
+      <tr class="r"><td class="tn">11</td><td>ทำการ ON GEN พร้อมทดสอบระบบ</td><td class="tt">10 นาที</td><td class="rem on">ON Gen</td></tr>
+      <tr class="r"><td class="tn">12</td><td>ทำการคืนระบบ</td><td class="tt">—</td><td class="rem"></td></tr>
+      <tr class="total r"><td colspan="2" style="text-align:right;padding-right:20px">เวลาดำเนินการรวม</td><td class="tt" style="font-weight:700">140 นาที</td><td></td></tr>
+    </table>
+  </div>
+  <div class="sf"><span class="sf-note">Total Access Communication PLC · True Corporation PLC</span><span class="sf-num">39 / 45</span></div>
+</section>
+
+<!-- ====================================================
+     SLIDE 40 — GEN 7 TIE LOAD EB
+     ==================================================== -->
+<section class="slide">
+  <div class="sh"><span class="sh-tag">RST — Gen7 TIE Load EB</span><div class="brand"><span class="br">true</span><span class="bs">|</span><span class="bc">dtac</span></div></div>
+  <div class="ca">
+    <div class="stitle r">TIE Load EB — <span class="c">Standby ทีมไว้ TIE Load</span> ที่ตู้ EB Floor 2-3-4</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px" class="r">
+      <div style="display:flex;flex-direction:column;gap:16px">
+        <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:22px">
+          <div style="font-family:var(--font);font-size:18px;font-weight:700;color:var(--cyan);margin-bottom:12px">TIE Load EB Concept</div>
+          <div style="font-family:var(--font);font-size:17px;color:var(--txt2);line-height:1.65">
+            Standby ทีมไว้ TIE Load ที่ตู้ EB Floor 2-3-4<br>
+            เพื่อ Transfer Load ที่ตู้ EB หากเกิดไฟฟ้ากับขณะ PM Generator7<br><br>
+            Gen7 ไม่มี GDB TIE เหมือน Gen อื่น → ต้องใช้วิธี TIE EB Panel แทน
+          </div>
+        </div>
+        <div style="background:rgba(232,25,44,.07);border:1px solid rgba(232,25,44,.2);border-radius:12px;padding:18px">
+          <div style="font-family:var(--font);font-size:16px;font-weight:700;color:var(--red);margin-bottom:8px">Gen7 Current Load</div>
+          <div style="font-family:var(--font);font-size:28px;font-weight:700;color:var(--yellow)">630 KW / 39%</div>
+          <div style="font-family:var(--font);font-size:15px;color:var(--txt2);margin-top:6px">Rated: 2000 kVA / 1600 kW</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div style="background:rgba(0,174,239,.07);border:1px solid rgba(0,174,239,.2);border-radius:12px;padding:18px">
+          <div style="font-family:var(--font);font-size:16px;font-weight:700;color:var(--cyan);margin-bottom:10px">EB(A) TIE → EB(B) Panel Layout</div>
+          <div style="display:flex;gap:12px;align-items:center;justify-content:center;margin:10px 0">
+            <div style="background:rgba(232,25,44,.15);border:1px solid rgba(232,25,44,.3);border-radius:8px;padding:12px 20px;font-family:var(--font);font-size:16px;font-weight:700;color:var(--red);text-align:center">EB (A)<br>Side</div>
+            <div style="font-family:var(--font);font-size:24px;color:var(--yellow)">↔</div>
+            <div style="background:rgba(241,196,15,.1);border:1px solid rgba(241,196,15,.3);border-radius:8px;padding:12px 20px;font-family:var(--font);font-size:16px;font-weight:700;color:var(--yellow);text-align:center">TIE<br>Switch</div>
+            <div style="font-family:var(--font);font-size:24px;color:var(--yellow)">↔</div>
+            <div style="background:rgba(46,204,113,.15);border:1px solid rgba(46,204,113,.3);border-radius:8px;padding:12px 20px;font-family:var(--font);font-size:16px;font-weight:700;color:var(--green);text-align:center">EB (B)<br>Side</div>
+          </div>
+          <div style="font-family:var(--font);font-size:15px;color:var(--txt2);line-height:1.5">EB (A) ↔ TIE ↔ EB (B)<br>Floor 2, 3, 4 — Equipment Rooms</div>
+        </div>
+        <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:16px;font-family:var(--font);font-size:15px;color:var(--txt2);line-height:1.6">
+          💡 หากไฟฟ้าดับขณะ PM Gen7 → ทีมที่ standby จะ TIE Load EB ทันที เพื่อโอนโหลดจาก Gen7 ไปยัง Gen5/Gen6 และ Gen1/Gen2
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="sf"><span class="sf-note">Total Access Communication PLC · True Corporation PLC</span><span class="sf-num">40 / 45</span></div>
+</section>
+
+<!-- ====================================================
+     SLIDE 41 — GEN 7 TRANSFER LOAD (Power Outage)
+     ==================================================== -->
+<section class="slide">
+  <div class="sh"><span class="sh-tag">RST — Gen7 Transfer Load</span><div class="brand"><span class="br">true</span><span class="bs">|</span><span class="bc">dtac</span></div></div>
+  <div class="ca">
+    <div class="stitle r">Generator7 Transfer Load <span style="color:var(--txt2);font-size:34px">กรณีไฟฟ้าดับขณะทำ PM</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px" class="r">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="background:rgba(0,174,239,.07);border:1px solid rgba(0,174,239,.2);border-radius:11px;padding:16px">
+          <div style="font-family:var(--font);font-size:15px;font-weight:700;color:var(--cyan);margin-bottom:8px">Transfer EB41B EB42B → G1</div>
+          <div style="font-family:var(--font);font-size:15px;color:var(--txt)">725KW + 108KW + 138KW</div>
+          <div style="font-family:var(--font);font-size:18px;font-weight:700;color:var(--red);margin-top:4px">= 971 KW / G1 60%</div>
+          <div style="font-family:var(--font);font-size:14px;color:var(--txt2)">Gen2 load: 750KW / 46%</div>
+          <div style="margin-top:8px;background:rgba(46,204,113,.1);border-radius:5px;padding:5px;font-family:var(--font);font-size:13px;font-weight:700;color:var(--green);text-align:center">G1/G2 Redundancy 92%</div>
+        </div>
+        <div style="background:rgba(232,25,44,.07);border:1px solid rgba(232,25,44,.2);border-radius:11px;padding:16px">
+          <div style="font-family:var(--font);font-size:15px;font-weight:700;color:var(--red);margin-bottom:6px">Gen7 Load After Transfer</div>
+          <div style="font-family:var(--font);font-size:22px;font-weight:700;color:var(--yellow)">630 KW / 39%</div>
+          <div style="font-family:var(--font);font-size:13px;color:var(--txt2)">Original before EB transfer</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="background:rgba(46,204,113,.07);border:1px solid rgba(46,204,113,.2);border-radius:11px;padding:16px">
+          <div style="font-family:var(--font);font-size:15px;font-weight:700;color:var(--green);margin-bottom:8px">Transfer G7 Load → G5, G6</div>
+          <div style="font-family:var(--font);font-size:15px;color:var(--txt)">G5 Load after: <b style="color:var(--yellow)">444 KW / 22%</b></div>
+          <div style="font-family:var(--font);font-size:15px;color:var(--txt)">G6 Load after: <b style="color:var(--yellow)">935 KW / 46%</b></div>
+          <div style="margin-top:8px">
+            <div style="font-family:var(--font);font-size:14px;color:var(--txt2)">Gen5 total: 512+444 = 956KW 47%</div>
+            <div style="font-family:var(--font);font-size:14px;color:var(--txt2)">Gen6 total: 517+935 = 1447KW 72%</div>
+          </div>
+        </div>
+        <div style="background:rgba(0,174,239,.07);border:1px solid rgba(0,174,239,.2);border-radius:11px;padding:16px">
+          <div style="font-family:var(--font);font-size:15px;font-weight:700;color:var(--cyan);margin-bottom:6px">Redundancy G5/G6</div>
+          <div style="font-family:var(--font);font-size:20px;font-weight:700;color:var(--green)">94%</div>
+          <div style="font-family:var(--font);font-size:13px;color:var(--txt2)">Despite G7 PM outage</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="background:rgba(232,25,44,.07);border:1px solid rgba(232,25,44,.2);border-radius:11px;padding:16px">
+          <div style="font-family:var(--font);font-size:15px;font-weight:700;color:var(--red);margin-bottom:8px">TIE EB → G7 Adds Back</div>
+          <div style="font-family:var(--font);font-size:14px;color:var(--txt2);margin-bottom:4px">After EB transfer (B side→A side):</div>
+          <div style="font-family:var(--font);font-size:15px;color:var(--txt)">269KW + 480KW + 492KW</div>
+          <div style="font-family:var(--font);font-size:20px;font-weight:700;color:var(--red);margin-top:4px">= 1241 KW / 77.5%</div>
+          <div style="font-family:var(--font);font-size:13px;color:var(--txt2)">Total G7 load after TIE EB</div>
+        </div>
+        <div style="background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:14px;font-family:var(--font);font-size:14px;color:var(--txt2);line-height:1.55">
+          💡 G3/G4 Redundancy 72%<br>
+          💡 G1/G2 Redundancy 92%<br>
+          💡 G5/G6 Redundancy 94%
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="sf"><span class="sf-note">Total Access Communication PLC · True Corporation PLC</span><span class="sf-num">41 / 45</span></div>
+</section>
+
+<!-- ====================================================
+     SLIDE 42 — TEAM
+     ==================================================== -->
+<section class="slide">
+  <div class="sh"><span class="sh-tag">RST — ทีมงาน</span><div class="brand"><span class="br">true</span><span class="bs">|</span><span class="bc">dtac</span></div></div>
+  <div class="ca">
+    <div class="stitle r">ทีมงานประจำชั้น <span class="c">TIE Load EB&amp;MTS TOC-RST</span></div>
+    <div class="r" style="font-family:var(--font);font-size:22px;font-weight:600;color:var(--txt2)">ผู้ปฏิบัติงาน 9 คน</div>
+    <div class="teamg r">
+      <div class="teamcard">
+        <div class="tc-floor">ชั้น 1 — MDB Room &amp; Gen Room</div>
+        <div class="tc-names">Teerakij Promtum &amp; Sittichai Tangjitajana</div>
+        <div class="tc-role">MDB Room, Generator Room Operations</div>
+      </div>
+      <div class="teamcard">
+        <div class="tc-floor">ชั้น 2 — Control Room, SCADA</div>
+        <div class="tc-names">Vorapong Rimsakul</div>
+        <div class="tc-role">SCADA Monitoring &amp; Control Room</div>
+      </div>
+      <div class="teamcard">
+        <div class="tc-floor">ชั้น 2 — Equipment Room</div>
+        <div class="tc-names">Krishnapon Jaturaboon &amp; Poochit Seangsawan</div>
+        <div class="tc-role">Equipment Room Floor 2</div>
+      </div>
+      <div class="teamcard">
+        <div class="tc-floor">ชั้น 3 — Equipment Room</div>
+        <div class="tc-names">Winai Saengsai &amp; Doonyakit Utitasan</div>
+        <div class="tc-role">Equipment Room Floor 3</div>
+      </div>
+      <div class="teamcard" style="grid-column:1 / -1">
+        <div class="tc-floor">ชั้น 4 — Equipment Room</div>
+        <div class="tc-names">Phaisan Kiengkaiwit &amp; Piradet Pongpai</div>
+        <div class="tc-role">Equipment Room Floor 4</div>
+      </div>
+    </div>
+  </div>
+  <div class="sf"><span class="sf-note">Total Access Communication PLC · True Corporation PLC</span><span class="sf-num">42 / 45</span></div>
+</section>
+
+<!-- ====================================================
+     SLIDE 43 — PM INSPECTION SHEET
+     ==================================================== -->
+<section class="slide">
+  <div class="sh"><span class="sh-tag">RST — PM Inspection Sheet</span><div class="brand"><span class="br">true</span><span class="bs">|</span><span class="bc">dtac</span></div></div>
+  <div class="ca">
+    <div class="stitle r">Generator Preventive Maintenance <span class="c">Inspection Sheet</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px" class="r">
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="font-family:var(--font);font-size:19px;font-weight:600;color:var(--cyan)">Engine System Inspection</div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px 18px;display:flex;flex-direction:column;gap:6px">
+          <div style="font-family:var(--font);font-size:16px;color:var(--txt)">1.1 ตรวจสอบการโซเดียมแอมป์ตัวเครื่องก่อนเปิด ✓/✗</div>
+          <div style="font-family:var(--font);font-size:16px;color:var(--txt)">1.2 ตรวจสอบสภาพตัวเครื่อง Alarm &amp; Fault หน้าจอ ✓/✗</div>
+          <div style="font-family:var(--font);font-size:16px;color:var(--txt)">1.3 ตรวจสอบสัญญาณรั่วซึมของน้ำมัน, น้ำ, ฟิวส์ ✓/✗</div>
+          <div style="font-family:var(--font);font-size:16px;color:var(--txt)">1.4 ตรวจสอบสายไฟและอุปกรณ์ไม่มีรอยชำรุด ✓/✗</div>
+          <div style="font-family:var(--font);font-size:16px;color:var(--txt)">1.5 ตรวจสอบน้ำมันเครื่องให้อยู่ในระดับปกติ ✓/✗</div>
+          <div style="font-family:var(--font);font-size:16px;color:var(--txt)">1.6 ตรวจสอบน้ำมันเกียร์สายส่งและระดับหม้อน้ำ ✓/✗</div>
+        </div>
+        <div style="font-family:var(--font);font-size:19px;font-weight:600;color:var(--cyan)">Alternator Inspection</div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px 18px;display:flex;flex-direction:column;gap:6px">
+          <div style="font-family:var(--font);font-size:16px;color:var(--txt)">2.1 ตรวจสอบสภาพ Alternator ความปลอดภัย ✓/✗</div>
+          <div style="font-family:var(--font);font-size:16px;color:var(--txt)">2.2 ตรวจสอบสภาพของ Terminal ไม่มีรอยไหม้ ✓/✗</div>
+          <div style="font-family:var(--font);font-size:16px;color:var(--txt)">2.3 ตรวจสอบแรงดันไฟฟ้าและความถี่ปกติ ✓/✗</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="font-family:var(--font);font-size:19px;font-weight:600;color:var(--cyan)">Electrical System Inspection</div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px 18px;display:flex;flex-direction:column;gap:6px">
+          <div style="font-family:var(--font);font-size:16px;color:var(--txt)">7.1 ตรวจสอบระบบสายไฟฟ้าและอุปกรณ์ไฟฟ้า ✓/✗</div>
+          <div style="font-family:var(--font);font-size:16px;color:var(--txt)">7.2 ตรวจสอบสัมผัสไฟฟ้าให้อยู่ในสภาพดี ✓/✗</div>
+          <div style="font-family:var(--font);font-size:16px;color:var(--txt)">7.3 ตรวจสอบค่า Battery CCA: V:___ A:___</div>
+          <div style="font-family:var(--font);font-size:16px;color:var(--txt)">7.4 ตรวจสอบระบบ Battery Charger ✓/✗</div>
+        </div>
+        <div style="font-family:var(--font);font-size:19px;font-weight:600;color:var(--cyan)">Load Test</div>
+        <div style="background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px 18px">
+          <table style="width:100%;border-collapse:collapse;font-family:var(--font);font-size:15px">
+            <tr><td style="color:var(--txt2);padding:4px 0">Rated RPM:</td><td style="color:var(--yellow)">_____ RPM</td><td style="color:var(--txt2)">Rated Hz:</td><td style="color:var(--yellow)">_____ Hz</td></tr>
+            <tr><td style="color:var(--txt2);padding:4px 0">Voltage L1-N:</td><td style="color:var(--yellow)">_____ V</td><td style="color:var(--txt2)">Current L1:</td><td style="color:var(--yellow)">_____ A</td></tr>
+            <tr><td style="color:var(--txt2);padding:4px 0">Voltage L2-N:</td><td style="color:var(--yellow)">_____ V</td><td style="color:var(--txt2)">Current L2:</td><td style="color:var(--yellow)">_____ A</td></tr>
+            <tr><td style="color:var(--txt2);padding:4px 0">Voltage L3-N:</td><td style="color:var(--yellow)">_____ V</td><td style="color:var(--txt2)">Current L3:</td><td style="color:var(--yellow)">_____ A</td></tr>
+          </table>
+        </div>
+        <div style="background:rgba(0,174,239,.06);border:1px solid rgba(0,174,239,.15);border-radius:8px;padding:12px 16px;font-family:var(--font);font-size:15px;color:var(--txt2)">
+          📋 ดำเนินการโดย: <b style="color:var(--txt)">EMPIRE NS CO., LTD.</b><br>
+          วันที่ตรวจสอบ: _____ / _____ / _____
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="sf"><span class="sf-note">Total Access Communication PLC · True Corporation PLC</span><span class="sf-num">43 / 45</span></div>
+</section>
+
+<!-- ====================================================
+     SLIDE 44 — EQUIPMENT
+     ==================================================== -->
+<section class="slide">
+  <div class="sh"><span class="sh-tag">RST — Equipment &amp; Tools</span><div class="brand"><span class="br">true</span><span class="bs">|</span><span class="bc">dtac</span></div></div>
+  <div class="ca">
+    <div class="stitle r">Equipments <span class="c">&amp; Tools</span></div>
+    <div class="eqg r">
+      <div class="eqc">
+        <div class="eqicon">🔧</div>
+        <div class="eqname">General Tools</div>
+        <div class="eqdet">Socket wrench set<br>Open-end wrench set<br>For filter removal &amp; general maintenance</div>
+      </div>
+      <div class="eqc">
+        <div class="eqicon">🔩</div>
+        <div class="eqname">Filter Remove Tools</div>
+        <div class="eqdet">Filter removal strap wrench<br>Specialty tools for LF9050<br>FS1006 separator filter tools</div>
+      </div>
+      <div class="eqc">
+        <div class="eqicon">⚙️</div>
+        <div class="eqname">Electric Pump</div>
+        <div class="eqdet">Oil extraction pump<br>For draining used engine oil<br>Reduces spill risk</div>
+      </div>
+      <div class="eqc">
+        <div class="eqicon">🔋</div>
+        <div class="eqname">Battery Tester</div>
+        <div class="eqdet">CCA Battery Tester<br>Model: Digital Meter<br>Verifies battery condition before PM</div>
+      </div>
+      <div class="eqc">
+        <div class="eqicon">💨</div>
+        <div class="eqname">Blower</div>
+        <div class="eqdet">Black &amp; Decker blower<br>For cleaning air filters<br>&amp; equipment areas</div>
+      </div>
+      <div class="eqc" style="background:rgba(0,174,239,.05);border-color:rgba(0,174,239,.2)">
+        <div class="eqicon">📐</div>
+        <div class="eqname">Digital Multimeter</div>
+        <div class="eqdet">Fluke 17B+<br>S/N: 62612363WS<br>Calibrated: 15-Jan-26<br>Cert: EL02130/26 (PCAL204708)</div>
+      </div>
+    </div>
+  </div>
+  <div class="sf"><span class="sf-note">Total Access Communication PLC · True Corporation PLC</span><span class="sf-num">44 / 45</span></div>
+</section>
+
+<!-- ====================================================
+     SLIDE 45 — THANK YOU
+     ==================================================== -->
+<section class="slide">
+  <div class="ty-slide" style="background:radial-gradient(ellipse at 50% 50%,rgba(232,25,44,.1) 0%,transparent 55%),linear-gradient(140deg,#060a14 0%,#0d1528 55%,#060a14 100%)">
+    <div class="ty-main r"><span class="t1">Thank</span> <span class="t2">You</span></div>
+    <div class="ty-line r"></div>
+    <div class="ty-sub r">TOC-RST PM Generator — ระยะเวลาดำเนินการ 4 วัน</div>
+    <div class="r" style="font-family:var(--font);font-size:22px;font-weight:300;color:rgba(255,255,255,.3)">Total Access Communication PLC · True Corporation PLC</div>
+    <div class="r" style="display:flex;gap:40px;margin-top:10px">
+      <div style="text-align:center"><div style="font-family:var(--font);font-size:36px;font-weight:800;color:var(--red)">7</div><div style="font-family:var(--font);font-size:16px;color:var(--txt2)">Generators</div></div>
+      <div style="text-align:center"><div style="font-family:var(--font);font-size:36px;font-weight:800;color:var(--cyan)">4</div><div style="font-family:var(--font);font-size:16px;color:var(--txt2)">Days</div></div>
+      <div style="text-align:center"><div style="font-family:var(--font);font-size:36px;font-weight:800;color:var(--yellow)">9</div><div style="font-family:var(--font);font-size:16px;color:var(--txt2)">Personnel</div></div>
+      <div style="text-align:center"><div style="font-family:var(--font);font-size:36px;font-weight:800;color:var(--green)">45</div><div style="font-family:var(--font);font-size:16px;color:var(--txt2)">Slides</div></div>
+    </div>
+    <div class="brand r" style="font-size:36px;margin-top:10px"><span class="br">true</span><span style="color:rgba(255,255,255,.3);margin:0 6px">|</span><span class="bc">dtac</span></div>
+  </div>
+</section>
+
+</main><!-- end deck-stage -->
+</div><!-- end deck-viewport -->
+
+<!-- Progress bar -->
+<div class="progress-bar" id="progressBar"></div>
+
+<!-- Inline edit affordance -->
+<div class="edit-hotzone" id="editHotzone"></div>
+<button class="edit-toggle" id="editToggle">✏️ Edit</button>
+
+<script>
+/* =====================================================
+   SLIDE PRESENTATION CONTROLLER
+   ===================================================== */
+class SlidePresentation {
+  constructor() {
+    this.slides = document.querySelectorAll('.slide');
+    this.current = 0;
+    this.stage = document.getElementById('deckStage');
+    this.total = this.slides.length;
+    this.scaleStage();
+    window.addEventListener('resize', () => this.scaleStage());
+    this.bindKeys();
+    this.bindTouch();
+    this.bindWheel();
+    this.show(0);
+  }
+
+  scaleStage() {
+    const f = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+    const x = (window.innerWidth  - 1920 * f) / 2;
+    const y = (window.innerHeight - 1080 * f) / 2;
+    this.stage.style.transform = `translate(${x}px,${y}px) scale(${f})`;
+  }
+
+  show(idx) {
+    this.current = Math.max(0, Math.min(idx, this.total - 1));
+    this.slides.forEach((s, i) => {
+      s.classList.toggle('active',  i === this.current);
+      s.classList.toggle('visible', i === this.current);
+    });
+    const pct = this.total > 1 ? (this.current / (this.total - 1)) * 100 : 0;
+    document.getElementById('progressBar').style.width = pct + '%';
+    document.title = `TOC-RST PM Generator — ${this.current + 1}/${this.total}`;
+  }
+
+  prev() { this.show(this.current - 1); }
+  next() { this.show(this.current + 1); }
+
+  bindKeys() {
+    document.addEventListener('keydown', e => {
+      if (e.target.getAttribute && e.target.getAttribute('contenteditable')) return;
+      if (['ArrowRight','ArrowDown','Space','PageDown'].includes(e.code)) { e.preventDefault(); this.next(); }
+      if (['ArrowLeft','ArrowUp','PageUp'].includes(e.code))              { e.preventDefault(); this.prev(); }
+      if (e.code === 'Home') { e.preventDefault(); this.show(0); }
+      if (e.code === 'End')  { e.preventDefault(); this.show(this.total - 1); }
+      if ((e.key === 'e' || e.key === 'E') && !e.target.getAttribute('contenteditable')) editor.toggle();
+    });
+  }
+
+  bindTouch() {
+    let startX = 0, startY = 0;
+    document.addEventListener('touchstart', e => { startX = e.touches[0].clientX; startY = e.touches[0].clientY; }, {passive:true});
+    document.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - startX;
+      const dy = e.changedTouches[0].clientY - startY;
+      if (Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 40) dx > 0 ? this.prev() : this.next();
+    });
+  }
+
+  bindWheel() {
+    let t = 0;
+    document.addEventListener('wheel', e => {
+      e.preventDefault();
+      const now = Date.now();
+      if (now - t < 600) return;
+      t = now;
+      e.deltaY > 0 ? this.next() : this.prev();
+    }, {passive:false});
+  }
+}
+
+/* =====================================================
+   INLINE EDITOR
+   ===================================================== */
+const editor = {
+  active: false,
+  toggle() {
+    this.active = !this.active;
+    const btn = document.getElementById('editToggle');
+    btn.classList.toggle('active', this.active);
+    btn.textContent = this.active ? '💾 Save (Ctrl+S)' : '✏️ Edit';
+    document.querySelectorAll('.slide.active [class*="r"]:not(.slide):not(.deck-stage),[contenteditable]')
+      .forEach(el => {});
+    if (this.active) {
+      document.querySelectorAll('.slide.active td,.slide.active th,.slide.active div,.slide.active p,.slide.active span,.slide.active h1,.slide.active h2,.slide.active h3,.slide.active li')
+        .forEach(el => {
+          if (!el.children.length || el.tagName === 'TD' || el.tagName === 'TH') {
+            el.setAttribute('contenteditable','true');
+            el.style.outline='1px dashed rgba(0,174,239,.4)';
+          }
+        });
+    } else {
+      document.querySelectorAll('[contenteditable]').forEach(el => {
+        el.removeAttribute('contenteditable');
+        el.style.outline='';
+      });
+      this.save();
+    }
+  },
+  save() {
+    try { localStorage.setItem('toc-rst-pm-gen', document.getElementById('deckStage').innerHTML); } catch(e) {}
+  },
+  load() {
+    try {
+      const saved = localStorage.getItem('toc-rst-pm-gen');
+      if (saved) document.getElementById('deckStage').innerHTML = saved;
+    } catch(e) {}
+  }
+};
+
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); editor.save(); }
+});
+
+/* Hotzone hover with 400ms grace period */
+const hotzone = document.getElementById('editHotzone');
+const editBtn  = document.getElementById('editToggle');
+let hideT = null;
+hotzone.addEventListener('mouseenter', () => { clearTimeout(hideT); editBtn.classList.add('show'); });
+hotzone.addEventListener('mouseleave', () => { hideT = setTimeout(() => { if(!editor.active) editBtn.classList.remove('show'); }, 400); });
+editBtn.addEventListener('mouseenter',  () => { clearTimeout(hideT); });
+editBtn.addEventListener('mouseleave',  () => { hideT = setTimeout(() => { if(!editor.active) editBtn.classList.remove('show'); }, 400); });
+hotzone.addEventListener('click', () => editor.toggle());
+editBtn.addEventListener('click',  () => editor.toggle());
+
+/* =====================================================
+   BOOT
+   ===================================================== */
+const deck = new SlidePresentation();
+</script>
+</body>
+</html>
