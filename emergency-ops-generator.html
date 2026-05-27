@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Emergency Operation Procedure — Generator Fail · TOC RST</title>
+<link href="https://fonts.googleapis.com/css2?family=Kanit:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --red:#E8192C;--cyan:#00AEEF;--bg:#070b16;
+  --card:rgba(255,255,255,0.04);--border:rgba(255,255,255,0.08);
+  --txt:#fff;--txt2:rgba(255,255,255,0.65);--txt3:rgba(255,255,255,0.38);
+  --font:'Kanit',sans-serif;--ease:cubic-bezier(.16,1,.3,1);
+}
+/* === viewport-base.css === */
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--bg)}
+.deck-viewport{position:fixed;inset:0;overflow:hidden;background:var(--bg)}
+.deck-stage{position:absolute;left:0;top:0;width:1920px;height:1080px;overflow:hidden;transform-origin:0 0;background:var(--bg);font-family:var(--font)}
+.slide{position:absolute;inset:0;width:1920px;height:1080px;overflow:hidden;display:block;visibility:hidden;opacity:0;pointer-events:none;background:var(--bg)}
+.slide.active,.slide.visible{visibility:visible;opacity:1;pointer-events:auto;z-index:1}
+img,video,canvas,svg{max-width:100%;max-height:100%}
+.deck-controls{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:1000}
+@media print{html,body{width:1920px;height:auto;overflow:visible;background:#fff}.deck-viewport{position:static;overflow:visible;background:#fff}.deck-stage{position:static;width:auto;height:auto;transform:none!important;background:none}.slide{position:relative;display:block!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;width:1920px;height:1080px;break-after:page;page-break-after:always}.slide:last-child{break-after:auto;page-break-after:auto}.deck-controls{display:none!important}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.2s!important}}
+
+/* === GRID BG === */
+.slide::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,0.022) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.022) 1px,transparent 1px);background-size:60px 60px;pointer-events:none;z-index:0}
+
+/* === REVEALS === */
+.r{opacity:0;transform:translateY(22px);transition:opacity .5s var(--ease),transform .5s var(--ease)}
+.slide.visible .r{opacity:1;transform:translateY(0)}
+.r:nth-child(1){transition-delay:.06s}.r:nth-child(2){transition-delay:.14s}
+.r:nth-child(3){transition-delay:.22s}.r:nth-child(4){transition-delay:.30s}
+.r:nth-child(5){transition-delay:.38s}.r:nth-child(6){transition-delay:.46s}
+
+/* === CHROME === */
+.sh{position:absolute;top:0;left:0;right:0;height:80px;display:flex;align-items:center;padding:0 64px;background:rgba(7,11,22,0.94);border-bottom:1px solid rgba(255,255,255,0.06);z-index:10}
+.sh-t{font-size:20px;font-weight:600;color:var(--txt)}.sh-t span{color:var(--red)}
+.sh-sub{font-size:15px;font-weight:300;color:var(--txt2);margin-left:14px}
+.sh-r{margin-left:auto;display:flex;align-items:center;gap:10px}
+.sh-badge{font-size:12px;font-weight:500;padding:4px 12px;border-radius:16px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);color:var(--txt2)}
+.sf{position:absolute;bottom:0;left:0;right:0;height:50px;display:flex;align-items:center;padding:0 64px;border-top:1px solid rgba(255,255,255,0.06);background:rgba(7,11,22,0.94);z-index:10}
+.sf-l{font-size:12px;color:var(--txt3)}
+.sf-r{margin-left:auto;display:flex;align-items:center;gap:5px;font-size:13px}
+.bt{color:var(--red);font-weight:700}.bd{color:var(--cyan);font-weight:700}
+.sn{font-size:12px;color:var(--txt3);margin-left:16px}
+#pb{position:fixed;top:0;left:0;height:3px;background:linear-gradient(90deg,var(--red),var(--cyan));z-index:9999;transition:width .3s var(--ease)}
+
+/* === CONTENT AREA === */
+.ca{position:absolute;top:80px;bottom:50px;left:0;right:0;padding:32px 64px}
+
+/* === SLIDE 1: TITLE === */
+.s1 .ca{padding:0;display:grid;grid-template-columns:1fr 400px}
+.s1 .lft{padding:56px 80px;display:flex;flex-direction:column;justify-content:center}
+.s1 .rgt{display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,rgba(232,25,44,0.12) 0%,rgba(0,174,239,0.07) 50%,transparent 80%);border-left:1px solid rgba(255,255,255,0.05)}
+.warn-tag{display:inline-flex;align-items:center;gap:8px;background:rgba(232,25,44,0.12);border:1px solid rgba(232,25,44,0.3);border-radius:20px;padding:7px 18px;font-size:15px;font-weight:500;color:#ff6b7a;width:fit-content;margin-bottom:26px}
+.s1 h1{font-size:78px;font-weight:800;line-height:1.05;color:var(--txt)}
+.s1 h1 em{font-style:normal;color:var(--red)}
+.s1 h2{font-size:46px;font-weight:500;color:var(--cyan);margin-top:10px;font-style:italic}
+.s1 .meta{display:flex;gap:26px;margin-top:40px;flex-wrap:wrap}
+.mi{display:flex;align-items:center;gap:8px;font-size:16px;color:var(--txt2)}
+.md{width:7px;height:7px;border-radius:50%}
+.s1 .upd{margin-top:28px;font-size:13px;color:var(--txt3);background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:6px;padding:6px 14px;width:fit-content}
+.toc-m{text-align:center}
+.toc-m .ltrs{font-size:116px;font-weight:800;letter-spacing:8px;line-height:1}
+.toc-m .sub{font-size:20px;color:var(--txt3);margin-top:6px;letter-spacing:3px;text-transform:uppercase}
+.toc-m .br{margin-top:18px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:18px}
+
+/* === SLIDE 2: GEN STATUS === */
+.s2 .ca{display:flex;flex-direction:column;gap:18px}
+.sec-t{font-size:26px;font-weight:700;color:var(--txt)}.sec-t span{color:var(--cyan)}
+.gp-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:18px;flex:1}
+.gp-card{background:var(--card);border:1px solid var(--border);border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+.gp-hd{padding:13px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.gp-ht{font-size:16px;font-weight:600;color:var(--txt)}
+.b2n{font-size:12px;font-weight:700;padding:3px 10px;border-radius:10px;background:rgba(0,174,239,0.15);color:var(--cyan);border:1px solid rgba(0,174,239,0.25)}
+.bn{font-size:12px;font-weight:700;padding:3px 10px;border-radius:10px;background:rgba(39,174,96,0.15);color:#2ecc71;border:1px solid rgba(39,174,96,0.25)}
+.gt{width:100%;border-collapse:collapse}
+.gt th{padding:8px 12px;font-size:11px;font-weight:500;color:var(--txt3);text-align:center;background:rgba(255,255,255,0.02)}
+.gt td{padding:10px 12px;font-size:14px;color:var(--txt2);text-align:center;border-top:1px solid rgba(255,255,255,0.04)}
+.gt td:first-child{font-weight:600;color:var(--txt);text-align:left}
+.ur{display:inline-block;padding:3px 8px;border-radius:5px;font-size:13px;font-weight:700;background:rgba(232,25,44,0.2);color:#ff6b7a;border:1px solid rgba(232,25,44,0.3)}
+.uy{display:inline-block;padding:3px 8px;border-radius:5px;font-size:13px;font-weight:700;background:rgba(243,156,18,0.2);color:#f1c40f;border:1px solid rgba(243,156,18,0.3)}
+.ug{display:inline-block;padding:3px 8px;border-radius:5px;font-size:13px;font-weight:700;background:rgba(39,174,96,0.2);color:#2ecc71;border:1px solid rgba(39,174,96,0.3)}
+.gp-ft{padding:9px 18px;border-top:1px solid var(--border);display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.02);margin-top:auto}
+.gp-ft-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.gp-ft-txt{font-size:12px;color:var(--txt2)}
+
+/* === SCENARIO SLIDES === */
+.ss .ca{display:flex;gap:44px;align-items:flex-start;padding-top:26px}
+.sc-bg{position:absolute;font-size:500px;font-weight:900;line-height:1;color:rgba(255,255,255,0.013);top:80px;left:480px;pointer-events:none;z-index:0;font-family:var(--font);user-select:none}
+.sc-info{width:420px;flex-shrink:0;display:flex;flex-direction:column;gap:13px;position:relative;z-index:1}
+.sc-lbl{font-size:12px;font-weight:500;letter-spacing:0.12em;text-transform:uppercase;color:var(--red);margin-bottom:3px}
+.sc-h1{font-size:31px;font-weight:700;color:var(--txt);line-height:1.2}
+.sc-h2{font-size:17px;color:var(--txt2);margin-top:3px}
+.sc-cfg{display:inline-flex;align-items:center;gap:6px;padding:5px 13px;border-radius:7px;font-size:13px;font-weight:600;background:rgba(0,174,239,0.10);border:1px solid rgba(0,174,239,0.25);color:var(--cyan);margin-top:2px;width:fit-content}
+.sc-tbl{background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.07);border-radius:9px;overflow:hidden}
+.sc-tbl-hd{padding:7px 13px;border-bottom:1px solid rgba(255,255,255,0.05);font-size:11px;font-weight:500;color:var(--txt3);letter-spacing:0.06em;text-transform:uppercase;background:rgba(255,255,255,0.02)}
+.sgt{width:100%;border-collapse:collapse}
+.sgt th{padding:7px 10px;font-size:11px;color:var(--txt3);text-align:center;background:rgba(255,255,255,0.015)}
+.sgt td{padding:9px 10px;font-size:13px;color:var(--txt2);text-align:center;border-top:1px solid rgba(255,255,255,0.04)}
+.sgt td:first-child{font-weight:600;color:var(--txt);text-align:left;padding-left:13px}
+.sc-loc{background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.06);border-radius:8px;padding:9px 13px;display:flex;align-items:center;gap:9px}
+.sc-loc-i{width:28px;height:28px;border-radius:6px;background:rgba(0,174,239,0.08);display:flex;align-items:center;justify-content:center;font-size:13px}
+.sc-loc-t{font-size:13px;color:var(--txt2);flex:1}
+.sc-loc-time{font-size:15px;font-weight:700;color:var(--cyan)}
+
+/* === FLOWCHART === */
+.fc{flex:1;display:flex;flex-direction:column;align-items:center;gap:0;position:relative;z-index:1}
+.fc-lbl-top{font-size:11px;color:var(--txt3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:10px}
+.fc-dm{width:196px;height:196px;position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.fc-dm::before{content:'';position:absolute;inset:0;clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%);background:#a06400}
+.fc-dm span{position:relative;z-index:1;text-align:center;font-size:14px;font-weight:600;color:#ffeebb;line-height:1.3;max-width:136px;padding:14px}
+.fc-vl{width:2px;background:rgba(255,255,255,0.14);flex-shrink:0}
+.fc-brow{display:flex;gap:56px;align-items:flex-start;width:100%;justify-content:center;margin-top:10px}
+.fc-bcol{display:flex;flex-direction:column;align-items:center;gap:0}
+.lbl-no{font-size:12px;font-weight:600;color:#e74c3c;background:rgba(231,76,60,0.12);border:1px solid rgba(231,76,60,0.25);border-radius:4px;padding:2px 9px;margin-bottom:6px}
+.lbl-yes{font-size:12px;font-weight:600;color:#27ae60;background:rgba(39,174,96,0.12);border:1px solid rgba(39,174,96,0.25);border-radius:4px;padding:2px 9px;margin-bottom:6px}
+.fc-box{border-radius:9px;padding:13px 17px;text-align:center;min-width:220px}
+.box-tie{background:rgba(39,174,96,0.12);border:1.5px solid rgba(39,174,96,0.35);color:#2ecc71}
+.box-xfr{background:rgba(0,174,239,0.10);border:1.5px solid rgba(0,174,239,0.30);color:var(--cyan)}
+.bx-t{font-size:16px;font-weight:700}
+.bx-s{font-size:13px;margin-top:3px;opacity:0.85;line-height:1.4}
+.fc-det{background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.07);border-radius:7px;padding:10px 13px;min-width:220px}
+.det-flr{font-size:11px;font-weight:500;color:var(--red);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:5px}
+.det-row{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--txt2);padding:2px 0}
+.det-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.fc-time{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--cyan);padding:5px 10px;background:rgba(0,174,239,0.07);border:1px solid rgba(0,174,239,0.18);border-radius:5px;margin-top:6px}
+
+/* === SLIDE D: direct transfer === */
+.d-row{display:flex;align-items:center;gap:17px;width:100%;max-width:740px}
+.d-badge{width:43px;height:43px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;flex-shrink:0}
+.d-card{flex:1;border-radius:9px;padding:13px 17px}
+.d-card-t{font-size:16px;font-weight:700}
+.d-card-s{font-size:13px;color:var(--txt2);margin-top:3px}
+.d-kw{font-size:22px;font-weight:700;color:var(--cyan);min-width:88px;text-align:right}
+
+/* === SLIDE 7: QUICK REF === */
+.s7 .ca{display:flex;flex-direction:column;gap:16px}
+.qr-grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;flex:1}
+.qr-card{background:var(--card);border:1px solid var(--border);border-radius:10px;overflow:hidden;display:flex;flex-direction:column}
+.qr-hd{padding:10px 14px;font-size:13px;font-weight:700;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px}
+.qr-hd.red{color:#ff6b7a;background:rgba(232,25,44,0.07)}
+.qr-hd.org{color:#e67e22;background:rgba(230,126,34,0.07)}
+.qr-hd.grn{color:#2ecc71;background:rgba(39,174,96,0.07)}
+.qr-row{padding:9px 14px;border-bottom:1px solid rgba(255,255,255,0.035)}
+.qr-row:last-child{border-bottom:none}
+.qr-rl{font-size:11px;color:var(--txt3);font-weight:500;margin-bottom:2px}
+.qr-rv{font-size:13px;color:var(--txt2);font-weight:500}
+.qr-kw{font-size:12px;color:var(--cyan);font-weight:600;margin-top:1px}
+
+/* === NAV === */
+.nav-btn{width:42px;height:42px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.12);color:var(--txt);cursor:pointer;font-size:18px;display:inline-flex;align-items:center;justify-content:center;transition:all .2s}
+.nav-btn:hover{background:rgba(255,255,255,0.14)}
+.slide-ctr{font-size:13px;color:var(--txt2);padding:0 10px}
+
+/* === INLINE EDITOR === */
+.edit-hz{position:fixed;top:0;left:0;width:80px;height:80px;z-index:10000;cursor:pointer}
+.edit-btn{position:fixed;top:14px;left:14px;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.18);color:var(--txt);cursor:pointer;font-size:15px;opacity:0;pointer-events:none;transition:opacity .25s;z-index:10001;display:flex;align-items:center;justify-content:center}
+.edit-btn.show,.edit-btn.on{opacity:1;pointer-events:auto}
+.edit-btn.on{background:rgba(232,25,44,0.25);border-color:var(--red)}
+[contenteditable]:focus{outline:2px dashed rgba(0,174,239,0.55);outline-offset:2px;border-radius:3px}
+</style>
+</head>
+<body>
+<div id="pb"></div>
+<div class="edit-hz"></div>
+<button class="edit-btn" id="editBtn">✏️</button>
+
+<div class="deck-viewport">
+<main class="deck-stage" id="stage">
+
+<!-- ===== SLIDE 1: TITLE ===== -->
+<section class="slide s1 active">
+  <div class="sh">
+    <span class="sh-t">Emergency <span>Operation</span> Procedure</span>
+    <div class="sh-r">
+      <span class="sh-badge">TOC RST</span>
+      <span class="sh-badge">Update 8/5/2026</span>
+    </div>
+  </div>
+  <div class="ca">
+    <div class="lft">
+      <div class="warn-tag r">⚠ Generator Failure Protocol</div>
+      <h1 class="r">Emergency<br><em>Operation</em><br>Procedure</h1>
+      <h2 class="r">ไฟฟ้าดับ Generator Fail</h2>
+      <div class="meta r">
+        <div class="mi"><div class="md" style="background:var(--red)"></div>Generator 1–7</div>
+        <div class="mi"><div class="md" style="background:var(--cyan)"></div>4 Scenarios</div>
+        <div class="mi"><div class="md" style="background:#2ecc71"></div>Response 10 min</div>
+      </div>
+      <div class="upd r">Remark: Update 8/5/2026</div>
+    </div>
+    <div class="rgt r">
+      <div class="toc-m">
+        <div class="ltrs">
+          <span style="color:var(--red)">T</span><span style="color:rgba(255,255,255,0.6)">O</span><span style="color:var(--cyan)">C</span>
+        </div>
+        <div class="sub">RST</div>
+        <div class="br">
+          <span class="bt">true</span>
+          <span style="color:var(--txt3)">|</span>
+          <span class="bd">dtac</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="sf">
+    <span class="sf-l">Emergency Operations Manual · TOC RST</span>
+    <span class="sf-r"><span class="bt">true</span><span style="color:var(--txt3)">|</span><span class="bd">dtac</span></span>
+    <span class="sn">1 / 7</span>
+  </div>
+</section>
+
+<!-- ===== SLIDE 2: GENERATOR STATUS ===== -->
+<section class="slide s2">
+  <div class="sh">
+    <span class="sh-t">Generator <span>Load Status</span></span>
+    <span class="sh-sub">สถานะโหลดเครื่องกำเนิดไฟฟ้า</span>
+    <div class="sh-r"><span class="sh-badge">7 Generators · 4 Pairs</span></div>
+  </div>
+  <div class="ca">
+    <div class="sec-t r">Current Load — <span>Generator Overview</span></div>
+    <div class="gp-grid r">
+
+      <div class="gp-card">
+        <div class="gp-hd"><span class="gp-ht">Gen 1 &amp; Gen 2</span><span class="b2n">2N</span></div>
+        <table class="gt">
+          <tr><th>No</th><th>CAP (KW)</th><th>Act.Load (KW)</th><th>Utilize</th><th>%Util &lt;80%</th></tr>
+          <tr><td>Gen.1</td><td>1,600</td><td>691</td><td>43%</td><td><span class="ur">91%</span></td></tr>
+          <tr><td>Gen.2</td><td>1,600</td><td>763</td><td>48%</td><td>—</td></tr>
+        </table>
+        <div class="gp-ft"><div class="gp-ft-dot" style="background:var(--red)"></div><span class="gp-ft-txt">Combined 91% · ⚠ Transfer Load Required</span></div>
+      </div>
+
+      <div class="gp-card">
+        <div class="gp-hd"><span class="gp-ht">Gen 3 &amp; Gen 4</span><span class="b2n">2N</span></div>
+        <table class="gt">
+          <tr><th>No</th><th>CAP (KW)</th><th>Act.Load (KW)</th><th>Utilize</th><th>%Util &lt;80%</th></tr>
+          <tr><td>Gen.3</td><td>1,280</td><td>453</td><td>41%</td><td><span class="uy">74%</span></td></tr>
+          <tr><td>Gen.4</td><td>1,200</td><td>383</td><td>33%</td><td>—</td></tr>
+        </table>
+        <div class="gp-ft"><div class="gp-ft-dot" style="background:#f1c40f"></div><span class="gp-ft-txt">Combined 74% · TIE GDB Sufficient</span></div>
+      </div>
+
+      <div class="gp-card">
+        <div class="gp-hd"><span class="gp-ht">Gen 5 &amp; Gen 6</span><span class="b2n">2N</span></div>
+        <table class="gt">
+          <tr><th>No</th><th>CAP (KW)</th><th>Act.Load (KW)</th><th>Utilize</th><th>%Util &lt;80%</th></tr>
+          <tr><td>Gen.5</td><td>2,000</td><td>934</td><td>47%</td><td><span class="ur">93%</span></td></tr>
+          <tr><td>Gen.6</td><td>2,000</td><td>922</td><td>46%</td><td>—</td></tr>
+        </table>
+        <div class="gp-ft"><div class="gp-ft-dot" style="background:var(--red)"></div><span class="gp-ft-txt">Combined 93% · ⚠ Critical Transfer Required</span></div>
+      </div>
+
+      <div class="gp-card">
+        <div class="gp-hd"><span class="gp-ht">Gen 7</span><span class="bn">N</span></div>
+        <table class="gt">
+          <tr><th>No</th><th>CAP (KW)</th><th>Act.Load (KW)</th><th>Utilize</th><th>%Util &lt;80%</th></tr>
+          <tr><td>Gen.7</td><td>1,600</td><td>651</td><td>41%</td><td><span class="ug">41%</span></td></tr>
+          <tr><td colspan="5" style="color:var(--txt3);font-size:12px;text-align:left;padding-left:12px">Single N config — Transfer options D1/D2/D3</td></tr>
+        </table>
+        <div class="gp-ft"><div class="gp-ft-dot" style="background:#2ecc71"></div><span class="gp-ft-txt">41% · ✓ Transfer to G4/G5/G6</span></div>
+      </div>
+
+    </div>
+  </div>
+  <div class="sf">
+    <span class="sf-l">Emergency Operations Manual · TOC RST</span>
+    <span class="sf-r"><span class="bt">true</span><span style="color:var(--txt3)">|</span><span class="bd">dtac</span></span>
+    <span class="sn">2 / 7</span>
+  </div>
+</section>
+
+<!-- ===== SLIDE 3: SCENARIO A ===== -->
+<section class="slide ss">
+  <div class="sc-bg" aria-hidden="true">A</div>
+  <div class="sh">
+    <span class="sh-t">Scenario <span>A</span> — Gen 1 or Gen 2 Fail</span>
+    <div class="sh-r"><span class="sh-badge" style="color:#ff6b7a;border-color:rgba(232,25,44,0.3)">⚠ Combined 91%</span></div>
+  </div>
+  <div class="ca">
+    <div class="sc-info r">
+      <div>
+        <div class="sc-lbl">Scenario A</div>
+        <div class="sc-h1">Gen 1 or Gen 2 Fail</div>
+        <div class="sc-h2">เครื่องกำเนิดไฟฟ้า 1 หรือ 2 ขัดข้อง</div>
+        <div class="sc-cfg">⚡ 2N Configuration</div>
+      </div>
+      <div class="sc-tbl">
+        <div class="sc-tbl-hd">Generator Load Status</div>
+        <table class="sgt">
+          <tr><th>No</th><th>CAP(KW)</th><th>Act.Load</th><th>Util</th><th>&lt;80%</th></tr>
+          <tr><td>Gen.1</td><td>1,600</td><td>691 KW</td><td>43%</td><td><span class="ur">91%</span></td></tr>
+          <tr><td>Gen.2</td><td>1,600</td><td>763 KW</td><td>48%</td><td>—</td></tr>
+        </table>
+      </div>
+      <div class="sc-loc"><div class="sc-loc-i">🏢</div><span class="sc-loc-t">1st Floor Gen Room</span><span class="sc-loc-time">⏱ 10:00</span></div>
+    </div>
+    <div class="fc r">
+      <div class="fc-lbl-top">Decision Point</div>
+      <div class="fc-dm"><span>Load<br>G1 ↔ G2<br>&gt; 90%?</span></div>
+      <div class="fc-vl" style="height:16px;margin:0 auto"></div>
+      <div class="fc-brow">
+        <div class="fc-bcol">
+          <span class="lbl-no">No</span>
+          <div class="fc-vl" style="height:22px"></div>
+          <div class="fc-box box-tie" style="min-width:240px">
+            <div class="bx-t">A3) TIE GDB</div>
+            <div class="bx-s">G1 ↔ G2</div>
+          </div>
+          <div class="fc-vl" style="height:14px"></div>
+          <div class="fc-det" style="min-width:240px">
+            <div class="det-flr">1st Floor Gen Room</div>
+            <div class="fc-time">⏱ ใช้เวลา 10:00 นาที</div>
+          </div>
+        </div>
+        <div class="fc-bcol">
+          <span class="lbl-yes">Yes — Current: 91%</span>
+          <div class="fc-vl" style="height:22px"></div>
+          <div class="fc-box box-xfr" style="min-width:300px">
+            <div class="bx-t">A2) Transfer Load</div>
+            <div class="bx-s">MTS.EB 41A · G1 → G5</div>
+          </div>
+          <div class="fc-vl" style="height:14px"></div>
+          <div class="fc-det" style="min-width:300px">
+            <div class="det-flr">1st Floor Gen Room</div>
+            <div class="det-row"><div class="det-dot" style="background:var(--cyan)"></div>MTS.EB 41A from G1 to G5</div>
+            <div class="det-row"><div class="det-dot" style="background:#f1c40f"></div>Rectifier 41A = 30 KW</div>
+            <div class="det-row"><div class="det-dot" style="background:#e74c3c"></div>PAC = 111 KW</div>
+            <div class="fc-time">⏱ ใช้เวลา 10:00 นาที</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="sf">
+    <span class="sf-l">Emergency Operations Manual · TOC RST</span>
+    <span class="sf-r"><span class="bt">true</span><span style="color:var(--txt3)">|</span><span class="bd">dtac</span></span>
+    <span class="sn">3 / 7</span>
+  </div>
+</section>
+
+<!-- ===== SLIDE 4: SCENARIO B ===== -->
+<section class="slide ss">
+  <div class="sc-bg" aria-hidden="true">B</div>
+  <div class="sh">
+    <span class="sh-t">Scenario <span>B</span> — Gen 3 or Gen 4 Fail</span>
+    <div class="sh-r"><span class="sh-badge" style="color:#f1c40f;border-color:rgba(241,196,15,0.3)">Combined 74%</span></div>
+  </div>
+  <div class="ca">
+    <div class="sc-info r">
+      <div>
+        <div class="sc-lbl">Scenario B</div>
+        <div class="sc-h1">Gen 3 or Gen 4 Fail</div>
+        <div class="sc-h2">เครื่องกำเนิดไฟฟ้า 3 หรือ 4 ขัดข้อง</div>
+        <div class="sc-cfg">⚡ 2N Configuration</div>
+      </div>
+      <div class="sc-tbl">
+        <div class="sc-tbl-hd">Generator Load Status</div>
+        <table class="sgt">
+          <tr><th>No</th><th>CAP(KW)</th><th>Act.Load</th><th>Util</th><th>&lt;80%</th></tr>
+          <tr><td>Gen.3</td><td>1,280</td><td>453 KW</td><td>41%</td><td><span class="uy">74%</span></td></tr>
+          <tr><td>Gen.4</td><td>1,200</td><td>383 KW</td><td>33%</td><td>—</td></tr>
+        </table>
+      </div>
+      <div class="sc-loc"><div class="sc-loc-i">🏢</div><span class="sc-loc-t">1st Floor Gen Room</span><span class="sc-loc-time">⏱ 10:00</span></div>
+    </div>
+    <div class="fc r">
+      <div class="fc-lbl-top">Decision Point</div>
+      <div class="fc-dm"><span>Load<br>G3 ↔ G4<br>&gt; 90%?</span></div>
+      <div class="fc-vl" style="height:16px;margin:0 auto"></div>
+      <div class="fc-brow">
+        <div class="fc-bcol">
+          <span class="lbl-no">No — Current: 74%</span>
+          <div class="fc-vl" style="height:22px"></div>
+          <div class="fc-box box-tie" style="min-width:240px">
+            <div class="bx-t">B2) TIE GDB</div>
+            <div class="bx-s">G3 ↔ G4</div>
+          </div>
+          <div class="fc-vl" style="height:14px"></div>
+          <div class="fc-det" style="min-width:240px">
+            <div class="det-flr">1st Floor Gen Room</div>
+            <div class="fc-time">⏱ ใช้เวลา 10:00 นาที</div>
+          </div>
+        </div>
+        <div class="fc-bcol">
+          <span class="lbl-yes">Yes</span>
+          <div class="fc-vl" style="height:22px"></div>
+          <div class="fc-box box-xfr" style="min-width:320px">
+            <div class="bx-t">B1) Transfer Load</div>
+            <div class="bx-s">MTS EB21A · G3 → G6<br>MTS EB21B · G4 → G7</div>
+          </div>
+          <div class="fc-vl" style="height:14px"></div>
+          <div class="fc-det" style="min-width:320px">
+            <div class="det-flr">1st Floor ใช้เวลา 10:00 นาที</div>
+            <div class="det-row"><div class="det-dot" style="background:#3498db"></div>MTS EB21A G3 → G6 = <strong style="color:var(--cyan)">174 KW</strong></div>
+            <div class="det-row"><div class="det-dot" style="background:#e74c3c"></div>MTS EB21B G4 → G7 = <strong style="color:var(--cyan)">145 KW</strong></div>
+            <div class="fc-time">⏱ ใช้เวลา 10:00 นาที</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="sf">
+    <span class="sf-l">Emergency Operations Manual · TOC RST</span>
+    <span class="sf-r"><span class="bt">true</span><span style="color:var(--txt3)">|</span><span class="bd">dtac</span></span>
+    <span class="sn">4 / 7</span>
+  </div>
+</section>
+
+<!-- ===== SLIDE 5: SCENARIO C ===== -->
+<section class="slide ss">
+  <div class="sc-bg" aria-hidden="true">C</div>
+  <div class="sh">
+    <span class="sh-t">Scenario <span>C</span> — Gen 5 or Gen 6 Fail</span>
+    <div class="sh-r"><span class="sh-badge" style="color:#ff6b7a;border-color:rgba(232,25,44,0.3)">⚠ Combined 93% — Critical</span></div>
+  </div>
+  <div class="ca">
+    <div class="sc-info r">
+      <div>
+        <div class="sc-lbl">Scenario C</div>
+        <div class="sc-h1">Gen 5 or Gen 6 Fail</div>
+        <div class="sc-h2">เครื่องกำเนิดไฟฟ้า 5 หรือ 6 ขัดข้อง</div>
+        <div class="sc-cfg">⚡ 2N Configuration</div>
+      </div>
+      <div class="sc-tbl">
+        <div class="sc-tbl-hd">Generator Load Status</div>
+        <table class="sgt">
+          <tr><th>No</th><th>CAP(KW)</th><th>Act.Load</th><th>Util</th><th>&lt;80%</th></tr>
+          <tr><td>Gen.5</td><td>2,000</td><td>934 KW</td><td>47%</td><td><span class="ur">93%</span></td></tr>
+          <tr><td>Gen.6</td><td>2,000</td><td>922 KW</td><td>46%</td><td>—</td></tr>
+        </table>
+      </div>
+      <div class="sc-loc"><div class="sc-loc-i">🏢</div><span class="sc-loc-t">1st Floor Gen Room 2</span><span class="sc-loc-time">⏱ 10:00</span></div>
+    </div>
+    <div class="fc r">
+      <div class="fc-lbl-top">Decision Point</div>
+      <div class="fc-dm"><span>Load<br>G5 ↔ G6<br>&gt; 90%?</span></div>
+      <div class="fc-vl" style="height:16px;margin:0 auto"></div>
+      <div class="fc-brow">
+        <div class="fc-bcol">
+          <span class="lbl-no">No</span>
+          <div class="fc-vl" style="height:22px"></div>
+          <div class="fc-box box-tie" style="min-width:240px">
+            <div class="bx-t">C2) TIE GDB</div>
+            <div class="bx-s">G5 ↔ G6</div>
+          </div>
+          <div class="fc-vl" style="height:14px"></div>
+          <div class="fc-det" style="min-width:240px">
+            <div class="det-flr">1st Floor Gen Room 2</div>
+            <div class="fc-time">⏱ ใช้เวลา 10:00 นาที</div>
+          </div>
+        </div>
+        <div class="fc-bcol">
+          <span class="lbl-yes">Yes — Current: 93%</span>
+          <div class="fc-vl" style="height:22px"></div>
+          <div class="fc-box box-xfr" style="min-width:320px">
+            <div class="bx-t">C1) Transfer Load</div>
+            <div class="bx-s">MTS EB37A · G5 → G3<br>MTS EB37B · G6 → G4</div>
+          </div>
+          <div class="fc-vl" style="height:14px"></div>
+          <div class="fc-det" style="min-width:320px">
+            <div class="det-flr">1st Floor ใช้เวลา 10:00 นาที</div>
+            <div class="det-row"><div class="det-dot" style="background:#9b59b6"></div>MTS EB37A G5 → G3 = <strong style="color:var(--cyan)">130 KW</strong></div>
+            <div class="det-row"><div class="det-dot" style="background:#e67e22"></div>MTS EB37B G6 → G4 = <strong style="color:var(--cyan)">130 KW</strong></div>
+            <div class="fc-time">⏱ ใช้เวลา 10:00 นาที</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="sf">
+    <span class="sf-l">Emergency Operations Manual · TOC RST</span>
+    <span class="sf-r"><span class="bt">true</span><span style="color:var(--txt3)">|</span><span class="bd">dtac</span></span>
+    <span class="sn">5 / 7</span>
+  </div>
+</section>
+
+<!-- ===== SLIDE 6: SCENARIO D ===== -->
+<section class="slide ss">
+  <div class="sc-bg" aria-hidden="true">D</div>
+  <div class="sh">
+    <span class="sh-t">Scenario <span>D</span> — Gen 7 Fail</span>
+    <div class="sh-r"><span class="sh-badge" style="color:#2ecc71;border-color:rgba(46,204,113,0.3)">✓ 41% — Transfer Available</span></div>
+  </div>
+  <div class="ca">
+    <div class="sc-info r">
+      <div>
+        <div class="sc-lbl">Scenario D</div>
+        <div class="sc-h1">Gen 7 Fail</div>
+        <div class="sc-h2">เครื่องกำเนิดไฟฟ้า 7 ขัดข้อง</div>
+        <div class="sc-cfg" style="background:rgba(39,174,96,0.08);border-color:rgba(39,174,96,0.2);color:#2ecc71">🔌 N Configuration</div>
+      </div>
+      <div class="sc-tbl">
+        <div class="sc-tbl-hd">Generator Load Status</div>
+        <table class="sgt">
+          <tr><th>No</th><th>CAP(KW)</th><th>Act.Load</th><th>Util</th><th>&lt;80%</th></tr>
+          <tr><td>Gen.7</td><td>1,600</td><td>651 KW</td><td>41%</td><td><span class="ug">41%</span></td></tr>
+        </table>
+      </div>
+      <div class="sc-loc"><div class="sc-loc-i">🏢</div><span class="sc-loc-t">1st Floor — Transfer to G4/G5/G6</span><span class="sc-loc-time">⏱ 10:00</span></div>
+    </div>
+    <div class="fc r">
+      <div class="fc-lbl-top">Direct Transfer Load Options</div>
+      <div style="display:flex;flex-direction:column;gap:13px;width:100%;max-width:740px">
+        <div class="d-row">
+          <div class="d-badge" style="background:rgba(52,152,219,0.18);border:1px solid rgba(52,152,219,0.35);color:#3498db">D1</div>
+          <div class="d-card" style="background:rgba(52,152,219,0.07);border:1px solid rgba(52,152,219,0.2)">
+            <div class="d-card-t" style="color:#3498db">MTS EB33B · G7 → G4</div>
+            <div class="d-card-s">Transfer Generator 7 load to Generator 4</div>
+          </div>
+          <div class="d-kw">136 KW</div>
+        </div>
+        <div class="d-row">
+          <div class="d-badge" style="background:rgba(231,76,60,0.18);border:1px solid rgba(231,76,60,0.35);color:#e74c3c">D2</div>
+          <div class="d-card" style="background:rgba(231,76,60,0.07);border:1px solid rgba(231,76,60,0.2)">
+            <div class="d-card-t" style="color:#e74c3c">MTS EB34B · G7 → G5</div>
+            <div class="d-card-s">Transfer Generator 7 load to Generator 5</div>
+          </div>
+          <div class="d-kw">154 KW</div>
+        </div>
+        <div class="d-row">
+          <div class="d-badge" style="background:rgba(155,89,182,0.18);border:1px solid rgba(155,89,182,0.35);color:#9b59b6">D3</div>
+          <div class="d-card" style="background:rgba(155,89,182,0.07);border:1px solid rgba(155,89,182,0.2)">
+            <div class="d-card-t" style="color:#9b59b6">MTS EB23B · G7 → G6</div>
+            <div class="d-card-s">Transfer Generator 7 load to Generator 6</div>
+          </div>
+          <div class="d-kw">138 KW</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:11px 17px;display:flex;align-items:center;gap:14px;margin-top:4px">
+          <span style="font-size:13px;color:var(--txt3)">⏱ Response Time:</span>
+          <span style="font-size:20px;font-weight:700;color:var(--cyan)">10:00 นาที</span>
+          <span style="margin-left:auto;font-size:13px;color:var(--txt3)">📍 1st Floor</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="sf">
+    <span class="sf-l">Emergency Operations Manual · TOC RST</span>
+    <span class="sf-r"><span class="bt">true</span><span style="color:var(--txt3)">|</span><span class="bd">dtac</span></span>
+    <span class="sn">6 / 7</span>
+  </div>
+</section>
+
+<!-- ===== SLIDE 7: QUICK REFERENCE ===== -->
+<section class="slide s7">
+  <div class="sh">
+    <span class="sh-t">Quick <span>Reference</span> — All MTS Actions</span>
+    <div class="sh-r"><span class="sh-badge">Emergency Summary</span></div>
+  </div>
+  <div class="ca">
+    <div class="sec-t r">MTS Transfer Actions — <span>Complete Reference</span></div>
+    <div class="qr-grid r">
+      <div class="qr-card">
+        <div class="qr-hd red">⚠ A) Gen 1 or 2 Fail · 91%</div>
+        <div class="qr-row"><div class="qr-rl">Load &gt; 90% → Transfer</div><div class="qr-rv">A2) MTS.EB 41A · G1 → G5</div><div class="qr-kw">Rectifier 41A = 30 KW · PAC = 111 KW</div></div>
+        <div class="qr-row"><div class="qr-rl">Load ≤ 90% → TIE</div><div class="qr-rv">A3) TIE GDB G1 ↔ G2</div><div class="qr-kw">1st Floor Gen Room</div></div>
+        <div class="qr-row"><div class="qr-rl">Response Time</div><div class="qr-rv" style="color:var(--cyan);font-weight:700">⏱ 10:00 นาที</div></div>
+      </div>
+      <div class="qr-card">
+        <div class="qr-hd org">B) Gen 3 or 4 Fail · 74%</div>
+        <div class="qr-row"><div class="qr-rl">Load &gt; 90% → Transfer</div><div class="qr-rv">B1) MTS EB21A · G3 → G6</div><div class="qr-kw">174 KW</div></div>
+        <div class="qr-row"><div class="qr-rl">Load &gt; 90% → Transfer</div><div class="qr-rv">B1) MTS EB21B · G4 → G7</div><div class="qr-kw">145 KW</div></div>
+        <div class="qr-row"><div class="qr-rl">Load ≤ 90% (Current)</div><div class="qr-rv">B2) TIE GDB G3 ↔ G4</div><div class="qr-kw">1st Floor Gen Room</div></div>
+        <div class="qr-row"><div class="qr-rl">Response Time</div><div class="qr-rv" style="color:var(--cyan);font-weight:700">⏱ 10:00 นาที</div></div>
+      </div>
+      <div class="qr-card">
+        <div class="qr-hd red">⚠ C) Gen 5 or 6 Fail · 93%</div>
+        <div class="qr-row"><div class="qr-rl">Load &gt; 90% (Current)</div><div class="qr-rv">C1) MTS EB37A · G5 → G3</div><div class="qr-kw">130 KW</div></div>
+        <div class="qr-row"><div class="qr-rl">Load &gt; 90% (Current)</div><div class="qr-rv">C1) MTS EB37B · G6 → G4</div><div class="qr-kw">130 KW</div></div>
+        <div class="qr-row"><div class="qr-rl">Load ≤ 90%</div><div class="qr-rv">C2) TIE GDB G5 ↔ G6</div><div class="qr-kw">1st Floor Gen Room 2</div></div>
+        <div class="qr-row"><div class="qr-rl">Response Time</div><div class="qr-rv" style="color:var(--cyan);font-weight:700">⏱ 10:00 นาที</div></div>
+      </div>
+      <div class="qr-card">
+        <div class="qr-hd grn">✓ D) Gen 7 Fail · 41%</div>
+        <div class="qr-row"><div class="qr-rl">D1) Direct Transfer</div><div class="qr-rv">MTS EB33B · G7 → G4</div><div class="qr-kw">136 KW</div></div>
+        <div class="qr-row"><div class="qr-rl">D2) Direct Transfer</div><div class="qr-rv">MTS EB34B · G7 → G5</div><div class="qr-kw">154 KW</div></div>
+        <div class="qr-row"><div class="qr-rl">D3) Direct Transfer</div><div class="qr-rv">MTS EB23B · G7 → G6</div><div class="qr-kw">138 KW</div></div>
+        <div class="qr-row"><div class="qr-rl">Response Time</div><div class="qr-rv" style="color:var(--cyan);font-weight:700">⏱ 10:00 นาที</div></div>
+      </div>
+    </div>
+  </div>
+  <div class="sf">
+    <span class="sf-l">Emergency Operations Manual · TOC RST · Update 8/5/2026</span>
+    <span class="sf-r"><span class="bt">true</span><span style="color:var(--txt3)">|</span><span class="bd">dtac</span></span>
+    <span class="sn">7 / 7</span>
+  </div>
+</section>
+
+</main>
+</div>
+
+<div class="deck-controls">
+  <button class="nav-btn" onclick="deck.prev()">‹</button>
+  <span class="slide-ctr" id="ctr">1 / 7</span>
+  <button class="nav-btn" onclick="deck.next()">›</button>
+</div>
+
+<script>
+const deck=(() => {
+  const slides=document.querySelectorAll('.slide');
+  const ctr=document.getElementById('ctr');
+  const pb=document.getElementById('pb');
+  let cur=0;const n=slides.length;
+  function show(i){
+    i=Math.max(0,Math.min(i,n-1));
+    slides[cur].classList.remove('active','visible');
+    cur=i;
+    slides[cur].classList.add('active');
+    requestAnimationFrame(()=>slides[cur].classList.add('visible'));
+    ctr.textContent=`${cur+1} / ${n}`;
+    pb.style.width=`${((cur+1)/n)*100}%`;
+  }
+  function next(){show(cur+1);}
+  function prev(){show(cur-1);}
+  document.addEventListener('keydown',e=>{
+    if(e.target.getAttribute('contenteditable'))return;
+    if(['ArrowRight','ArrowDown',' ','PageDown'].includes(e.key)){e.preventDefault();next();}
+    if(['ArrowLeft','ArrowUp','PageUp'].includes(e.key)){e.preventDefault();prev();}
+    if(e.key==='Home')show(0);if(e.key==='End')show(n-1);
+  });
+  let tx=0;
+  document.addEventListener('touchstart',e=>{tx=e.touches[0].clientX;},{passive:true});
+  document.addEventListener('touchend',e=>{const dx=e.changedTouches[0].clientX-tx;if(Math.abs(dx)>50)dx<0?next():prev();},{passive:true});
+  let wt=0;
+  document.addEventListener('wheel',e=>{const now=Date.now();if(now-wt<800)return;wt=now;e.deltaY>0?next():prev();},{passive:true});
+  slides[0].classList.add('visible');
+  pb.style.width=`${(1/n)*100}%`;
+  return{show,next,prev};
+})();
+
+(function(){
+  const stage=document.getElementById('stage');
+  function scale(){
+    const f=Math.min(window.innerWidth/1920,window.innerHeight/1080);
+    const x=(window.innerWidth-1920*f)/2,y=(window.innerHeight-1080*f)/2;
+    stage.style.transform=`translate(${x}px,${y}px) scale(${f})`;
+  }
+  scale();window.addEventListener('resize',scale);
+})();
+
+const editor=(() => {
+  const btn=document.getElementById('editBtn');
+  const hz=document.querySelector('.edit-hz');
+  let on=false,ht=null;
+  const sel='.slide h1,.slide h2,.slide .sc-h1,.slide .sc-h2,.slide .bx-t,.slide .bx-s,.slide .det-row,.slide .qr-rv,.slide .qr-kw,.slide .gp-ft-txt,.slide .sgt td,.slide .gt td,.slide .d-card-t,.slide .d-card-s';
+  function enable(){on=true;btn.classList.add('on');document.querySelectorAll(sel).forEach(el=>{if(!el.closest('.deck-controls'))el.setAttribute('contenteditable','true');});}
+  function disable(){on=false;btn.classList.remove('on');document.querySelectorAll('[contenteditable]').forEach(el=>el.removeAttribute('contenteditable'));save();}
+  function toggle(){on?disable():enable();}
+  function save(){const d={};document.querySelectorAll('.slide').forEach((s,i)=>{d[i]=s.innerHTML;});localStorage.setItem('eop_gen',JSON.stringify(d));}
+  function load(){const sv=localStorage.getItem('eop_gen');if(!sv)return;const d=JSON.parse(sv);document.querySelectorAll('.slide').forEach((s,i)=>{if(d[i])s.innerHTML=d[i];});}
+  hz.addEventListener('mouseenter',()=>{clearTimeout(ht);btn.classList.add('show');});
+  hz.addEventListener('mouseleave',()=>{ht=setTimeout(()=>{if(!on)btn.classList.remove('show');},400);});
+  btn.addEventListener('mouseenter',()=>clearTimeout(ht));
+  btn.addEventListener('mouseleave',()=>{ht=setTimeout(()=>{if(!on)btn.classList.remove('show');},400);});
+  btn.addEventListener('click',toggle);hz.addEventListener('click',toggle);
+  document.addEventListener('keydown',e=>{
+    if((e.key==='e'||e.key==='E')&&!e.target.getAttribute('contenteditable'))toggle();
+    if((e.ctrlKey||e.metaKey)&&e.key==='s'){e.preventDefault();save();}
+  });
+  load();
+  return{toggle,save,load,get isActive(){return on;}};
+})();
+</script>
+</body>
+</html>

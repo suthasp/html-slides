@@ -3,7 +3,8 @@
     "allow": [
       "Bash(mkdir -p \"c:/Users/suthas/OneDrive/Documents/GitHub/frontend-slides-main/.frontend-slides/slide-previews\")",
       "Bash(start \"c:\\\\Users\\\\suthas\\\\OneDrive\\\\Documents\\\\GitHub\\\\frontend-slides-main\\\\TOC-RST-PM-Generator.html\")",
-      "Bash(start \"c:\\\\Users\\\\suthas\\\\OneDrive\\\\Documents\\\\GitHub\\\\frontend-slides-main\\\\index.html\")"
+      "Bash(start \"c:\\\\Users\\\\suthas\\\\OneDrive\\\\Documents\\\\GitHub\\\\frontend-slides-main\\\\index.html\")",
+      "Bash(start \"c:\\\\Users\\\\suthas\\\\OneDrive\\\\Documents\\\\GitHub\\\\frontend-slides-main\\\\emergency-ops-generator.html\")"
     ],
     "additionalDirectories": [
       "c:\\Users\\suthas\\OneDrive\\Documents\\GitHub\\frontend-slides-main\\.frontend-slides"
