@@ -9,7 +9,8 @@
       "Bash(curl -s \"https://cc-okid.vercel.app\")",
       "Bash(Start-Process \"c:\\\\Users\\\\suthas\\\\OneDrive\\\\Documents\\\\GitHub\\\\frontend-slides-main\\\\claude-code-guide.html\")",
       "PowerShell(Start-Process \"c:\\\\Users\\\\suthas\\\\OneDrive\\\\Documents\\\\GitHub\\\\frontend-slides-main\\\\claude-code-guide.html\")",
-      "PowerShell(Start-Process \"c:\\\\Users\\\\suthas\\\\OneDrive\\\\Documents\\\\GitHub\\\\frontend-slides-main\\\\index.html\")"
+      "PowerShell(Start-Process \"c:\\\\Users\\\\suthas\\\\OneDrive\\\\Documents\\\\GitHub\\\\frontend-slides-main\\\\index.html\")",
+      "PowerShell(Start-Process \"c:\\\\Users\\\\suthas\\\\OneDrive\\\\Documents\\\\GitHub\\\\frontend-slides-main\\\\load-balance.html\")"
     ],
     "additionalDirectories": [
       "c:\\Users\\suthas\\OneDrive\\Documents\\GitHub\\frontend-slides-main\\.frontend-slides"

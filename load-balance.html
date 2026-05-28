@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TOC-RST Load Balance</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+
+/* === RESET === */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+html, body {
+  width:100vw; height:100vh; overflow:hidden;
+  background:#030609;
+  font-family:'Kanit', sans-serif;
+}
+
+/* === STAGE === */
+#stage {
+  position:absolute;
+  top:0; left:0;
+  width:1920px; height:1080px;
+  transform-origin:0 0;
+  overflow:hidden;
+  background:#070b16;
+}
+
+/* === GRID BG === */
+#stage::before {
+  content:'';
+  position:absolute; inset:0;
+  background-image:
+    linear-gradient(rgba(0,174,239,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,174,239,0.03) 1px, transparent 1px);
+  background-size:60px 60px;
+  pointer-events:none;
+}
+
+/* === SLIDE LAYOUT === */
+.slide {
+  position:absolute; inset:0;
+  display:flex; flex-direction:column;
+  padding:26px 44px 20px;
+  gap:10px;
+}
+
+/* === HEADER === */
+.hdr {
+  display:flex; align-items:center;
+  justify-content:space-between;
+  flex-shrink:0;
+}
+.hdr-left { display:flex; align-items:baseline; gap:12px; }
+.hdr-title {
+  font-size:29px; font-weight:700;
+  color:#fff; letter-spacing:0.02em;
+  white-space:nowrap;
+}
+.hdr-title .acc { color:#00AEEF; }
+.hdr-sub {
+  font-size:15px; font-weight:300;
+  color:rgba(255,255,255,0.45);
+}
+.hdr-right { display:flex; gap:8px; align-items:center; }
+
+.badge {
+  padding:4px 14px; border-radius:16px;
+  font-size:12px; font-weight:600;
+  letter-spacing:0.08em; text-transform:uppercase;
+}
+.b-rst  { background:#00AEEF; color:#000; }
+.b-yr   { background:rgba(255,255,255,0.07); color:rgba(255,255,255,0.55);
+          border:1px solid rgba(255,255,255,0.14); }
+
+/* === ACCENT LINE === */
+.aline {
+  height:2px; flex-shrink:0;
+  background:linear-gradient(90deg, #E8192C 0%, #00AEEF 55%, transparent 100%);
+  border-radius:1px;
+}
+
+/* === TABLE WRAPPER === */
+.tbl-wrap {
+  flex:1; overflow:hidden;
+  border-radius:10px;
+  border:1px solid rgba(255,255,255,0.35);
+}
+
+/* === TABLE === */
+table {
+  width:100%; height:100%;
+  border-collapse:collapse;
+  table-layout:fixed;
+}
+
+/* --- Segment header --- */
+.seg td {
+  font-size:19px; font-weight:700; letter-spacing:0.07em;
+  text-align:center; text-transform:uppercase;
+  padding:7px 4px;
+  border:1px solid rgba(255,255,255,0.35);
+}
+.seg .s0   { background:#0d1525; }
+.seg .str  { background:#004C8C; color:#ffffff; }
+.seg .sgen { background:#527200; color:#ffffff; }
+
+/* --- Column header --- */
+.ch th {
+  font-size:12px; font-weight:600;
+  text-align:center; vertical-align:middle;
+  padding:5px 3px; line-height:1.25;
+  background:#111d2e; color:#b8cfe0;
+  border:1px solid rgba(255,255,255,0.30);
+}
+
+/* --- Data cells (base) --- */
+td {
+  font-size:14.5px; font-weight:400;
+  text-align:center; vertical-align:middle;
+  padding:5px 3px;
+  border:1px solid rgba(255,255,255,0.28);
+  color:#d8e8f0;
+  background:#091120;
+}
+
+/* --- TOC vertical cell --- */
+.toc {
+  background:linear-gradient(180deg, #004C8C 0%, #002F5C 100%);
+  color:#ffffff;
+  font-size:19px; font-weight:700;
+  letter-spacing:0.15em;
+  writing-mode:vertical-rl;
+  transform:rotate(180deg);
+  text-align:center;
+  border-right:2px solid rgba(0,174,239,0.8) !important;
+}
+
+/* --- Row group tints --- */
+tr.rp  td { background:#150d1c; }         /* TR1/TR2 — pink group   */
+tr.ry  td { background:#141200; }         /* TR6    — yellow group  */
+tr.rs  td { background:#070e1a; }         /* EMDB sub-rows          */
+tr.rps td { background:#110b19; }         /* pink sub-rows (unused) */
+
+/* === TEXT COLORS === */
+.to { color:#FFA020 !important; font-weight:600; }  /* orange  — TR Used alert */
+.tp { color:#FF6EC7 !important; font-weight:600; }  /* pink    — TR1/TR2 vals */
+.tc { color:#00E5FF !important; font-weight:600; }  /* cyan    — EMDB11A val  */
+.tr2{ color:#FF5555 !important; font-weight:600; }  /* red     — high used    */
+.tg { color:#555 !important; }                       /* gray    — empty cells  */
+
+/* === PERCENTAGE CELL BACKGROUNDS === */
+.pG { background:rgba(70,180,55,0.22) !important;  color:#72E054 !important; font-weight:600; }
+.pR { background:rgba(220,25,40,0.38) !important;  color:#FF7070 !important; font-weight:600; }
+.pY { background:rgba(220,175,0,0.32) !important;  color:#FFD700 !important; font-weight:600; }
+
+/* Thick group-boundary borders */
+tr.grp td  { border-top:2px solid rgba(255,255,255,0.55) !important; }
+
+/* === LEGEND === */
+.legend {
+  display:flex; gap:22px; align-items:center;
+  flex-shrink:0; padding-top:2px;
+}
+.li {
+  display:flex; align-items:center; gap:6px;
+  font-size:11.5px; color:rgba(255,255,255,0.5);
+}
+.ld {
+  width:13px; height:13px; border-radius:3px;
+  flex-shrink:0;
+}
+.legend-end {
+  margin-left:auto;
+  font-size:11px; color:rgba(255,255,255,0.25);
+}
+
+</style>
+</head>
+<body>
+
+<div id="stage">
+<div class="slide">
+
+  <!-- ── Header ── -->
+  <div class="hdr">
+    <div class="hdr-left">
+      <span class="hdr-title">
+        <span class="acc">TOC-RST</span>&nbsp;·&nbsp;Transformer &amp; Generator Load Balance
+      </span>
+      <span class="hdr-sub">Current Load Distribution Summary</span>
+    </div>
+    <div class="hdr-right">
+      <span class="badge b-rst">RST Building</span>
+      <span class="badge b-yr">2026</span>
+    </div>
+  </div>
+
+  <div class="aline"></div>
+
+  <!-- ── Table ── -->
+  <div class="tbl-wrap">
+    <table>
+      <colgroup>
+        <col style="width:52px">    <!-- TOC -->
+        <col style="width:60px">    <!-- TR No -->
+        <col style="width:72px">    <!-- TR Max KVA -->
+        <col style="width:72px">    <!-- TR Max KW -->
+        <col style="width:76px">    <!-- TR Used KVA -->
+        <col style="width:90px">    <!-- MDB No -->
+        <col style="width:76px">    <!-- MDB Used KW -->
+        <col style="width:114px">   <!-- EMDB No -->
+        <col style="width:86px">    <!-- EMDB Used KW -->
+        <col style="width:70px">    <!-- %TR Load -->
+        <col style="width:68px">    <!-- GEN No -->
+        <col style="width:76px">    <!-- GEN Max KVA -->
+        <col style="width:76px">    <!-- GEN Max KW -->
+        <col style="width:90px">    <!-- Actual Load Gen KW -->
+        <col style="width:70px">    <!-- %Gen Load -->
+        <col style="width:114px">   <!-- Actual Load Single Gen KW -->
+        <col style="width:90px">    <!-- %Gen Load > 80% -->
+      </colgroup>
+
+      <thead>
+        <!-- Section labels -->
+        <tr class="seg">
+          <td class="s0"></td>
+          <td colspan="9" class="str">Transformer</td>
+          <td colspan="7" class="sgen">Generator</td>
+        </tr>
+        <!-- Column headers -->
+        <tr class="ch">
+          <th>TOC</th>
+          <th>TR No</th>
+          <th>TR Max<br>(KVA)</th>
+          <th>TR Max<br>(KW)</th>
+          <th>TR Used<br>(KVA)</th>
+          <th>MDB No</th>
+          <th>MDB Used<br>(KW)</th>
+          <th>EMDB No</th>
+          <th>EMDB Used<br>(KW)</th>
+          <th>%TR<br>Load</th>
+          <th>GEN No</th>
+          <th>GEN Max<br>(KVA)</th>
+          <th>GEN Max<br>(KW)</th>
+          <th>Actual Load<br>Gen (KW)</th>
+          <th>%Gen<br>Load</th>
+          <th>Actual Load<br>Single Gen (KW)</th>
+          <th>%Gen Load<br>&gt; 80%</th>
+        </tr>
+      </thead>
+
+      <tbody>
+
+        <!-- ════════════════════════════════
+             GEN 1 + 2  (TR7 · TR8)
+             ════════════════════════════════ -->
+
+        <!-- Row 1 · TR7 / EMDB12A1 -->
+        <tr class="grp">
+          <td class="toc" rowspan="13">RST</td>
+          <td rowspan="2">TR7</td>
+          <td rowspan="2">2000</td>
+          <td rowspan="2">1600</td>
+          <td rowspan="2" class="to">766</td>
+          <td rowspan="2">MDB12A</td>
+          <td rowspan="2">764</td>
+          <td>EMDB12A1</td>
+          <td>291</td>
+          <td rowspan="2" class="pG">38%</td>
+          <td rowspan="2">GEN1</td>
+          <td rowspan="2">2000</td>
+          <td rowspan="2">1600</td>
+          <td rowspan="2">691</td>
+          <td rowspan="2" class="pG">43%</td>
+          <td rowspan="4">1454</td>
+          <td rowspan="4" class="pR">91%</td>
+        </tr>
+        <!-- Row 2 · TR7 / EMDB12A2 (sub) -->
+        <tr class="rs">
+          <td>EMDB12A2</td>
+          <td>400</td>
+        </tr>
+
+        <!-- Row 3 · TR8 / EMDB12B1 -->
+        <tr>
+          <td rowspan="2">TR8</td>
+          <td rowspan="2">2000</td>
+          <td rowspan="2">1600</td>
+          <td rowspan="2">838</td>
+          <td rowspan="2">MDB12B</td>
+          <td rowspan="2">761</td>
+          <td>EMDB12B1</td>
+          <td>186</td>
+          <td rowspan="2" class="pR">42%</td>
+          <td rowspan="2">GEN2</td>
+          <td rowspan="2">2000</td>
+          <td rowspan="2">1600</td>
+          <td rowspan="2">763</td>
+          <td rowspan="2" class="pG">48%</td>
+        </tr>
+        <!-- Row 4 · TR8 / EMDB12B2 (sub) -->
+        <tr class="rs">
+          <td>EMDB12B2</td>
+          <td>577</td>
+        </tr>
+
+        <!-- ════════════════════════════════
+             GEN 3 + 4  (TR1 · TR2)
+             ════════════════════════════════ -->
+
+        <!-- Row 5 · TR1 (pink group) -->
+        <tr class="rp grp">
+          <td>TR1</td>
+          <td>1500</td>
+          <td>1200</td>
+          <td class="tp">481</td>
+          <td>MDB11A</td>
+          <td>491</td>
+          <td>EMDB11A</td>
+          <td class="tc">453</td>
+          <td class="pG">32%</td>
+          <td>GEN3</td>
+          <td>1500</td>
+          <td>1200</td>
+          <td>453</td>
+          <td class="pG">41%</td>
+          <td rowspan="2">836</td>
+          <td rowspan="2" class="pY">70%</td>
+        </tr>
+        <!-- Row 6 · TR2 (pink group) -->
+        <tr class="rp">
+          <td>TR2</td>
+          <td>1500</td>
+          <td>1200</td>
+          <td class="tp">373</td>
+          <td>MDB11B</td>
+          <td>383</td>
+          <td>EMDB11B</td>
+          <td class="tp">383</td>
+          <td class="pG">25%</td>
+          <td>GEN4</td>
+          <td>1500</td>
+          <td>1200</td>
+          <td>383</td>
+          <td class="pG">32%</td>
+        </tr>
+
+        <!-- ════════════════════════════════
+             GEN 5 + 6  (TR3 · TR5 · TR4)
+             ════════════════════════════════ -->
+
+        <!-- Row 7 · TR3 / EMDB13A -->
+        <tr class="grp">
+          <td rowspan="2">TR3</td>
+          <td rowspan="2">1500</td>
+          <td rowspan="2">1200</td>
+          <td rowspan="2" class="tr2">508</td>
+          <td rowspan="2">MDB13A</td>
+          <td rowspan="2">511</td>
+          <td>EMDB13A</td>
+          <td>546</td>
+          <td rowspan="2" class="pG">34%</td>
+          <td rowspan="2">GEN5</td>
+          <td rowspan="2">2500</td>
+          <td rowspan="2">2000</td>
+          <td rowspan="2">934</td>
+          <td rowspan="2" class="pG">47%</td>
+          <td rowspan="6">1856</td>
+          <td rowspan="6" class="pR">93%</td>
+        </tr>
+        <!-- Row 8 · TR3 / EMDB13A2 (sub) -->
+        <tr class="rs">
+          <td>EMDB13A2</td>
+          <td class="tg">—</td>
+        </tr>
+
+        <!-- Row 9 · TR5 / EMDB14A1 -->
+        <tr>
+          <td rowspan="2">TR5</td>
+          <td rowspan="2">2000</td>
+          <td rowspan="2">1600</td>
+          <td rowspan="2" class="tr2">833</td>
+          <td rowspan="2">MDB14A</td>
+          <td rowspan="2">853</td>
+          <td>EMDB14A1</td>
+          <td>388</td>
+          <td rowspan="2" class="pR">42%</td>
+          <td rowspan="4">GEN6</td>
+          <td rowspan="4">2500</td>
+          <td rowspan="4">2000</td>
+          <td rowspan="4">922</td>
+          <td rowspan="4" class="pG">46%</td>
+        </tr>
+        <!-- Row 10 · TR5 / EMDB14A2 (sub) -->
+        <tr class="rs">
+          <td>EMDB14A2</td>
+          <td>399</td>
+        </tr>
+
+        <!-- Row 11 · TR4 / EMDB13B -->
+        <tr>
+          <td rowspan="2">TR4</td>
+          <td rowspan="2">1500</td>
+          <td rowspan="2">1200</td>
+          <td rowspan="2" class="to">545</td>
+          <td rowspan="2">MDB13B</td>
+          <td rowspan="2">541</td>
+          <td>EMDB13B</td>
+          <td>523</td>
+          <td rowspan="2" class="pG">36%</td>
+        </tr>
+        <!-- Row 12 · TR4 / EMDB13B2 (sub) -->
+        <tr class="rs">
+          <td>EMDB13B2</td>
+          <td class="tg">—</td>
+        </tr>
+
+        <!-- ════════════════════════════════
+             GEN 7  (TR6)
+             ════════════════════════════════ -->
+
+        <!-- Row 13 · TR6 (yellow group) -->
+        <tr class="ry grp">
+          <td>TR6</td>
+          <td>2000</td>
+          <td>1600</td>
+          <td class="to">643</td>
+          <td>MDB14B</td>
+          <td>656</td>
+          <td>EMDB14B</td>
+          <td>613</td>
+          <td class="pG">32%</td>
+          <td>GEN7</td>
+          <td>2000</td>
+          <td>1600</td>
+          <td>651</td>
+          <td class="pG">41%</td>
+          <td>651</td>
+          <td class="pG">41%</td>
+        </tr>
+
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ── Legend ── -->
+  <div class="legend">
+    <div class="li">
+      <div class="ld" style="background:rgba(70,180,55,0.55)"></div>
+      <span>Load ปกติ (&lt; 60%)</span>
+    </div>
+    <div class="li">
+      <div class="ld" style="background:rgba(220,175,0,0.6)"></div>
+      <span>Load ปานกลาง (60–80%)</span>
+    </div>
+    <div class="li">
+      <div class="ld" style="background:rgba(220,25,40,0.65)"></div>
+      <span>Load สูง (&gt; 80%) — Critical</span>
+    </div>
+    <div class="li" style="margin-left:16px">
+      <div class="ld" style="background:#150d1c; border:1px solid rgba(255,110,200,0.4)"></div>
+      <span>กลุ่ม GEN3+4 (TR1 / TR2)</span>
+    </div>
+    <div class="li">
+      <div class="ld" style="background:#141200; border:1px solid rgba(255,215,0,0.35)"></div>
+      <span>กลุ่ม GEN7 (TR6)</span>
+    </div>
+    <span class="legend-end">TOC-RST &nbsp;·&nbsp; True Corporation &amp; DTAC &nbsp;·&nbsp; 2026</span>
+  </div>
+
+</div>
+</div>
+
+<script>
+  function scaleStage() {
+    const vw = window.innerWidth, vh = window.innerHeight;
+    const s = Math.min(vw / 1920, vh / 1080);
+    const x = (vw - 1920 * s) / 2;
+    const y = (vh - 1080 * s) / 2;
+    document.getElementById('stage').style.transform =
+      'translate(' + x + 'px,' + y + 'px) scale(' + s + ')';
+  }
+  scaleStage();
+  window.addEventListener('resize', scaleStage);
+</script>
+</body>
+</html>
