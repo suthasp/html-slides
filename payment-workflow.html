@@ -125,6 +125,7 @@ tr:nth-child(even) td { background:#0c1828; }
 .cd.doc  { background:rgba(0,200,100,0.35); color:#70e890; font-weight:700; border-radius:50%; }
 .cd.bill { background:rgba(232,25,44,0.35); color:#ff8080; font-weight:700; border-radius:50%; }
 .cd.pay  { background:rgba(255,200,0,0.3);  color:#FFD700; font-weight:700; border-radius:3px; }
+.cd.bill.pay { background:linear-gradient(135deg,rgba(232,25,44,0.45) 50%,rgba(255,200,0,0.35) 50%); color:#FFD700; font-weight:700; border-radius:3px; }
 
 /* === TITLE SLIDE === */
 #s0 { align-items:center; justify-content:center; }
@@ -842,8 +843,10 @@ document.addEventListener('keydown', e => {
   const calGrid = document.getElementById('calGrid');
   const payTable = document.getElementById('payTable');
 
+  // March bill day = 3rd Friday (20th) — payment on 27th is a separate date
+  const billOverrides = { 3: 20 };
   for (let m = 1; m <= 12; m++) {
-    const bill = nthFriday(2026, m, 4);
+    const bill = (billOverrides[m] !== undefined) ? billOverrides[m] : nthFriday(2026, m, 4);
     const pay  = payDates[m];
     const doc  = docDay(2026, m);
 
@@ -859,9 +862,9 @@ document.addEventListener('keydown', e => {
     for (let i = 0; i < offset; i++) html += '<div class="cd e">0</div>';
     for (let d = 1; d <= daysInMonth; d++) {
       let cls = 'cd';
-      if (d === pay) cls += ' pay';
-      else if (d === bill) cls += ' bill';
-      else if (d === doc) cls += ' doc';
+      if (d === doc)  cls += ' doc';
+      if (d === bill) cls += ' bill';
+      if (d === pay)  cls += ' pay';
       html += `<div class="${cls}">${d}</div>`;
     }
     html += '</div></div>';
