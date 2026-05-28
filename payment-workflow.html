@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Payment Workflow — NW Special Project</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+
+/* === RESET === */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html, body { width:100vw; height:100vh; overflow:hidden; background:#050810; font-family:'Kanit',sans-serif; }
+
+/* === STAGE === */
+#stage {
+  position:absolute; top:0; left:0;
+  width:1920px; height:1080px;
+  transform-origin:0 0; overflow:hidden;
+  background:#0a0e1c;
+}
+#stage::before {
+  content:''; position:absolute; inset:0;
+  background-image:
+    linear-gradient(rgba(0,100,200,0.025) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,100,200,0.025) 1px,transparent 1px);
+  background-size:60px 60px; pointer-events:none;
+}
+
+/* === SLIDES === */
+.slide { display:none; position:absolute; inset:0; flex-direction:column; padding:26px 44px 20px; gap:10px; }
+.slide.active { display:flex; }
+
+/* === NAVIGATION === */
+#nav { position:absolute; bottom:20px; right:44px; display:flex; align-items:center; gap:14px; z-index:200; }
+.nb { background:rgba(0,174,239,0.12); border:1px solid rgba(0,174,239,0.4); color:#00AEEF; font-family:'Kanit',sans-serif; font-size:18px; font-weight:600; padding:5px 20px; border-radius:8px; cursor:pointer; transition:background 0.2s; }
+.nb:hover { background:rgba(0,174,239,0.3); }
+#sc { font-size:15px; font-weight:500; color:rgba(255,255,255,0.45); min-width:44px; text-align:center; }
+
+/* === SHARED HEADER === */
+.hdr { display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
+.hdr-left { display:flex; align-items:baseline; gap:12px; }
+.hdr-title { font-size:32px; font-weight:700; color:#fff; letter-spacing:0.01em; }
+.hdr-title .acc { color:#00AEEF; }
+.hdr-sub { font-size:16px; font-weight:300; color:rgba(255,255,255,0.45); }
+.hdr-right { display:flex; gap:8px; align-items:center; }
+.badge { padding:4px 14px; border-radius:16px; font-size:14px; font-weight:600; letter-spacing:0.07em; text-transform:uppercase; }
+.b-ww  { background:#00AEEF; color:#000; }
+.b-mo  { background:rgba(255,200,0,0.15); color:#FFD700; border:1px solid rgba(255,200,0,0.35); }
+.b-sp  { background:rgba(232,25,44,0.15); color:#ff6b6b; border:1px solid rgba(232,25,44,0.35); }
+.b-sub { background:rgba(80,200,80,0.15); color:#80e080; border:1px solid rgba(80,200,80,0.35); }
+.b-ref { background:rgba(160,120,220,0.15); color:#c090f0; border:1px solid rgba(160,120,220,0.35); }
+.aline { height:2px; flex-shrink:0; background:linear-gradient(90deg,#E8192C 0%,#00AEEF 55%,transparent 100%); border-radius:1px; }
+
+/* === HIGHLIGHT BOXES === */
+.hbox { border-radius:8px; padding:7px 16px; font-size:15px; font-weight:600; text-align:center; flex-shrink:0; }
+.hbox-r { background:rgba(232,25,44,0.2); border:1px solid rgba(232,25,44,0.5); color:#ff8080; }
+.hbox-y { background:rgba(255,200,0,0.15); border:1px solid rgba(255,200,0,0.45); color:#FFD700; }
+.hbox-g { background:rgba(70,180,60,0.18); border:1px solid rgba(70,180,60,0.45); color:#72E054; }
+
+/* === SWIMLANE === */
+.sl-wrap { flex:1; display:flex; flex-direction:column; border-radius:10px; border:2px solid rgba(255,255,255,0.40); overflow:hidden; }
+.sl-heads { display:flex; flex-shrink:0; }
+.sl-h { flex:1; padding:7px 4px; text-align:center; font-size:15px; font-weight:700; color:#fff; line-height:1.25; border-right:1px solid rgba(255,255,255,0.40); }
+.sl-h:last-child { border-right:none; }
+.sl-body { flex:1; display:flex; overflow:hidden; }
+.sl-col { flex:1; border-right:1px solid rgba(255,255,255,0.30); padding:6px 4px; display:flex; flex-direction:column; gap:4px; align-items:center; overflow:hidden; }
+.sl-col:last-child { border-right:none; }
+.sl-sp { flex:1; }
+
+.fbox { background:#101e36; border:1px solid rgba(255,255,255,0.45); border-radius:5px; padding:5px 5px; font-size:15px; color:#d8e8f4; text-align:center; line-height:1.3; width:100%; }
+.fbox .fn { font-size:14px; font-weight:700; color:#00AEEF; display:block; margin-bottom:1px; }
+.fbox.start { background:rgba(70,200,70,0.22); border-color:rgba(70,200,70,0.80); color:#70e070; font-weight:700; font-size:15px; }
+.fbox.end   { background:rgba(220,90,20,0.22); border-color:rgba(220,90,20,0.80); color:#f09050; font-weight:700; font-size:15px; }
+.fbox.dec   { background:rgba(220,180,0,0.16); border-color:rgba(220,180,0,0.65); color:#FFD700; }
+.fbox.crit  { background:rgba(232,25,44,0.16); border-color:rgba(232,25,44,0.65); }
+.fbox.note  { background:rgba(255,150,50,0.12); border-color:rgba(255,150,50,0.55); color:#ffa060; font-size:14px; }
+.tag-d { background:rgba(70,200,70,0.25); border:1px solid rgba(70,200,70,0.65); border-radius:10px; padding:2px 8px; font-size:14px; font-weight:600; color:#70e070; white-space:nowrap; }
+.tag-t { background:rgba(0,174,239,0.20); border:1px solid rgba(0,174,239,0.60); border-radius:10px; padding:2px 8px; font-size:14px; font-weight:600; color:#00AEEF; white-space:nowrap; }
+.arr { font-size:20px; color:rgba(255,255,255,0.55); line-height:1; }
+
+/* === TIMELINE BAR === */
+.tbar { flex-shrink:0; display:flex; align-items:stretch; gap:0; border-radius:8px; overflow:hidden; border:1px solid rgba(255,255,255,0.38); }
+.tbar-item { flex:1; padding:7px 5px; text-align:center; display:flex; flex-direction:column; gap:3px; border-right:1px solid rgba(255,255,255,0.35); }
+.tbar-item:last-child { border-right:none; }
+.ti-role { font-size:14px; font-weight:700; color:#fff; }
+.ti-desc { font-size:13.5px; color:rgba(255,255,255,0.8); line-height:1.3; }
+.ti-days { font-size:14.5px; font-weight:700; color:#FFD700; }
+.ti-date { font-size:13px; color:#00AEEF; font-weight:600; }
+
+/* === TABLE === */
+.tbl-wrap { flex:1; overflow:hidden; border-radius:10px; border:1px solid rgba(255,255,255,0.38); }
+table { width:100%; height:100%; border-collapse:collapse; table-layout:fixed; }
+td, th { font-size:16px; font-weight:400; text-align:left; vertical-align:middle; padding:5px 10px; border:1px solid rgba(255,255,255,0.30); color:#d8e8f0; }
+th { background:#111d30; font-weight:600; color:#b8cfe0; text-align:center; }
+td { background:#091120; }
+tr:nth-child(even) td { background:#0c1828; }
+.tc { text-align:center !important; }
+.cl { text-align:left !important; }
+.hl-r { color:#FF7070 !important; font-weight:600; }
+.hl-g { color:#72E054 !important; font-weight:600; }
+.hl-y { color:#FFD700 !important; font-weight:600; }
+.hl-b { color:#60b0ff !important; font-weight:600; }
+.hl-o { color:#FFA040 !important; font-weight:600; }
+.hl-c { color:#00AEEF !important; font-weight:600; }
+.row-h td { background:#131e34 !important; font-weight:600; }
+
+/* === CARDS === */
+.card-grid { flex:1; display:grid; gap:14px; }
+.info-card { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.12); border-radius:10px; padding:16px 20px; display:flex; flex-direction:column; gap:8px; }
+.ic-title { font-size:18px; font-weight:700; }
+.ic-body { font-size:15.5px; font-weight:300; color:rgba(255,255,255,0.78); line-height:1.75; }
+.ic-body ul { padding-left:18px; }
+.ic-body li { margin-bottom:3px; }
+
+/* === CALENDAR === */
+.cal-wrap { flex:1; display:flex; gap:14px; }
+.cal-grid { flex:1; display:grid; grid-template-columns:repeat(4,1fr); grid-template-rows:repeat(3,1fr); gap:9px; }
+.cal-month { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.28); border-radius:8px; padding:6px 8px; display:flex; flex-direction:column; gap:3px; }
+.cal-mname { font-size:15px; font-weight:700; color:#00AEEF; text-align:center; }
+.cal-days { display:grid; grid-template-columns:repeat(7,1fr); gap:1px; font-size:14px; text-align:center; }
+.cal-dow { color:rgba(255,255,255,0.55); font-weight:600; font-size:13px; }
+.cd { padding:1px 0; color:rgba(255,255,255,0.65); }
+.cd.e { visibility:hidden; }
+.cd.doc  { background:rgba(0,200,100,0.35); color:#70e890; font-weight:700; border-radius:50%; }
+.cd.bill { background:rgba(232,25,44,0.35); color:#ff8080; font-weight:700; border-radius:50%; }
+.cd.pay  { background:rgba(255,200,0,0.3);  color:#FFD700; font-weight:700; border-radius:3px; }
+
+/* === TITLE SLIDE === */
+#s0 { align-items:center; justify-content:center; }
+.t-wrap { text-align:center; }
+.t-chip { display:inline-flex; align-items:center; gap:8px; background:rgba(0,174,239,0.12); border:1px solid rgba(0,174,239,0.3); border-radius:20px; padding:6px 22px; font-size:16px; color:#00AEEF; margin-bottom:22px; }
+.t-chip .dot { width:8px; height:8px; border-radius:50%; background:#00AEEF; animation:pulse 2s infinite; }
+.t-h1 { font-size:80px; font-weight:700; line-height:1.12; background:linear-gradient(135deg,#fff 35%,rgba(255,255,255,0.5)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin-bottom:14px; }
+.t-h2 { font-size:30px; font-weight:300; color:rgba(255,255,255,0.5); margin-bottom:40px; }
+.t-pills { display:flex; gap:16px; justify-content:center; }
+.t-pill { padding:8px 22px; border-radius:20px; font-size:16px; font-weight:500; }
+.tp-m  { background:rgba(255,200,0,0.12); color:#FFD700; border:1px solid rgba(255,200,0,0.35); }
+.tp-sp { background:rgba(232,25,44,0.12); color:#ff7070; border:1px solid rgba(232,25,44,0.35); }
+.tp-sc { background:rgba(80,200,80,0.12); color:#80e080; border:1px solid rgba(80,200,80,0.35); }
+.tp-r  { background:rgba(160,120,220,0.12); color:#c090f0; border:1px solid rgba(160,120,220,0.35); }
+
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.7)} }
+
+</style>
+</head>
+<body>
+<div id="stage">
+
+  <div id="nav">
+    <button class="nb" id="bp">&#8592;</button>
+    <span id="sc">1 / 9</span>
+    <button class="nb" id="bn">&#8594;</button>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       S0 · Title
+       ══════════════════════════════════════════════ -->
+  <div class="slide active" id="s0">
+    <div class="t-wrap">
+      <div class="t-chip"><span class="dot"></span>W&W — Wire &amp; Wireless | NW Special Project</div>
+      <div class="t-h1">การเบิก-จ่ายผลตอบแทน<br>Payment Workflow</div>
+      <div class="t-h2">ขั้นตอนการเบิก Invoice และจ่ายผลตอบแทน Sub Contractor</div>
+      <div class="t-pills">
+        <span class="t-pill tp-m">Invoice Monthly</span>
+        <span class="t-pill tp-sp">Invoice Special Work</span>
+        <span class="t-pill tp-sc">Sub Contractor Payment</span>
+        <span class="t-pill tp-r">ระเบียบ &amp; ปฏิทิน</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       S1 · Invoice Monthly
+       ══════════════════════════════════════════════ -->
+  <div class="slide" id="s1">
+    <div class="hdr">
+      <div class="hdr-left">
+        <span class="hdr-title"><span class="acc">การเบิกผลตอบแทน</span>&nbsp;(Invoice) — Monthly</span>
+        <span class="hdr-sub">ขั้นตอนการเบิก Invoice รายเดือน — 8 ฝ่าย</span>
+      </div>
+      <div class="hdr-right">
+        <div class="hbox hbox-r">Due ชำระเงิน 60 วัน นับจากรับวางบิลในระบบ</div>
+        <div class="hbox hbox-y">10-12 วัน ส่งวางบิล</div>
+        <span class="badge b-mo">Monthly</span>
+        <span class="badge b-ww">W&amp;W</span>
+      </div>
+    </div>
+    <div class="aline"></div>
+    <!-- Timeline bar -->
+    <div class="tbar">
+      <div class="tbar-item" style="background:#1A2A50;"><div class="ti-date">วันที่ 3</div><div class="ti-desc">สรุป/จัดทำรายงาน</div><div class="ti-role">Sub Contractor</div></div>
+      <div class="tbar-item" style="background:#1A2A50;"><div class="ti-date">วันที่ 4–5</div><div class="ti-desc">Review KPI</div><div class="ti-role">Supervisor</div></div>
+      <div class="tbar-item" style="background:#1A2A50;"><div class="ti-date">วันที่ 6–13</div><div class="ti-desc">ตรวจสอบ/ลงนาม FBOQ</div><div class="ti-role">Customer</div></div>
+      <div class="tbar-item" style="background:#1A2A50;"><div class="ti-date">วันที่ 14–15</div><div class="ti-desc">รวบรวมเอกสาร BOQ</div><div class="ti-role">Admin Zone</div></div>
+      <div class="tbar-item" style="background:#1A2A50;"><div class="ti-date">วันที่ 16</div><div class="ti-desc">ส่งแจ้งหนี้ UR</div><div class="ti-role">Admin Zone</div><div class="ti-days">1 วัน</div></div>
+      <div class="tbar-item" style="background:#1A3060;"><div class="ti-date">วันที่ 17</div><div class="ti-desc">Submit UR</div><div class="ti-role">CCM</div><div class="ti-days">1 วัน</div></div>
+      <div class="tbar-item" style="background:#1A3060;"><div class="ti-date">วันที่ 18</div><div class="ti-desc">ออก Invoice</div><div class="ti-role">AR (W&W)</div><div class="ti-days">1–3 วัน</div></div>
+      <div class="tbar-item" style="background:#1A2A50;"><div class="ti-date">วันที่ 19</div><div class="ti-desc">Accept / ส่งขอ GR</div><div class="ti-role">Admin Zone</div><div class="ti-days">1–3 วัน</div></div>
+      <div class="tbar-item" style="background:#1A3060;"><div class="ti-date">วันที่ 20–21</div><div class="ti-desc">ออก GR</div><div class="ti-role">AR (Customer)</div><div class="ti-days">1–3 วัน</div></div>
+      <div class="tbar-item" style="background:#1A2A50;"><div class="ti-date">วันที่ 22</div><div class="ti-desc">Print GR ส่งวางบิล</div><div class="ti-role">Admin Zone</div></div>
+      <div class="tbar-item" style="background:#1A3060;"><div class="ti-date">วันที่ 23</div><div class="ti-desc">ส่งวางบิลผ่านระบบ</div><div class="ti-role">AR (W&W)</div><div class="ti-days">1 วัน</div></div>
+      <div class="tbar-item" style="background:#2A1018;"><div class="ti-date">วันที่ 30</div><div class="ti-desc">วางบิล / Due</div><div class="ti-role">AR (Customer)</div><div class="ti-days" style="color:#ff7070;">60 วัน Due</div></div>
+    </div>
+    <!-- Swimlane -->
+    <div class="sl-wrap">
+      <div class="sl-heads">
+        <div class="sl-h" style="background:#B04810;">Customer</div>
+        <div class="sl-h" style="background:#153880;">Supervisor<br>(W&W)</div>
+        <div class="sl-h" style="background:#206030;">Sub<br>Contractor</div>
+        <div class="sl-h" style="background:#404818;">Admin Zone</div>
+        <div class="sl-h" style="background:#7A1870;">Admin Center<br>(CCM)</div>
+        <div class="sl-h" style="background:#705818;">CCM</div>
+        <div class="sl-h" style="background:#184858;">AR (W&W)</div>
+        <div class="sl-h" style="background:#303858;">AR (Customer)</div>
+      </div>
+      <div class="sl-body">
+        <div class="sl-col">
+          <div class="fbox start">Start</div>
+          <div class="arr">↓</div>
+          <div class="fbox"><span class="fn">1.</span>Sign Contract</div>
+          <div class="arr">↓</div>
+          <div class="fbox"><span class="fn">4.</span>เปิด PO</div>
+          <div class="sl-sp"></div>
+          <div class="fbox dec"><span class="fn">10.</span>ตรวจสอบรายงาน<br>[แก้ไข?]</div>
+          <div class="arr">↓</div>
+          <div class="fbox"><span class="fn">11.</span>ลงนาม FBOQ<br>ตรวจรับงาน</div>
+          <div class="arr">↓</div>
+          <div class="fbox end">End</div>
+        </div>
+        <div class="sl-col">
+          <div class="sl-sp"></div>
+          <div class="fbox"><span class="fn">5.</span>สั่งการ/<br>ดำเนินงาน</div>
+          <div class="sl-sp"></div>
+          <div class="fbox"><span class="fn">9.</span>ตรวจสอบรายงาน<br>Review KPI</div>
+          <div class="tag-d">วันที่ 4–5</div>
+        </div>
+        <div class="sl-col">
+          <div class="sl-sp"></div>
+          <div class="fbox"><span class="fn">6.</span>ดำเนินการ</div>
+          <div class="arr">↓</div>
+          <div class="fbox"><span class="fn">7.</span>ปิดงาน</div>
+          <div class="arr">↓</div>
+          <div class="fbox"><span class="fn">8.</span>สรุป/จัดทำ<br>รายงาน</div>
+          <div class="tag-d">ภายในวันที่ 3</div>
+        </div>
+        <div class="sl-col">
+          <div class="sl-sp"></div>
+          <div class="fbox"><span class="fn">12.</span>รวบรวมเอกสาร<br>Summary, BOQ</div>
+          <div class="tag-d">วันที่ 14–15</div>
+          <div class="arr">↓</div>
+          <div class="fbox"><span class="fn">13.</span>ส่งแจ้งหนี้<br>เข้าระบบ UR</div>
+          <div class="tag-t">วันที่ 16 · 1 วัน</div>
+          <div class="arr">↓</div>
+          <div class="fbox"><span class="fn">16.</span>Accept Invoice<br>ส่งขอ GR</div>
+          <div class="tag-t">วันที่ 19 · 1–3 วัน</div>
+          <div class="arr">↓</div>
+          <div class="fbox"><span class="fn">18.</span>Print GR<br>ส่งวางบิล</div>
+          <div class="tag-d">วันที่ 22</div>
+        </div>
+        <div class="sl-col">
+          <div class="fbox"><span class="fn">2.→3.</span>ตีตราสาร<br>กรมสรรพากร<br>→ ตรวจสอบ/จัดเก็บ</div>
+          <div class="arr">↓</div>
+          <div class="fbox end">End</div>
+        </div>
+        <div class="sl-col">
+          <div class="sl-sp"></div>
+          <div class="fbox"><span class="fn">14.</span>Submit UR</div>
+          <div class="tag-t">วันที่ 17 · 1 วัน</div>
+        </div>
+        <div class="sl-col">
+          <div class="sl-sp"></div>
+          <div class="fbox"><span class="fn">15.</span>ออก Invoice</div>
+          <div class="tag-t">วันที่ 18 · 1–3 วัน</div>
+          <div class="sl-sp"></div>
+          <div class="fbox"><span class="fn">19.</span>ส่งวางบิล<br>ผ่านระบบ</div>
+          <div class="tag-t">วันที่ 23 · 1 วัน</div>
+        </div>
+        <div class="sl-col">
+          <div class="sl-sp"></div>
+          <div class="fbox"><span class="fn">17.</span>ออก GR</div>
+          <div class="tag-t">วันที่ 20–21 · 1–3 วัน</div>
+          <div class="sl-sp"></div>
+          <div class="fbox crit"><span class="fn">20.</span>วางบิล/<br>Due ชำระเงิน</div>
+          <div class="tag-d">วันที่ 30 · 10–12 วัน</div>
+          <div class="arr">↓</div>
+          <div class="fbox end">End</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       S2 · Invoice Special Work
+       ══════════════════════════════════════════════ -->
+  <div class="slide" id="s2">
+    <div class="hdr">
+      <div class="hdr-left">
+        <span class="hdr-title"><span class="acc">การเบิกผลตอบแทน</span>&nbsp;(Invoice) — Special Work</span>
+        <span class="hdr-sub">ขั้นตอนการเบิก Invoice งาน Special — เงื่อนไขตาม GR</span>
+      </div>
+      <div class="hdr-right">
+        <div class="hbox hbox-r">ไม่มี GR · 10–12 วัน ส่งวางบิล</div>
+        <div class="hbox hbox-y">มี GR · 7 วัน ส่งวางบิล</div>
+        <div class="hbox hbox-r">Due 30 วัน นับจากรับวางบิล</div>
+        <span class="badge b-sp">Special Work</span>
+      </div>
+    </div>
+    <div class="aline"></div>
+    <div class="sl-wrap">
+      <div class="sl-heads">
+        <div class="sl-h" style="background:#B04810;">Customer</div>
+        <div class="sl-h" style="background:#153880;">Supervisor<br>(W&W)</div>
+        <div class="sl-h" style="background:#206030;">Sub<br>Contractor</div>
+        <div class="sl-h" style="background:#404818;">Admin Zone</div>
+        <div class="sl-h" style="background:#7A1870;">Payment Team</div>
+        <div class="sl-h" style="background:#705818;">CCM</div>
+        <div class="sl-h" style="background:#184858;">AR (W&W)</div>
+        <div class="sl-h" style="background:#303858;">AR (Customer)</div>
+      </div>
+      <div class="sl-body">
+        <div class="sl-col">
+          <div class="fbox start">Start</div>
+          <div class="arr">↓</div>
+          <div class="fbox"><span class="fn">1.</span>Sign Contract</div>
+          <div class="arr">↓</div>
+          <div class="fbox"><span class="fn">4.</span>เปิด PO</div>
+          <div class="sl-sp"></div>
+          <div class="fbox dec"><span class="fn">10.</span>ตรวจสอบรายงาน<br>[แก้ไข?]</div>
+          <div class="arr">↓</div>
+          <div class="fbox"><span class="fn">11.</span>ลงนาม FBOQ<br>ตรวจรับงาน</div>
+          <div class="arr">↓</div>
+          <div class="fbox end">End</div>
+        </div>
+        <div class="sl-col">
+          <div class="sl-sp"></div>
+          <div class="fbox"><span class="fn">5.</span>สั่งการ/<br>ดำเนินงาน</div>
+          <div class="sl-sp"></div>
+          <div class="fbox"><span class="fn">9.</span>ตรวจสอบรายงาน<br>Review KPI</div>
+        </div>
+        <div class="sl-col">
+          <div class="sl-sp"></div>
+          <div class="fbox"><span class="fn">6.</span>ดำเนินการ</div>
+          <div class="arr">↓</div>
+          <div class="fbox"><span class="fn">7.</span>ปิดงาน</div>
+          <div class="arr">↓</div>
+          <div class="fbox"><span class="fn">8.</span>สรุป/จัดทำ<br>รายงาน</div>
+        </div>
+        <div class="sl-col">
+          <div class="sl-sp"></div>
+          <div class="fbox"><span class="fn">12.</span>รวบรวมเอกสาร<br>Summary, BOQ</div>
+          <div class="tag-t">แจ้งหนี้ 1 วัน</div>
+          <div class="arr">↓</div>
+          <div class="fbox"><span class="fn">13.</span>ส่งแจ้งหนี้<br>เข้าระบบ UR</div>
+          <div class="arr">↓</div>
+          <div class="fbox"><span class="fn">16.</span>Accept Invoice<br>ส่งขอ GR</div>
+          <div class="tag-t">1–3 วัน</div>
+          <div class="arr">↓</div>
+          <div class="fbox"><span class="fn">18.</span>Print GR<br>ส่งวางบิล</div>
+        </div>
+        <div class="sl-col">
+          <div class="fbox"><span class="fn">2.→3.</span>ตีตราสาร<br>กรมสรรพากร<br>→ ตรวจสอบ/จัดเก็บ</div>
+          <div class="arr">↓</div>
+          <div class="fbox end">End</div>
+          <div class="sl-sp"></div>
+          <div class="fbox note">ไม่มี GR<br>ส่งวางบิลโดยตรง<br>10–12 วัน</div>
+        </div>
+        <div class="sl-col">
+          <div class="sl-sp"></div>
+          <div class="fbox"><span class="fn">14.</span>Submit UR</div>
+          <div class="tag-t">1 วัน</div>
+        </div>
+        <div class="sl-col">
+          <div class="sl-sp"></div>
+          <div class="fbox"><span class="fn">15.</span>ออก Invoice</div>
+          <div class="tag-t">1–3 วัน</div>
+          <div class="sl-sp"></div>
+          <div class="fbox"><span class="fn">19.</span>ส่งวางบิลผ่าน<br>ระบบ พันธวณิช</div>
+          <div class="tag-t">1 วัน</div>
+        </div>
+        <div class="sl-col">
+          <div class="sl-sp"></div>
+          <div class="fbox"><span class="fn">17.</span>ออก GR</div>
+          <div class="tag-t">1–3 วัน</div>
+          <div class="sl-sp"></div>
+          <div class="fbox crit"><span class="fn">20.</span>วางบิล/<br>Due ชำระเงิน</div>
+          <div class="arr">↓</div>
+          <div class="fbox end">End</div>
+          <div style="font-size:10px;color:#ff7070;font-weight:700;text-align:center;">Due 30 วัน</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       S3 · Sub Contractor Payment
+       ══════════════════════════════════════════════ -->
+  <div class="slide" id="s3">
+    <div class="hdr">
+      <div class="hdr-left">
+        <span class="hdr-title"><span class="acc">การจ่ายผลตอบแทน</span>&nbsp;Sub Contractor — Special Work</span>
+        <span class="hdr-sub">ขั้นตอนการจ่ายเงิน Sub Contractor</span>
+      </div>
+      <div class="hdr-right">
+        <div class="hbox hbox-r" style="font-size:16px;padding:6px 24px;">24 วัน</div>
+        <span class="badge b-sp">Special Work</span>
+        <span class="badge b-sub">Sub Contractor</span>
+      </div>
+    </div>
+    <div class="aline"></div>
+    <div class="sl-wrap">
+      <div class="sl-heads">
+        <div class="sl-h" style="background:#206030;">Sub Contractor</div>
+        <div class="sl-h" style="background:#153880;">Supervisor (W&W)</div>
+        <div class="sl-h" style="background:#404818;">Admin Zone</div>
+        <div class="sl-h" style="background:#7A1870;">Payment Team</div>
+        <div class="sl-h" style="background:#B04810;">Costing</div>
+        <div class="sl-h" style="background:#303858;">Account Payable (W&W)</div>
+      </div>
+      <div class="sl-body">
+        <div class="sl-col">
+          <div class="fbox start">Start</div>
+          <div class="arr">↓</div>
+          <div class="fbox"><span class="fn">1.</span>Sign Contract</div>
+          <div class="arr">↓</div>
+          <div class="fbox"><span class="fn">2.</span>PO/Work Order<br>/Ticker</div>
+          <div class="arr">↓</div>
+          <div class="fbox"><span class="fn">3.</span>ตีตราสาร</div>
+          <div class="arr">↓</div>
+          <div class="fbox"><span class="fn">4.</span>ดำเนินงาน</div>
+          <div class="arr">↓</div>
+          <div class="fbox"><span class="fn">5.</span>ปิดงาน</div>
+          <div class="arr">↓</div>
+          <div class="fbox"><span class="fn">6.</span>สรุป/จัดทำรายงาน</div>
+          <div class="sl-sp"></div>
+          <div class="fbox"><span class="fn">18.</span>ทำแจ้งหนี้<br>ส่งวางบิล</div>
+          <div class="tag-t">1 วัน · Mail</div>
+        </div>
+        <div class="sl-col">
+          <div class="sl-sp"></div>
+          <div class="fbox"><span class="fn">7.</span>ตรวจสอบรายงาน<br>Review KPI</div>
+          <div class="arr">↓</div>
+          <div class="fbox dec"><span class="fn">8.</span>ตรวจสอบรายงาน<br>[แก้ไข?]</div>
+          <div class="arr">↓</div>
+          <div class="fbox"><span class="fn">9.</span>ลงนามเอกสาร<br>ตรวจรับมอบงาน</div>
+          <div class="tag-t">Authorize Signing</div>
+          <div class="sl-sp"></div>
+          <div class="fbox"><span class="fn">17.</span>แจ้ง Sub<br>ส่งวางบิล</div>
+          <div class="tag-t">1 วัน</div>
+        </div>
+        <div class="sl-col">
+          <div class="sl-sp"></div>
+          <div class="fbox"><span class="fn">10.</span>ทำบันทึก/<br>summary แนบชุดเบิก</div>
+          <div class="arr">↓</div>
+          <div class="fbox"><span class="fn">11.</span>ลง Progress Summary<br>แนบชุดเบิก</div>
+          <div class="tag-t">2 วัน</div>
+          <div class="arr">↓</div>
+          <div class="fbox"><span class="fn">12.</span>เสนอลงนาม<br>อนุมัติเบิก</div>
+          <div class="tag-t">Supervisor/ZOM Approve</div>
+        </div>
+        <div class="sl-col">
+          <div class="sl-sp"></div>
+          <div class="fbox"><span class="fn">13.</span>ตรวจสอบ/แนบ<br>เข้าระบบ</div>
+          <div class="tag-t">1–3 วัน</div>
+          <div class="sl-sp"></div>
+          <div class="fbox"><span class="fn">16.</span>แจ้ง Sub<br>ส่งวางบิล</div>
+          <div class="tag-t">1 วัน</div>
+          <div class="arr">↓</div>
+          <div class="fbox"><span class="fn">20.</span>แนบใบวางบิล<br>Invoice sub</div>
+          <div class="tag-t">1–3 วัน นับจากรับวางบิล</div>
+        </div>
+        <div class="sl-col">
+          <div class="sl-sp"></div>
+          <div class="fbox"><span class="fn">14.</span>ตรวจสอบ</div>
+          <div class="tag-t">7 วัน</div>
+        </div>
+        <div class="sl-col">
+          <div class="sl-sp"></div>
+          <div class="fbox"><span class="fn">15.</span>แจ้งรับวางบิล</div>
+          <div class="tag-t">1–3 วัน · ไม่เกินวันพุธ W2,W4</div>
+          <div class="sl-sp"></div>
+          <div class="fbox"><span class="fn">19.</span>ออกใบรับวางบิล</div>
+          <div class="tag-t">1–3 วัน</div>
+          <div class="arr">↓</div>
+          <div class="fbox"><span class="fn">21.</span>Submit Payment Req.</div>
+          <div class="arr">↓</div>
+          <div class="fbox crit"><span class="fn">22.</span>ชำระเงิน</div>
+          <div class="arr">↓</div>
+          <div class="fbox end">End</div>
+        </div>
+      </div>
+    </div>
+    <div style="flex-shrink:0;font-size:11px;color:rgba(255,255,255,0.45);text-align:center;">** งานที่ดำเนินการเสร็จแล้ว ส่งเอกสารเบิกไม่เกิน 1 เดือน</div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       S4 · Ticket Repair Sub-Contractor
+       ══════════════════════════════════════════════ -->
+  <div class="slide" id="s4">
+    <div class="hdr">
+      <div class="hdr-left">
+        <span class="hdr-title"><span class="acc">การจ่ายผลตอบแทน</span>&nbsp;Sub Contractor — ซ่อม Ticket</span>
+        <span class="hdr-sub">Special Work ซ่อม Ticket — ระยะเวลาและผู้รับผิดชอบ</span>
+      </div>
+      <div class="hdr-right">
+        <div class="hbox hbox-r" style="font-size:16px;padding:6px 24px;">24 วัน</div>
+        <span class="badge b-sp">Ticket Repair</span>
+        <span class="badge b-sub">Sub Contractor</span>
+      </div>
+    </div>
+    <div class="aline"></div>
+    <!-- Process timeline bar -->
+    <div class="tbar">
+      <div class="tbar-item" style="background:#B04810;"><div class="ti-role">BU Owner</div><div class="ti-desc">ขออนุมัติงบประมาณ/ขอจัดจ้าง ผ่าน Management Committee &amp; True Connect</div><div class="ti-days">ก่อนทำงาน</div></div>
+      <div class="tbar-item" style="background:#404818;"><div class="ti-role">Admin Zone</div><div class="ti-desc">ออกหนังสือสั่งจ้าง / PR-PO</div><div class="ti-days">1 วัน</div><div class="ti-date">ก่อนทำงาน</div></div>
+      <div class="tbar-item" style="background:#206030;"><div class="ti-role">Sub Contractor</div><div class="ti-desc">ส่งเอกสาร Summary, BOQ, KPI แนบชุดเบิก</div><div class="ti-days">1 วัน / 6 วันหลังตรวจรับ</div><div class="ti-date">ภายในวันที่ 7</div></div>
+      <div class="tbar-item" style="background:#404818;"><div class="ti-role">Admin NOP</div><div class="ti-desc">ตรวจสอบ/เสนอลงนามเอกสาร เติมงบ</div><div class="ti-days">2 วัน</div><div class="ti-date">วันที่ 8–9</div></div>
+      <div class="tbar-item" style="background:#7A1870;"><div class="ti-role">Payment</div><div class="ti-desc">แนบเอกสารเบิกผ่านระบบ Payment PRO</div><div class="ti-days">1 วัน</div><div class="ti-date">วันที่ 10</div></div>
+      <div class="tbar-item" style="background:#B04810;"><div class="ti-role">Costing</div><div class="ti-desc">ตรวจเอกสารในระบบ Payment PRO</div><div class="ti-days">7 วัน</div><div class="ti-date">วันที่ 11–17</div></div>
+      <div class="tbar-item" style="background:#303858;"><div class="ti-role">AP</div><div class="ti-desc">แจ้งรับวางบิล</div><div class="ti-days">1 วัน</div><div class="ti-date">วันที่ 18</div></div>
+      <div class="tbar-item" style="background:#206030;"><div class="ti-role">Sub Contractor</div><div class="ti-desc">ส่ง Invoice วางบิล</div><div class="ti-days">1 วัน</div><div class="ti-date">วันที่ 19</div></div>
+      <div class="tbar-item" style="background:#7A1870;"><div class="ti-role">Payment</div><div class="ti-desc">แนบวางบิล</div><div class="ti-days">1 วัน</div><div class="ti-date">วันที่ 20</div></div>
+      <div class="tbar-item" style="background:#303858;"><div class="ti-role">AP</div><div class="ti-desc">รับวางบิล / Due ชำระเงิน</div><div class="ti-days" style="color:#ff7070;">3 วัน</div><div class="ti-date">วันที่ 21–24</div></div>
+    </div>
+    <!-- Detail table -->
+    <div class="tbl-wrap">
+      <table>
+        <colgroup><col style="width:auto"><col style="width:210px"><col style="width:200px"><col style="width:230px"></colgroup>
+        <thead><tr><th>รายละเอียด</th><th>ระยะเวลา</th><th>วันที่</th><th>ผู้รับผิดชอบ</th></tr></thead>
+        <tbody>
+          <tr><td>ขออนุมัติงบประมาณ / ขอจัดจ้าง ผ่าน Management Committee และ/หรือ True Connect</td><td class="tc">ก่อนเริ่มโครงการ / ก่อนทำงาน</td><td class="tc">—</td><td class="tc">BU Owner</td></tr>
+          <tr><td>ออกหนังสือสั่งจ้าง / PR-PO</td><td class="tc hl-g">วันก่อนเริ่มงาน</td><td class="tc">—</td><td class="tc">Admin NOP</td></tr>
+          <tr><td>ส่งเอกสาร Summary, BOQ, KPI แนบชุดเบิก</td><td class="tc hl-g">1 วัน นับจากวันที่ตรวจรับมอบงานเสร็จ</td><td class="tc hl-y">ภายในวันที่ 7 ของเดือน</td><td class="tc">Sub Contractor</td></tr>
+          <tr><td>ตรวจสอบ/เสนอลงนามเอกสาร เติมงบ</td><td class="tc hl-g">6 วัน</td><td class="tc hl-y">วันที่ 8–9</td><td class="tc">Finance</td></tr>
+          <tr><td>แนบเอกสารเบิกผ่านระบบ Payment PRO ส่งบัญชี</td><td class="tc hl-g">1 วัน</td><td class="tc hl-y">วันที่ 10</td><td class="tc">Payment</td></tr>
+          <tr><td>บัญชี Costing ตรวจเอกสาร</td><td class="tc hl-b">7 วัน</td><td class="tc hl-y">วันที่ 11–17</td><td class="tc">Costing</td></tr>
+          <tr><td>แจ้งวางบิล</td><td class="tc hl-g">1 วัน</td><td class="tc hl-y">วันที่ 18</td><td class="tc">Account Payable</td></tr>
+          <tr><td>ส่ง Invoice วางบิล</td><td class="tc hl-g">1 วัน</td><td class="tc hl-y">วันที่ 19–25</td><td class="tc">Sub Contractor</td></tr>
+          <tr><td>แนบวางบิล</td><td class="tc hl-g">1 วัน</td><td class="tc hl-y">วันที่ 20</td><td class="tc">Payment</td></tr>
+          <tr><td style="font-weight:600;color:#ff7070;">รับวางบิลและกำหนด Due ชำระเงิน</td><td class="tc hl-r" style="font-size:13.5px;font-weight:700;">7 วัน · Due 30/60 วัน ตามสัญญา</td><td class="tc hl-y">วันที่ 21–24</td><td class="tc">Account Payable</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="flex-shrink:0;font-size:11px;color:rgba(255,255,255,0.4);text-align:center;">** ทุกงานต้องได้รับหนังสือสั่งจ้างก่อนทำงาน &nbsp;·&nbsp; **Due จ่ายเงิน 30/60 วัน (ตามที่ระบุในสัญญา/ตามตกลง) นับจากวันรับวางบิล (ศุกร์สัปดาห์ที่ 4 หรือสัปดาห์สุดท้ายของเดือน)</div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       S5 · ระเบียบการส่งเอกสาร
+       ══════════════════════════════════════════════ -->
+  <div class="slide" id="s5">
+    <div class="hdr">
+      <div class="hdr-left">
+        <span class="hdr-title"><span class="acc">ระเบียบ</span>&nbsp;การส่งเอกสารเบิก · การวางบิล · การรับเช็ค</span>
+        <span class="hdr-sub">บริษัท ไวร์เออ แอนด์ ไวร์เลส จำกัด</span>
+      </div>
+      <div class="hdr-right">
+        <span class="badge b-ref">ระเบียบ</span>
+        <span class="badge b-ww">W&amp;W</span>
+      </div>
+    </div>
+    <div class="aline"></div>
+    <div class="card-grid" style="grid-template-columns:repeat(3,1fr);grid-template-rows:1fr;">
+      <div class="info-card" style="border-top:3px solid #00AEEF;">
+        <div class="ic-title" style="color:#00AEEF;">📄 การส่งเอกสาร</div>
+        <div class="ic-body">
+          <ul>
+            <li>ส่งเอกสารเบิกค่างาน<strong style="color:#FFD700;"> ภายในวันที่ 7 ของเดือน</strong></li>
+          </ul>
+        </div>
+      </div>
+      <div class="info-card" style="border-top:3px solid #FFD700;">
+        <div class="ic-title" style="color:#FFD700;">🧾 การรับวางบิล</div>
+        <div class="ic-body">
+          <ul>
+            <li>รับวางบิล ทาง Email <strong style="color:#FFD700;">ทุกวันศุกร์ สัปดาห์ที่ 4 ของเดือน</strong></li>
+            <li><strong>กรณีออก ใบกำกับภาษี:</strong> ส่ง PDF file + เอกสารตัวจริง EMS ส่งหน่วยงานบัญชี ทันที<br><em style="font-size:12px;color:rgba(255,200,0,0.7);">*ใบรับวางบิลออกเมื่อได้รับเอกสารตัวจริงแล้วเท่านั้น*</em></li>
+            <li><strong>กรณีออก ใบแจ้งหนี้:</strong> ส่ง PDF + สำเนา PO ทาง Email (บริษัท Reply Email พร้อมใบรับวางบิลระบุวันชำระเงิน)</li>
+            <li>Due ชำระเงิน ตามเงื่อนไขที่กำหนดในสัญญา</li>
+          </ul>
+        </div>
+      </div>
+      <div class="info-card" style="border-top:3px solid #ff6b6b;">
+        <div class="ic-title" style="color:#ff6b6b;">💳 การชำระเงิน</div>
+        <div class="ic-body">
+          <ul>
+            <li>ชำระ <strong style="color:#FFD700;">ภายในวันศุกร์สัปดาห์สุดท้ายของเดือน</strong><br><em style="font-size:12px;color:rgba(255,255,255,0.5);">*อาจมีการเปลี่ยนแปลง ติดต่อ Admin โครงการ ประจำพื้นที่</em></li>
+            <li><strong>กรุงเทพฯ:</strong> รับเช็คที่ศูนย์จ่ายเช็ค รัชโยธิน อาคาร CAREER@SCB (RCP)<br>โทร 0-2722-2222 กด 0 กด 1</li>
+            <li><strong>ต่างจังหวัด:</strong> โอนเงินผ่านบัญชีธนาคาร ส่งใบเสร็จ/ใบกำกับภาษีภายใน 3 วัน หากไม่ส่งเกิน 3 ครั้งจะเปลี่ยนเป็นรับเช็ค</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div style="flex-shrink:0;background:rgba(0,174,239,0.07);border:1px solid rgba(0,174,239,0.25);border-radius:8px;padding:10px 16px;font-size:13px;color:rgba(255,255,255,0.7);">
+      <span style="color:#00AEEF;font-weight:600;">📍 ที่อยู่จัดส่งเอกสาร (ต่างจังหวัด):</span> บริษัท ไวร์เออ แอนด์ ไวร์เลส จำกัด เลขที่ 1252 อาคารทรูทาวเวอร์ 2 อาคาร 2 ชั้น 3 ถ.พัฒนาการ แขวงสวนหลวง เขตสวนหลวง กรุงเทพมหานคร 10250 &nbsp;·&nbsp; ภายใน 3 วัน นับจากได้รับเงิน
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       S6 · ปฏิทิน 2026
+       ══════════════════════════════════════════════ -->
+  <div class="slide" id="s6">
+    <div class="hdr">
+      <div class="hdr-left">
+        <span class="hdr-title"><span class="acc">ปฏิทิน</span>&nbsp;การรับเอกสาร · รับวางบิล · จ่ายเช็ค — 2026 (2569)</span>
+        <span class="hdr-sub">บริษัท ไวร์เออ แอนด์ ไวร์เลส จำกัด — กำหนดจ่ายทุกวันศุกร์สัปดาห์สุดท้ายของเดือน</span>
+      </div>
+      <div class="hdr-right">
+        <div style="display:flex;gap:12px;align-items:center;font-size:12px;color:rgba(255,255,255,0.7);">
+          <span style="display:flex;align-items:center;gap:4px;"><span style="width:12px;height:12px;background:rgba(0,200,100,0.5);border-radius:50%;display:inline-block;border:1px solid rgba(0,200,100,0.8)"></span>รับเอกสาร</span>
+          <span style="display:flex;align-items:center;gap:4px;"><span style="width:12px;height:12px;background:rgba(232,25,44,0.5);border-radius:50%;display:inline-block;border:1px solid rgba(232,25,44,0.8)"></span>รับวางบิล</span>
+          <span style="display:flex;align-items:center;gap:4px;"><span style="width:12px;height:12px;background:rgba(255,200,0,0.45);border-radius:3px;display:inline-block;border:1px solid rgba(255,200,0,0.7)"></span>จ่ายเช็ค</span>
+        </div>
+        <span class="badge b-ww">W&amp;W</span>
+      </div>
+    </div>
+    <div class="aline"></div>
+    <div class="cal-wrap">
+      <div class="cal-grid" id="calGrid"></div>
+      <div style="width:195px;flex-shrink:0;display:flex;flex-direction:column;gap:10px;">
+        <div style="font-size:12.5px;font-weight:700;color:#00AEEF;margin-bottom:2px;">กำหนดจ่ายเงิน ผรม. 2026</div>
+        <div class="tbl-wrap" style="flex:none;border-radius:8px;">
+          <table style="font-size:11.5px;height:auto!important;">
+            <thead><tr><th>เดือน</th><th>วันศุกร์ที่จ่าย</th></tr></thead>
+            <tbody id="payTable"></tbody>
+          </table>
+        </div>
+        <div style="font-size:10.5px;color:rgba(255,255,255,0.35);line-height:1.6;">** Due ชำระเงิน ตามเงื่อนไขที่กำหนดในสัญญา/ตามตกลง<br>อาจมีการเปลี่ยนแปลงโดยมิได้แจ้งล่วงหน้า</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       S7 · แนวทางปฎิบัติ ตรวจ-จ่ายและรับวางบิลคู่ค้า
+       ══════════════════════════════════════════════ -->
+  <div class="slide" id="s7">
+    <div class="hdr">
+      <div class="hdr-left">
+        <span class="hdr-title"><span class="acc">แนวทางปฎิบัติ</span>&nbsp;ตรวจ-จ่าย และรับวางบิลคู่ค้า</span>
+        <span class="hdr-sub">หน่วยงานบัญชี — กำหนดเวลารับเอกสาร</span>
+      </div>
+      <div class="hdr-right">
+        <span class="badge b-ref">ระเบียบ</span>
+        <span class="badge b-ww">W&amp;W</span>
+      </div>
+    </div>
+    <div class="aline"></div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:12px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;flex-shrink:0;">
+        <!-- ทีมบัญชี -->
+        <div class="info-card" style="border-top:3px solid #00AEEF;">
+          <div class="ic-title" style="color:#00AEEF;">ทีมบัญชี — กำหนดเวลารับเอกสาร</div>
+          <div class="ic-body">
+            <table style="width:100%;font-size:14.5px;border-collapse:collapse;">
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.1);">
+                <td style="padding:4px 6px;background:transparent;color:#d8e8f0;font-weight:600;border:none;">รอบวางบิล</td>
+                <td style="padding:4px 6px;background:transparent;color:#d8e8f0;border:none;">กำหนดการรับเอกสาร</td>
+              </tr>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.08);">
+                <td style="padding:4px 6px;background:transparent;color:#FFD700;border:none;">Costing</td>
+                <td style="padding:4px 6px;background:transparent;color:rgba(255,255,255,0.75);border:none;">รอบวางบิล ศุกร์สัปดาห์ที่ 2 ของเดือน<br>รอบวางบิล ศุกร์สัปดาห์ที่ 4 ของเดือน<br><small style="color:#00AEEF;">รับเอกสารผ่านระบบ PRO ภายในวันศุกร์ที่ 4 ของเดือน</small></td>
+              </tr>
+              <tr>
+                <td style="padding:4px 6px;background:transparent;color:#FFD700;border:none;">ทีม AP</td>
+                <td style="padding:4px 6px;background:transparent;color:rgba(255,255,255,0.75);border:none;">รอบวางบิล ศุกร์สัปดาห์ที่ 2 ของเดือน<br>รอบวางบิล ศุกร์สัปดาห์ที่ 4 ของเดือน<br><small style="color:#00AEEF;">ขอความร่วมมือให้ process ถึงทีม AP ในวันอังคารที่ 2 ของเดือน</small></td>
+              </tr>
+            </table>
+          </div>
+        </div>
+        <!-- หมายเหตุ -->
+        <div class="info-card" style="border-top:3px solid #ff6b6b;">
+          <div class="ic-title" style="color:#ff6b6b;">⚠️ รายละเอียดการตรวจสอบ ข้อผิดพลาดที่ Reject เพื่อกลับมาแก้ไข</div>
+          <div class="ic-body">
+            <ul style="font-size:14.5px;">
+              <li>จำนวนเงินไม่ถูกต้อง ไม่ตรงกับรายละเอียดเอกสารแนบ</li>
+              <li>รายละเอียด เอกสารแนบไม่ถูกต้อง</li>
+              <li>Cost center ไม่ถูกต้อง</li>
+              <li>สายการอนุมัติไม่เป็นไปตามนโยบายการอนุมัติจ่าย</li>
+              <li>วงเงินสัญญาเต็ม</li>
+              <li>วงเงินหนังสือค้ำประกัน (BG) / ประกันภัยหมดอายุ</li>
+              <li>มีการ tnfo กลับไปเพื่อให้แก้ไขเกินกว่า 2 สัปดาห์</li>
+              <li>รายการที่มีการ tnfo กลับไปเพื่อให้แก้ไขและตรวจสอบแล้วยังผิดอยู่</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <!-- Bottom note -->
+      <div style="flex-shrink:0;background:rgba(255,200,0,0.07);border:1px solid rgba(255,200,0,0.25);border-radius:8px;padding:10px 16px;font-size:14.5px;color:rgba(255,255,255,0.75);line-height:1.7;">
+        ** เมื่อโต้สรับใบแจ้งหนี้และใบรับวางบิล ให้ผู้รับโต้สรอบแนมเอกสารการPROจาก2วันทำการหลังจากโต้สรับการถ้าส่ง Email-mailและหากกดตรงกับวันสิ้นเดือนของความร่วมมือให้แนบกับบริษัท<br>
+        **โดยเมื่อมีการทำ PRO เข้ามาใหม่ ให้ใส่อ้างอิงเอกสาร PRO เดิม และสาเหตุการ reject ในช่องหมายเหตุ
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       S8 · Contract Point
+       ══════════════════════════════════════════════ -->
+  <div class="slide" id="s8">
+    <div class="hdr">
+      <div class="hdr-left">
+        <span class="hdr-title"><span class="acc">Contract Point</span>&nbsp;— PR&amp;PO พันธวณิช</span>
+        <span class="hdr-sub">รายชื่อ Admin ที่ดูแล และ Reviewer ทีม Revenue &amp; Payment</span>
+      </div>
+      <div class="hdr-right">
+        <span class="badge b-ref">ติดต่อ</span>
+        <span class="badge b-ww">W&amp;W</span>
+      </div>
+    </div>
+    <div class="aline"></div>
+    <div class="tbl-wrap">
+      <table>
+        <colgroup><col style="width:130px"><col style="width:auto"><col style="width:320px"><col style="width:300px"></colgroup>
+        <thead>
+          <tr><th>Region</th><th>ชื่อ Admin ที่ดูแล</th><th>Email</th><th>Reviewer ทีม Revenue &amp; Payment</th></tr>
+        </thead>
+        <tbody>
+          <tr><td class="hl-b">BMA EAST</td><td>นางสาว ปาณิกา หาเรือนทรง</td><td style="font-size:14.5px;">panika.har@ww.co.th</td><td>Borvornrut Khaokrue</td></tr>
+          <tr><td class="hl-b">BMA EAST</td><td><span style="color:#60b0ff;">นางสาว ไพรินทร์ ศรีชาเยช</span></td><td style="font-size:14.5px;"><span style="color:#60b0ff;">Pairin.Sri@ww.co.th</span></td><td>Borvornrut Khaokrue</td></tr>
+          <tr><td class="hl-b">BMA WEST</td><td>นางสาว มัลลิกา จงสวัสดิ์</td><td style="font-size:14.5px;">Mullika.Cho@ww.co.th</td><td>Sapachayakorn Muangkungarn</td></tr>
+          <tr><td class="hl-y">EAST</td><td>นางสาว สถิราเกตุ คลังสมบัติ</td><td style="font-size:14.5px;">Sathirakate.Kla@ww.co.th</td><td>Wipharat Sookrak</td></tr>
+          <tr><td class="hl-y">West</td><td>นางสาว นิภา ธัญญากุลวงศ์</td><td style="font-size:14.5px;">Nipa.Tha@ww.co.th</td><td>Kedkanoke Boonyaratchaiwong</td></tr>
+          <tr><td class="hl-g">CENTRAL</td><td>นางสาว สุภาพร แก้วสุข</td><td style="font-size:14.5px;">Supaporn.Kae@ww.co.th</td><td>Kedkanoke Boonyaratchaiwong</td></tr>
+          <tr><td class="hl-g">North (NOR)</td><td>นางสาว วรวรรณ ภาณุอำไพ</td><td style="font-size:14.5px;">Worawan.Pan@ww.co.th</td><td>Worawan Panuampai</td></tr>
+          <tr><td class="hl-g">Northeast (NOE)</td><td>นางสาว นงนุช ดรบัญญา</td><td style="font-size:14.5px;">Nongnuch.Don@ww.co.th</td><td>Sapachayakorn Muangkungarn</td></tr>
+          <tr><td class="hl-o">SOUTH</td><td>นางสาว จริยา ประเสริฐศรี, นางสาว อรสา บัวตุม</td><td style="font-size:13.5px;">Jariya.Pra@ww.co.th, Orasa.Bua@ww.co.th</td><td>Worawan Panuampai</td></tr>
+          <tr><td class="hl-o">CNO</td><td>นางสาว ณัฐฐาก้านย์ เรืองพันธ์</td><td style="font-size:14.5px;">Natthakan.Rue@ww.co.th</td><td>Somporn Pimbool</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════
+       S9 · Cost Center
+       ══════════════════════════════════════════════ -->
+  <div class="slide" id="s9">
+    <div class="hdr">
+      <div class="hdr-left">
+        <span class="hdr-title"><span class="acc">Cost Center</span>&nbsp;— New Org Chart Mapping</span>
+        <span class="hdr-sub">Effective date: 18/2/2026</span>
+      </div>
+      <div class="hdr-right">
+        <span class="badge b-ref">Reference</span>
+        <span class="badge b-ww">W&amp;W</span>
+      </div>
+    </div>
+    <div class="aline"></div>
+    <div class="tbl-wrap">
+      <table style="font-size:13.5px;">
+        <colgroup>
+          <col style="width:85px"><col style="width:165px"><col style="width:85px">
+          <col style="width:165px"><col style="width:88px"><col style="width:88px">
+          <col style="width:88px"><col style="width:88px"><col style="width:88px">
+          <col style="width:88px"><col style="width:88px">
+        </colgroup>
+        <thead>
+          <tr>
+            <th rowspan="2" style="background:#153880;">Revenue</th>
+            <th rowspan="2">Project (Existing)</th>
+            <th rowspan="2">Cost Center</th>
+            <th rowspan="2">To be (Project)</th>
+            <th colspan="7" style="background:#206030;">New Cost Center per Region</th>
+          </tr>
+          <tr>
+            <th>BMA West</th><th>BMA East</th><th>C&amp;W</th><th>East</th><th>SOU</th><th>NOR</th><th>NOE</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="row-h"><td rowspan="3" style="color:#60b0ff;">Revenue<br>True Network Business</td><td>CM Optical Fiber Network-BMA &amp; UPC</td><td class="tc">03Z01AF160</td><td>Scope 1 Passive Transmission</td><td class="tc" style="font-size:12px;">03ZBW00001</td><td class="tc" style="font-size:12px;">03ZBE00001</td><td class="tc" style="font-size:12px;">03ZCW00001</td><td class="tc" style="font-size:12px;">03ZEAS0001</td><td class="tc" style="font-size:12px;">03ZSOU0001</td><td class="tc">—</td><td class="tc">—</td></tr>
+          <tr class="row-h"><td rowspan="2">Site Manage Service-BMA &amp; UPC</td><td class="tc">03Z01AF159</td><td>Scope 2 NodeB Passive</td><td class="tc" style="font-size:12px;">03ZBW00002</td><td class="tc" style="font-size:12px;">03ZBE00002</td><td class="tc" style="font-size:12px;">03ZCW00002</td><td class="tc" style="font-size:12px;">03ZEAS0002</td><td class="tc" style="font-size:12px;">03ZSOU0002</td><td class="tc">—</td><td class="tc">—</td></tr>
+          <tr class="row-h"><td class="tc">—</td><td>Scope 3 NodeB Active</td><td class="tc" style="font-size:12px;">03ZBW00003</td><td class="tc" style="font-size:12px;">03ZBE00003</td><td class="tc" style="font-size:12px;">03ZCW00003</td><td class="tc" style="font-size:12px;">03ZEAS0003</td><td class="tc" style="font-size:12px;">03ZSOU0003</td><td class="tc">—</td><td class="tc">—</td></tr>
+          <tr><td rowspan="5" style="color:#72E054;font-weight:600;">Special<br>Project<br>Business</td><td>PM&amp;CM USO Ph1</td><td class="tc">03Z01AF106</td><td>PM&amp;CM USO Ph1</td><td class="tc" style="font-size:12px;">03ZBW00106</td><td class="tc" style="font-size:12px;">03ZBE00106</td><td class="tc" style="font-size:12px;">03ZCW00106</td><td class="tc" style="font-size:12px;">03ZEAS0106</td><td class="tc" style="font-size:12px;">03ZSOU0106</td><td class="tc" style="font-size:12px;">03ZNOR0106</td><td class="tc" style="font-size:12px;">03ZNOE0106</td></tr>
+          <tr><td>PM&amp;CM USO Ph2</td><td class="tc">03Z01AF117</td><td>PM&amp;CM USO Ph2</td><td class="tc" style="font-size:12px;">03ZBW00117</td><td class="tc" style="font-size:12px;">03ZBE00117</td><td class="tc" style="font-size:12px;">03ZCW00117</td><td class="tc" style="font-size:12px;">03ZEAS0117</td><td class="tc" style="font-size:12px;">03ZSOU0117</td><td class="tc" style="font-size:12px;">03ZNOR0117</td><td class="tc" style="font-size:12px;">03ZNOE0117</td></tr>
+          <tr><td>PM&amp;CM CDMA</td><td class="tc">03Z01AF122</td><td>PM&amp;CM CDMA</td><td class="tc" style="font-size:12px;">03ZBW00122</td><td class="tc" style="font-size:12px;">03ZBE00122</td><td class="tc" style="font-size:12px;">03ZCW00122</td><td class="tc" style="font-size:12px;">03ZEAS0122</td><td class="tc" style="font-size:12px;">03ZSOU0122</td><td class="tc" style="font-size:12px;">03ZNOR0122</td><td class="tc" style="font-size:12px;">03ZNOE0122</td></tr>
+          <tr><td>Solar Cell</td><td class="tc">03Z01AF161</td><td>Solar Cell</td><td class="tc" style="font-size:12px;">03ZBW00161</td><td class="tc" style="font-size:12px;">03ZBE00161</td><td class="tc" style="font-size:12px;">03ZCW00161</td><td class="tc" style="font-size:12px;">03ZEAS0161</td><td class="tc" style="font-size:12px;">03ZSOU0161</td><td class="tc" style="font-size:12px;">03ZNOR0161</td><td class="tc" style="font-size:12px;">03ZNOE0161</td></tr>
+          <tr><td>TPM Project Installation</td><td class="tc">03Z01AFA95</td><td>Special Project - Other</td><td class="tc" style="font-size:12px;">03ZBW00095</td><td class="tc" style="font-size:12px;">03ZBE00095</td><td class="tc" style="font-size:12px;">03ZCW00095</td><td class="tc" style="font-size:12px;">03ZEAS0095</td><td class="tc" style="font-size:12px;">03ZSOU0095</td><td class="tc" style="font-size:12px;">03ZNOR0095</td><td class="tc" style="font-size:12px;">03ZNOE0095</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div style="flex-shrink:0;font-size:13px;color:rgba(255,255,255,0.4);text-align:center;">ตารางแสดงเฉพาะ Revenue &amp; Special Project Business — ดูข้อมูล COS, Material, Solar Cell B2B/B2C เพิ่มเติมในเอกสารต้นฉบับ</div>
+  </div>
+
+</div><!-- #stage -->
+
+<script>
+/* ── Stage scaling ── */
+function scaleStage() {
+  const vw = window.innerWidth, vh = window.innerHeight;
+  const s = Math.min(vw/1920, vh/1080);
+  const x = (vw - 1920*s)/2, y = (vh - 1080*s)/2;
+  document.getElementById('stage').style.transform =
+    'translate('+x+'px,'+y+'px) scale('+s+')';
+}
+scaleStage();
+window.addEventListener('resize', scaleStage);
+
+/* ── Navigation ── */
+const slides = document.querySelectorAll('.slide');
+const scEl = document.getElementById('sc');
+let cur = 0;
+function go(n) {
+  slides[cur].classList.remove('active');
+  cur = ((n % slides.length) + slides.length) % slides.length;
+  slides[cur].classList.add('active');
+  scEl.textContent = (cur+1)+' / '+slides.length;
+}
+document.getElementById('bp').onclick = () => go(cur-1);
+document.getElementById('bn').onclick = () => go(cur+1);
+document.addEventListener('keydown', e => {
+  if (e.key==='ArrowRight'||e.key==='ArrowDown'||e.key===' ') go(cur+1);
+  if (e.key==='ArrowLeft'||e.key==='ArrowUp') go(cur-1);
+});
+
+/* ── Calendar generation ── */
+(function buildCalendar() {
+  // Payment dates (last Friday of each month 2026)
+  const payDates = {
+    1:30, 2:27, 3:27, 4:24, 5:29, 6:26,
+    7:31, 8:28, 9:25, 10:30, 11:27, 12:25
+  };
+  const MONTH_NAMES = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน',
+                       'กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+
+  // Get 4th Friday of each month
+  function nthFriday(year, month, n) {
+    let count = 0;
+    for (let d = 1; d <= 31; d++) {
+      const dt = new Date(year, month-1, d);
+      if (dt.getMonth() !== month-1) break;
+      if (dt.getDay() === 5) { count++; if (count === n) return d; }
+    }
+    return null;
+  }
+
+  // Approx document receipt day (weekday around 7th)
+  function docDay(year, month) {
+    const d7 = new Date(year, month-1, 7);
+    const dow = d7.getDay();
+    if (dow === 0) return 8; // Mon
+    if (dow === 6) return 9; // Mon
+    return 7;
+  }
+
+  const calGrid = document.getElementById('calGrid');
+  const payTable = document.getElementById('payTable');
+
+  for (let m = 1; m <= 12; m++) {
+    const bill = nthFriday(2026, m, 4);
+    const pay  = payDates[m];
+    const doc  = docDay(2026, m);
+
+    // Get first weekday offset (Mon=0)
+    const firstDow = new Date(2026, m-1, 1).getDay();
+    const offset = firstDow === 0 ? 6 : firstDow - 1;
+
+    // Days in month
+    const daysInMonth = new Date(2026, m, 0).getDate();
+
+    let html = `<div class="cal-month"><div class="cal-mname">${MONTH_NAMES[m-1]} 2026</div><div class="cal-days">`;
+    html += '<div class="cal-dow">จ</div><div class="cal-dow">อ</div><div class="cal-dow">พ</div><div class="cal-dow">พฤ</div><div class="cal-dow">ศ</div><div class="cal-dow">ส</div><div class="cal-dow">อา</div>';
+    for (let i = 0; i < offset; i++) html += '<div class="cd e">0</div>';
+    for (let d = 1; d <= daysInMonth; d++) {
+      let cls = 'cd';
+      if (d === pay) cls += ' pay';
+      else if (d === bill) cls += ' bill';
+      else if (d === doc) cls += ' doc';
+      html += `<div class="${cls}">${d}</div>`;
+    }
+    html += '</div></div>';
+    calGrid.innerHTML += html;
+
+    payTable.innerHTML += `<tr><td>${MONTH_NAMES[m-1].substring(0,3)}-26</td><td class="tc hl-y">${pay}/${m}/2026</td></tr>`;
+  }
+})();
+</script>
+</body>
+</html>
