@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Claude Code — Project Structure · สื่อการสอน</title>
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+
+/* === VIEWPORT BASE CSS (mandatory) === */
+html,body{width:100%;height:100%;margin:0;overflow:hidden;background:var(--stage-bg,#000);}
+.deck-viewport{position:fixed;inset:0;overflow:hidden;background:var(--stage-bg,#000);}
+.deck-stage{position:absolute;left:0;top:0;width:1920px;height:1080px;overflow:hidden;transform-origin:0 0;background:var(--slide-bg,#fff);}
+.slide{position:absolute;inset:0;width:1920px;height:1080px;overflow:hidden;display:block;visibility:hidden;opacity:0;pointer-events:none;background:var(--slide-bg,#fff);}
+.slide.active,.slide.visible{visibility:visible;opacity:1;pointer-events:auto;z-index:1;}
+img,video,canvas,svg{max-width:100%;max-height:100%;}
+@media print{html,body{width:1920px;height:auto;overflow:visible;background:#fff;}.deck-viewport{position:static;overflow:visible;background:#fff;}.deck-stage{position:static;width:auto;height:auto;transform:none!important;background:none;}.slide{position:relative;display:block!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;width:1920px;height:1080px;break-after:page;page-break-after:always;}.slide:last-child{break-after:auto;page-break-after:auto;}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:0.01ms!important;transition-duration:0.2s!important;}}
+
+/* === DESIGN SYSTEM === */
+:root{
+  --stage-bg:#040810;
+  --slide-bg:#070b14;
+  --bg1:#0d1322;
+  --glass:rgba(20,35,55,0.55);
+  --border:rgba(120,180,255,0.12);
+  --border-s:rgba(120,180,255,0.25);
+  --text:#e6eefb;
+  --dim:#8da3c4;
+  --mute:#5e7497;
+  --cyan:#22d3ee;
+  --cyan-s:#67e8f9;
+  --orange:#fb923c;
+  --green:#4ade80;
+  --blue:#60a5fa;
+  --purple:#c084fc;
+  --pink:#f472b6;
+  --yellow:#fbbf24;
+  --red:#f87171;
+  --font:'Noto Sans Thai',sans-serif;
+  --mono:'JetBrains Mono',monospace;
+  --ease:cubic-bezier(.16,1,.3,1);
+}
+
+/* === SLIDE BASE === */
+.slide{background:var(--slide-bg);font-family:var(--font);color:var(--text);}
+/* Grid background */
+.slide::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(120,180,255,0.04) 1px,transparent 1px),linear-gradient(90deg,rgba(120,180,255,0.04) 1px,transparent 1px);background-size:60px 60px;pointer-events:none;z-index:0;}
+.slide>*{position:relative;z-index:1;}
+
+/* === PROGRESS BAR === */
+#pb{position:fixed;top:0;left:0;right:0;height:3px;z-index:9999;background:linear-gradient(90deg,var(--cyan),var(--orange));transform-origin:left;transform:scaleX(0);transition:transform 0.4s var(--ease);}
+
+/* === SLIDE COUNTER === */
+#counter{position:fixed;top:16px;right:20px;z-index:9990;font-family:var(--mono);font-size:13px;color:var(--mute);background:rgba(7,11,20,0.65);border:1px solid var(--border);border-radius:6px;padding:4px 12px;}
+
+/* === SLIDE TRANSITION === */
+.slide.active{animation:sIn 0.3s ease-out;}
+@keyframes sIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+
+/* Reveal items */
+.r{opacity:0;transform:translateY(18px);}
+.slide.active .r{animation:rIn 0.5s var(--ease) both;}
+.slide.active .r:nth-child(1){animation-delay:0.05s;}
+.slide.active .r:nth-child(2){animation-delay:0.12s;}
+.slide.active .r:nth-child(3){animation-delay:0.19s;}
+.slide.active .r:nth-child(4){animation-delay:0.26s;}
+.slide.active .r:nth-child(5){animation-delay:0.33s;}
+.slide.active .r:nth-child(6){animation-delay:0.40s;}
+.slide.active .r:nth-child(7){animation-delay:0.47s;}
+.slide.active .r:nth-child(8){animation-delay:0.54s;}
+@keyframes rIn{from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:none;}}
+
+/* ==============================
+   SLIDE 0: TITLE
+   ============================== */
+.s0{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;}
+.s0-glow1{position:absolute;top:-220px;right:-180px;width:840px;height:840px;border-radius:50%;background:radial-gradient(circle,rgba(34,211,238,0.13) 0%,transparent 65%);pointer-events:none;}
+.s0-glow2{position:absolute;bottom:-200px;left:-200px;width:720px;height:720px;border-radius:50%;background:radial-gradient(circle,rgba(251,146,60,0.10) 0%,transparent 65%);pointer-events:none;}
+.s0-logo{width:110px;height:110px;border-radius:28px;background:linear-gradient(135deg,#fb923c,#ea580c);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;color:#fff;font-size:48px;box-shadow:0 16px 48px rgba(251,146,60,0.45);margin-bottom:40px;animation:logoIn 0.6s var(--ease);}
+@keyframes logoIn{from{transform:scale(0.4) rotate(-12deg);opacity:0;}to{transform:none;opacity:1;}}
+.s0-title{font-size:96px;font-weight:700;letter-spacing:-0.025em;line-height:1;background:linear-gradient(135deg,#fff 25%,var(--cyan) 65%,var(--cyan-s));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:18px;animation:tIn 0.7s 0.2s var(--ease) both;}
+.s0-sub{font-size:36px;font-weight:300;color:var(--dim);margin-bottom:44px;animation:tIn 0.7s 0.38s var(--ease) both;}
+.s0-pills{display:flex;gap:18px;justify-content:center;animation:tIn 0.7s 0.55s var(--ease) both;}
+.s0-pill{padding:12px 28px;border-radius:999px;font-size:18px;font-weight:500;border:1px solid;}
+.s0-pill.c{background:rgba(34,211,238,0.12);border-color:rgba(34,211,238,0.35);color:var(--cyan-s);}
+.s0-pill.o{background:rgba(251,146,60,0.12);border-color:rgba(251,146,60,0.35);color:#fdba74;}
+.s0-credit{position:absolute;bottom:50px;font-size:16px;color:var(--mute);animation:tIn 0.7s 0.7s var(--ease) both;}
+@keyframes tIn{from{transform:translateY(22px);opacity:0;}to{transform:none;opacity:1;}}
+
+/* ==============================
+   SECTION SLIDES COMMON
+   ============================== */
+.ss{padding:52px 72px 48px;display:flex;flex-direction:column;height:1080px;box-sizing:border-box;}
+
+/* Header */
+.sh{display:flex;align-items:flex-start;gap:24px;margin-bottom:0;}
+.sn{min-width:82px;height:82px;border-radius:16px;background:var(--glass);border:1px solid var(--border-s);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;}
+.sn-s{font-family:var(--mono);font-size:11px;font-weight:500;color:var(--mute);letter-spacing:0.14em;text-transform:uppercase;}
+.sn-n{font-family:var(--mono);font-size:32px;font-weight:700;color:var(--cyan);line-height:1;}
+.sh-text{flex:1;}
+.sh-t{font-size:54px;font-weight:700;letter-spacing:-0.01em;line-height:1.05;color:#fff;}
+.sh-s{font-size:20px;font-weight:300;color:var(--dim);margin-top:8px;}
+.sh-ico{font-size:68px;line-height:1;flex-shrink:0;}
+
+/* Divider */
+.sdiv{height:2px;background:linear-gradient(90deg,var(--cyan),rgba(34,211,238,0.1) 55%,transparent);border-radius:2px;margin:24px 0 28px;}
+
+/* Content area */
+.sb{flex:1;overflow:hidden;}
+
+/* Ghost number */
+.gn{position:absolute;right:52px;bottom:20px;font-family:var(--mono);font-size:300px;font-weight:700;color:rgba(34,211,238,0.035);line-height:1;user-select:none;pointer-events:none;}
+
+/* ==============================
+   LAYOUT PRIMITIVES
+   ============================== */
+/* Card grids */
+.g3{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;}
+.g2{display:grid;grid-template-columns:repeat(2,1fr);gap:24px;}
+.g5{display:grid;grid-template-columns:repeat(5,1fr);gap:18px;}
+.gcol2{display:grid;grid-template-columns:1fr 1fr;gap:32px;}
+.gcol23{display:grid;grid-template-columns:2fr 3fr;gap:32px;}
+.gcol32{display:grid;grid-template-columns:3fr 2fr;gap:32px;}
+
+/* Card */
+.card{background:var(--glass);border:1px solid var(--border);border-radius:16px;padding:26px;position:relative;overflow:hidden;}
+.card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;border-radius:2px 2px 0 0;}
+.card.tc::after{background:var(--cyan);}
+.card.to::after{background:var(--orange);}
+.card.tg::after{background:var(--green);}
+.card.tb::after{background:var(--blue);}
+.card.tp::after{background:var(--purple);}
+.card.tk::after{background:var(--pink);}
+.card.ty::after{background:var(--yellow);}
+.card.tr::after{background:var(--red);}
+.ci{font-size:34px;margin-bottom:10px;display:block;}
+.ct{font-family:var(--mono);font-size:17px;font-weight:500;color:var(--cyan-s);margin-bottom:6px;line-height:1.2;}
+.ct.o{color:#fdba74;} .ct.g{color:#86efac;} .ct.b{color:#93c5fd;} .ct.p{color:#d8b4fe;} .ct.k{color:#f9a8d4;} .ct.y{color:#fcd34d;} .ct.r{color:#fca5a5;}
+.cd{font-size:17px;font-weight:300;color:var(--dim);line-height:1.5;}
+
+/* Bullet list */
+.bl{list-style:none;display:flex;flex-direction:column;gap:14px;}
+.bl li{display:flex;align-items:flex-start;gap:14px;font-size:19px;font-weight:300;color:var(--dim);line-height:1.55;}
+.bl li::before{content:'▸';color:var(--cyan);font-size:15px;margin-top:4px;flex-shrink:0;}
+.bl li strong{color:var(--text);font-weight:600;}
+.bl li code{font-family:var(--mono);color:var(--cyan-s);font-size:16px;}
+
+/* Code block */
+.cb{background:rgba(0,0,0,0.38);border:1px solid var(--border);border-radius:12px;padding:22px 26px;font-family:var(--mono);font-size:15.5px;line-height:1.75;color:#cbd5e1;position:relative;}
+.cb-lang{position:absolute;top:9px;right:14px;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--mute);}
+.ck{color:#f472b6;} .cs{color:#86efac;} .cn{color:#fbbf24;} .cc{color:#475569;font-style:italic;} .cv{color:#67e8f9;} .cf{color:#fdba74;} .cw{color:#c084fc;}
+
+/* Table */
+.tb2{width:100%;border-collapse:separate;border-spacing:0;font-size:18px;}
+.tb2 th{text-align:left;padding:13px 20px;background:rgba(34,211,238,0.08);border-bottom:1px solid var(--border-s);font-size:13px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--cyan);}
+.tb2 th:first-child{border-radius:10px 0 0 0;} .tb2 th:last-child{border-radius:0 10px 0 0;}
+.tb2 td{padding:12px 20px;border-bottom:1px solid var(--border);color:var(--dim);font-weight:300;line-height:1.5;}
+.tb2 td:first-child{font-family:var(--mono);color:var(--cyan-s);font-size:15px;white-space:nowrap;}
+.tb2 tr:last-child td{border-bottom:none;}
+.tb2 td strong{color:var(--text);font-weight:500;}
+
+/* Tip / Warn / Info */
+.tip,.warn,.info{border-radius:10px;border-left:3px solid;padding:16px 20px;font-size:17px;font-weight:300;line-height:1.6;display:flex;gap:14px;align-items:flex-start;}
+.tip{background:rgba(74,222,128,0.07);border-color:var(--green);color:#bbf7d0;}
+.warn{background:rgba(248,113,113,0.07);border-color:var(--red);color:#fecaca;}
+.info{background:rgba(96,165,250,0.07);border-color:var(--blue);color:#bfdbfe;}
+.tip .bi,.warn .bi,.info .bi{font-size:22px;flex-shrink:0;margin-top:1px;}
+
+/* Context bars */
+.ctxbars{display:flex;flex-direction:column;gap:20px;}
+.ctxrow{display:flex;align-items:center;gap:18px;}
+.ctxlbl{width:110px;font-family:var(--mono);font-size:15px;color:var(--mute);}
+.ctxbar{flex:1;height:26px;background:rgba(0,0,0,0.3);border-radius:13px;overflow:hidden;}
+.ctxfill{height:100%;border-radius:13px;}
+.ctxtxt{width:280px;font-size:17px;font-weight:300;}
+
+/* Step list */
+.steps{display:flex;flex-direction:column;gap:13px;}
+.step{display:flex;align-items:flex-start;gap:18px;padding:14px 20px;background:var(--glass);border:1px solid var(--border);border-radius:12px;}
+.stepn{min-width:34px;height:34px;border-radius:8px;background:var(--cyan);color:#000;font-weight:700;font-family:var(--mono);font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+.stept{font-size:18px;font-weight:300;color:var(--dim);line-height:1.5;}
+.stept strong{color:var(--text);font-weight:500;}
+.stept code{font-family:var(--mono);color:var(--cyan-s);font-size:15px;}
+
+/* Badge inline */
+.bdg{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;letter-spacing:0.05em;border-radius:999px;padding:4px 14px;border:1px solid;}
+.bdg.c{background:rgba(34,211,238,0.12);border-color:rgba(34,211,238,0.3);color:var(--cyan-s);}
+.bdg.o{background:rgba(251,146,60,0.12);border-color:rgba(251,146,60,0.3);color:#fdba74;}
+.bdg.g{background:rgba(74,222,128,0.12);border-color:rgba(74,222,128,0.3);color:#86efac;}
+.bdg.r{background:rgba(248,113,113,0.12);border-color:rgba(248,113,113,0.3);color:#fca5a5;}
+.bdg.y{background:rgba(251,191,36,0.12);border-color:rgba(251,191,36,0.3);color:#fcd34d;}
+
+</style>
+</head>
+<body>
+
+<div id="pb"></div>
+<div id="counter"><span id="cur">01</span>&thinsp;/&thinsp;<span id="tot">17</span></div>
+
+<div class="deck-viewport">
+<div class="deck-stage" id="stage">
+
+<!-- =====================================================
+     SLIDE 0 — TITLE
+     ===================================================== -->
+<div class="slide active s0" id="s0">
+  <div class="s0-glow1"></div>
+  <div class="s0-glow2"></div>
+  <div class="s0-logo">C</div>
+  <div class="s0-title">Claude Code</div>
+  <div class="s0-sub">Project Structure — สื่อการสอน</div>
+  <div class="s0-pills">
+    <span class="s0-pill c">📚 15 Sections ครบ</span>
+    <span class="s0-pill o">🔧 Components · Skills · Agents · MCP</span>
+  </div>
+  <div class="s0-credit">Based on cc-okid.vercel.app · AI Pairoj — BUGpairoj Group · 2026</div>
+</div>
+
+<!-- =====================================================
+     SLIDE 1 — PROJECT OVERVIEW
+     ===================================================== -->
+<div class="slide ss" id="s1">
+  <div class="gn">01</div>
+  <div class="sh r">
+    <div class="sn"><span class="sn-s">SECTION</span><span class="sn-n">01</span></div>
+    <div class="sh-text">
+      <div class="sh-t">Project Overview</div>
+      <div class="sh-s">ภาพรวมของโปรเจกต์ Claude Code</div>
+    </div>
+    <div class="sh-ico">🏗️</div>
+  </div>
+  <div class="sdiv"></div>
+  <div class="sb">
+    <div class="gcol23" style="height:100%;">
+      <!-- Left: description -->
+      <div style="display:flex;flex-direction:column;gap:22px;">
+        <div class="card tc r">
+          <span class="ci">🤖</span>
+          <div class="ct">Claude Code คืออะไร?</div>
+          <div class="cd">CLI tool สำหรับ AI-assisted development โดย Anthropic — อ่าน CLAUDE.md ก่อนทุก session เพื่อรู้บริบทโปรเจกต์</div>
+        </div>
+        <div class="card to r">
+          <span class="ci">📋</span>
+          <div class="ct o">Context-Aware</div>
+          <div class="cd">Claude รู้ tech stack, conventions, และ business rules ของโปรเจกต์ผ่านไฟล์ CLAUDE.md</div>
+        </div>
+        <div class="card tg r">
+          <span class="ci">⚡</span>
+          <div class="ct g">Extensible</div>
+          <div class="cd">ขยายด้วย Slash Commands, Skills, Agents, Plugins, และ MCP Servers</div>
+        </div>
+      </div>
+      <!-- Right: file tree -->
+      <div class="r">
+        <div style="font-size:16px;font-weight:500;color:var(--mute);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:18px;">โครงสร้างโปรเจกต์</div>
+        <div class="cb" style="font-size:16px;line-height:2;">
+          <span class="cv">my-project/</span><br>
+          ├── <span class="cs">CLAUDE.md</span>          <span class="cc"># Project Memory — อ่านทุก session</span><br>
+          ├── <span class="cw">.claude/</span>           <span class="cc"># Claude configuration folder</span><br>
+          │   ├── <span class="cf">settings.json</span>   <span class="cc"># Shared team settings</span><br>
+          │   ├── <span class="ck">commands/</span>       <span class="cc"># Slash commands (.md)</span><br>
+          │   ├── <span class="ck">skills/</span>         <span class="cc"># Auto-triggered capabilities</span><br>
+          │   ├── <span class="ck">agents/</span>         <span class="cc"># Subagent definitions (.yml)</span><br>
+          │   └── <span class="cf">.mcp.json</span>       <span class="cc"># MCP server config</span><br>
+          ├── <span class="cv">src/</span>               <span class="cc"># Source code</span><br>
+          ├── <span class="cv">tests/</span>             <span class="cc"># Test files</span><br>
+          └── <span class="cv">docs/</span>              <span class="cc"># Reference docs (linked from CLAUDE.md)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =====================================================
+     SLIDE 2 — KEY COMPONENTS
+     ===================================================== -->
+<div class="slide ss" id="s2">
+  <div class="gn">02</div>
+  <div class="sh r">
+    <div class="sn"><span class="sn-s">SECTION</span><span class="sn-n">02</span></div>
+    <div class="sh-text">
+      <div class="sh-t">Key Components</div>
+      <div class="sh-s">องค์ประกอบหลักของระบบ</div>
+    </div>
+    <div class="sh-ico">🧩</div>
+  </div>
+  <div class="sdiv"></div>
+  <div class="sb">
+    <div class="g3" style="grid-template-rows:repeat(2,1fr);height:100%;">
+      <div class="card tc r">
+        <span class="ci">📄</span>
+        <div class="ct">CLAUDE.md</div>
+        <div class="cd"><strong style="color:var(--text)">Project Memory</strong> — Claude อ่านไฟล์นี้ทุก session บอก tech stack, conventions, testing rules, git workflow</div>
+      </div>
+      <div class="card to r">
+        <span class="ci">📁</span>
+        <div class="ct o">.claude/</div>
+        <div class="cd"><strong style="color:var(--text)">Configuration Hub</strong> — เก็บทุกการตั้งค่าและส่วนขยายของ Claude Code ในโปรเจกต์</div>
+      </div>
+      <div class="card tg r">
+        <span class="ci">⌨️</span>
+        <div class="ct g">commands/</div>
+        <div class="cd"><strong style="color:var(--text)">Slash Commands</strong> — คำสั่งย่อที่เรียกด้วย <code style="font-family:var(--mono);color:var(--cyan-s);">/cmd</code> เช่น /review, /deploy, /test-all</div>
+      </div>
+      <div class="card tb r">
+        <span class="ci">🎯</span>
+        <div class="ct b">skills/</div>
+        <div class="cd"><strong style="color:var(--text)">Auto-Triggered Skills</strong> — Claude ตัดสินใจใช้อัตโนมัติตาม context เช่น code-review, test-writer</div>
+      </div>
+      <div class="card tp r">
+        <span class="ci">🤖</span>
+        <div class="ct p">agents/</div>
+        <div class="cd"><strong style="color:var(--text)">Subagent Definitions</strong> — Claude อีก instance ที่ทำงานคู่ขนานได้ (code-reviewer, security-auditor)</div>
+      </div>
+      <div class="card ty r">
+        <span class="ci">🔌</span>
+        <div class="ct y">.mcp.json</div>
+        <div class="cd"><strong style="color:var(--text)">MCP Servers</strong> — ลงทะเบียน Model Context Protocol servers เช่น GitHub, Slack, Postgres</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =====================================================
+     SLIDE 3 — CLAUDE.MD ESSENTIALS
+     ===================================================== -->
+<div class="slide ss" id="s3">
+  <div class="gn">03</div>
+  <div class="sh r">
+    <div class="sn"><span class="sn-s">SECTION</span><span class="sn-n">03</span></div>
+    <div class="sh-text">
+      <div class="sh-t">CLAUDE.md Essentials</div>
+      <div class="sh-s">สิ่งที่ต้องมีในไฟล์ CLAUDE.md</div>
+    </div>
+    <div class="sh-ico">📝</div>
+  </div>
+  <div class="sdiv"></div>
+  <div class="sb">
+    <div class="gcol23" style="height:100%;">
+      <!-- Left: what to include -->
+      <div style="display:flex;flex-direction:column;gap:18px;">
+        <div class="r">
+          <div style="font-size:16px;font-weight:500;color:var(--mute);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px;">ต้องมีใน CLAUDE.md</div>
+          <ul class="bl" style="gap:12px;">
+            <li><strong>Tech Stack</strong> — PHP 8.2, MySQL 8, Tailwind CSS (ระบุ version ด้วย)</li>
+            <li><strong>Conventions</strong> — ใช้ PDO prepared statements, CSRF token ทุก form</li>
+            <li><strong>Testing Rules</strong> — Vitest/Jest, coverage ≥ 80%, arrange-act-assert</li>
+            <li><strong>Git Workflow</strong> — branch: feature/*, fix/*, commit prefix: feat, fix, docs</li>
+            <li><strong>Security Policy</strong> — RBAC, secrets ใน .env เท่านั้น</li>
+            <li><strong>Domain Rules</strong> — กฎธุรกิจเฉพาะโปรเจกต์</li>
+          </ul>
+        </div>
+        <div class="tip r">
+          <span class="bi">💡</span>
+          <span>เก็บ CLAUDE.md <strong>ต่ำกว่า 500 บรรทัด</strong> — ถ้ายาวกว่านี้ให้แตกไปไว้ใน <code style="font-family:var(--mono);font-size:15px;">docs/</code> แล้ว link มา</span>
+        </div>
+      </div>
+      <!-- Right: code example -->
+      <div class="r">
+        <div style="font-size:16px;font-weight:500;color:var(--mute);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px;">ตัวอย่าง CLAUDE.md</div>
+        <div class="cb" style="font-size:15px;line-height:1.8;">
+          <span class="cb-lang">markdown</span>
+          <span class="ck"># Project: MedRecord v1.0</span><br><br>
+          <span class="ck">## Tech Stack</span><br>
+          - PHP 8.2 + MySQL 8 (PDO prepared statements)<br>
+          - Tailwind CSS + Glassmorphism dark theme<br>
+          - Chart.js, LINE Messaging API<br><br>
+          <span class="ck">## Conventions</span><br>
+          - ทุกไฟล์ต้องมี CSRF token<br>
+          - ใช้ Buddhist Era (พ.ศ.) ในการแสดงวันที่<br>
+          - Footer: <span class="cs">"AI Pairoj — BUGpairoj Group"</span><br><br>
+          <span class="ck">## Testing</span><br>
+          - รัน <span class="cv">npm test</span> ก่อน commit เสมอ<br>
+          - Coverage: 80%+ ทุก module<br><br>
+          <span class="ck">## Git Workflow</span><br>
+          - Branch: <span class="cv">feature/*</span>, <span class="cv">fix/*</span>, <span class="cv">hotfix/*</span><br>
+          - Commit prefix: feat, fix, docs, test, chore
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =====================================================
+     SLIDE 4 — EXTENSION TYPES
+     ===================================================== -->
+<div class="slide ss" id="s4">
+  <div class="gn">04</div>
+  <div class="sh r">
+    <div class="sn"><span class="sn-s">SECTION</span><span class="sn-n">04</span></div>
+    <div class="sh-text">
+      <div class="sh-t">Extension Types</div>
+      <div class="sh-s">ประเภทการขยายระบบ Claude Code</div>
+    </div>
+    <div class="sh-ico">🔧</div>
+  </div>
+  <div class="sdiv"></div>
+  <div class="sb">
+    <div class="g2" style="grid-template-rows:repeat(2,1fr);height:100%;gap:22px;">
+      <div class="card tg r">
+        <span class="ci">⌨️</span>
+        <div class="ct g">Slash Commands</div>
+        <div class="cd" style="font-size:18px;line-height:1.6;">
+          <strong style="color:var(--text)">Manual trigger</strong> — ผู้ใช้พิมพ์ <code style="font-family:var(--mono);color:var(--cyan-s);">/cmd</code> เพื่อเรียกใช้<br>
+          เขียนเป็นไฟล์ <code style="font-family:var(--mono);color:var(--cyan-s);">.md</code> ใน <code style="font-family:var(--mono);color:var(--cyan-s);">.claude/commands/</code><br>
+          ใช้กับงานที่ทำซ้ำๆ เช่น /review, /deploy, /test-all
+        </div>
+      </div>
+      <div class="card tb r">
+        <span class="ci">🎯</span>
+        <div class="ct b">Skills</div>
+        <div class="cd" style="font-size:18px;line-height:1.6;">
+          <strong style="color:var(--text)">Auto-trigger</strong> — Claude ตัดสินใจเองตาม context<br>
+          โครงสร้างซับซ้อน: SKILL.md + scripts/ + references/ + assets/<br>
+          เหมาะกับ workflow ที่ต้องการ reference หลายชิ้น
+        </div>
+      </div>
+      <div class="card tp r">
+        <span class="ci">🤖</span>
+        <div class="ct p">Agents (Subagents)</div>
+        <div class="cd" style="font-size:18px;line-height:1.6;">
+          <strong style="color:var(--text)">Parallel AI instances</strong> — Claude อีกตัวที่มี context แยก<br>
+          นิยามด้วย <code style="font-family:var(--mono);color:var(--cyan-s);">.yml</code> ใน <code style="font-family:var(--mono);color:var(--cyan-s);">.claude/agents/</code><br>
+          ใช้สำหรับ code-review, security-audit, devops
+        </div>
+      </div>
+      <div class="card ty r">
+        <span class="ci">🔌</span>
+        <div class="ct y">Plugins</div>
+        <div class="cd" style="font-size:18px;line-height:1.6;">
+          <strong style="color:var(--text)">Deep system extension</strong> — ขยายความสามารถระดับ core<br>
+          ลงทะเบียนใน <code style="font-family:var(--mono);color:var(--cyan-s);">settings.json → plugins[]</code><br>
+          เหมาะกับ team tools ที่ใช้ข้ามโปรเจกต์
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =====================================================
+     SLIDE 5 — HOOK EVENTS
+     ===================================================== -->
+<div class="slide ss" id="s5">
+  <div class="gn">05</div>
+  <div class="sh r">
+    <div class="sn"><span class="sn-s">SECTION</span><span class="sn-n">05</span></div>
+    <div class="sh-text">
+      <div class="sh-t">Hook Events</div>
+      <div class="sh-s">เหตุการณ์ที่ดักจับและตอบสนองได้</div>
+    </div>
+    <div class="sh-ico">🪝</div>
+  </div>
+  <div class="sdiv"></div>
+  <div class="sb">
+    <div class="gcol32" style="height:100%;">
+      <!-- Left: table -->
+      <div class="r">
+        <table class="tb2">
+          <thead><tr><th>Hook Event</th><th>เรียกเมื่อ</th><th>ใช้ทำอะไร</th></tr></thead>
+          <tbody>
+            <tr><td>PreToolUse</td><td>ก่อน Claude เรียก tool</td><td>Secret scan, permission check</td></tr>
+            <tr><td>PostToolUse</td><td>หลัง Claude เรียก tool</td><td>Auto-format, lint, log</td></tr>
+            <tr><td>SessionStart</td><td>เปิด session ใหม่</td><td>โหลด env, แจ้งทีม</td></tr>
+            <tr><td>SessionEnd</td><td>ปิด session</td><td>Save summary, cleanup</td></tr>
+            <tr><td>PreCommit</td><td>ก่อน git commit</td><td>Run full test, security scan</td></tr>
+            <tr><td>Notification</td><td>เมื่อ tool ล้มเหลว</td><td>ส่ง LINE/Telegram alert</td></tr>
+          </tbody>
+        </table>
+        <div class="info r" style="margin-top:18px;">
+          <span class="bi">ℹ️</span>
+          <span>Hooks = <strong>shell scripts ตายตัว</strong> ไม่ใช่ AI — ทำงานเหมือน git hooks แต่ trigger ด้วย Claude events</span>
+        </div>
+      </div>
+      <!-- Right: code example -->
+      <div class="r">
+        <div style="font-size:16px;font-weight:500;color:var(--mute);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px;">settings.json</div>
+        <div class="cb" style="font-size:15px;line-height:1.8;">
+          <span class="cb-lang">json</span>
+          {<br>
+          &nbsp;&nbsp;<span class="ck">"hooks"</span>: {<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;<span class="ck">"PreToolUse"</span>: <span class="cs">"./scripts/secret-scan.sh"</span>,<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;<span class="ck">"PostToolUse"</span>: <span class="cs">"./scripts/auto-format.sh"</span>,<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;<span class="ck">"SessionStart"</span>: <span class="cs">"./scripts/load-env.sh"</span>,<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;<span class="ck">"PreCommit"</span>: <span class="cs">"./scripts/full-test.sh"</span><br>
+          &nbsp;&nbsp;},<br>
+          &nbsp;&nbsp;<span class="ck">"deniedTools"</span>: [<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;<span class="cs">"Bash(rm -rf*)"</span>,<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;<span class="cs">"Bash(DROP TABLE*)"</span><br>
+          &nbsp;&nbsp;]<br>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =====================================================
+     SLIDE 6 — SKILL STRUCTURE
+     ===================================================== -->
+<div class="slide ss" id="s6">
+  <div class="gn">06</div>
+  <div class="sh r">
+    <div class="sn"><span class="sn-s">SECTION</span><span class="sn-n">06</span></div>
+    <div class="sh-text">
+      <div class="sh-t">Skill Structure</div>
+      <div class="sh-s">โครงสร้างของ Skill และการทำงาน</div>
+    </div>
+    <div class="sh-ico">🎯</div>
+  </div>
+  <div class="sdiv"></div>
+  <div class="sb">
+    <div class="gcol23" style="height:100%;">
+      <!-- Left: folder structure -->
+      <div style="display:flex;flex-direction:column;gap:20px;">
+        <div class="r">
+          <div style="font-size:16px;font-weight:500;color:var(--mute);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px;">โครงสร้าง Skill</div>
+          <div class="cb" style="font-size:16px;line-height:2.1;">
+            <span class="cw">.claude/skills/code-review/</span><br>
+            ├── <span class="cs">SKILL.md</span>       <span class="cc"># Instructions + metadata</span><br>
+            ├── <span class="cf">scripts/</span>       <span class="cc"># Shell/Python scripts</span><br>
+            │&nbsp;&nbsp;&nbsp;└── lint-check.sh<br>
+            ├── <span class="cv">references/</span>    <span class="cc"># Docs loaded on-demand</span><br>
+            │&nbsp;&nbsp;&nbsp;└── owasp-top10.md<br>
+            └── <span class="ck">assets/</span>        <span class="cc"># Templates & static files</span><br>
+            &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── review-template.md
+          </div>
+        </div>
+        <div class="tip r">
+          <span class="bi">💡</span>
+          <span><strong>Skills vs Commands:</strong> Commands = trigger เอง / Skills = Claude ตัดสินใจใช้ตาม context</span>
+        </div>
+      </div>
+      <!-- Right: SKILL.md example -->
+      <div class="r">
+        <div style="font-size:16px;font-weight:500;color:var(--mute);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px;">SKILL.md frontmatter</div>
+        <div class="cb" style="font-size:15px;line-height:1.8;margin-bottom:16px;">
+          <span class="cb-lang">yaml</span>
+          <span class="cc">---</span><br>
+          <span class="ck">name</span>: <span class="cs">code-review</span><br>
+          <span class="ck">description</span>: |<br>
+          &nbsp;&nbsp;<span class="cc"># ใช้ description บอก Claude ว่าจะ trigger เมื่อไร</span><br>
+          &nbsp;&nbsp;Triggers thorough review before commit.<br>
+          &nbsp;&nbsp;Activate when user says: "review", "ตรวจ code"<br>
+          <span class="ck">allowed-tools</span>: [<span class="cs">Read</span>, <span class="cs">Bash</span>, <span class="cs">Grep</span>]<br>
+          <span class="cc">---</span><br><br>
+          <span class="ck">## Process</span><br>
+          1. รัน <span class="cv">scripts/lint-check.sh</span><br>
+          2. โหลด <span class="cv">references/owasp-top10.md</span> ถ้าเจอ auth<br>
+          3. สรุปด้วย <span class="cv">assets/review-template.md</span>
+        </div>
+        <div class="warn r">
+          <span class="bi">⚠️</span>
+          <span><strong>description ที่ดี = Skill ทำงานถูกต้อง</strong> — เขียนให้ชัดว่า trigger เมื่อไร ใช้ keyword ที่ผู้ใช้จะพิมพ์จริงๆ</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =====================================================
+     SLIDE 7 — POPULAR MCP SERVERS
+     ===================================================== -->
+<div class="slide ss" id="s7">
+  <div class="gn">07</div>
+  <div class="sh r">
+    <div class="sn"><span class="sn-s">SECTION</span><span class="sn-n">07</span></div>
+    <div class="sh-text">
+      <div class="sh-t">Popular MCP Servers</div>
+      <div class="sh-s">MCP servers ยอดนิยมที่ใช้กับ Claude Code</div>
+    </div>
+    <div class="sh-ico">🔌</div>
+  </div>
+  <div class="sdiv"></div>
+  <div class="sb">
+    <div class="g4" style="grid-template-rows:repeat(2,1fr);height:100%;">
+      <div class="card tc r">
+        <span class="ci">🐙</span>
+        <div class="ct">GitHub</div>
+        <div class="cd">จัดการ PR, Issues, Repo — อ่าน diff, comment, merge ได้จากใน Claude</div>
+      </div>
+      <div class="card to r">
+        <span class="ci">📋</span>
+        <div class="ct o">JIRA</div>
+        <div class="cd">ดู ticket, อัพเดท status, สร้าง issue และ link กับ code changes</div>
+      </div>
+      <div class="card tg r">
+        <span class="ci">💬</span>
+        <div class="ct g">Slack</div>
+        <div class="cd">ส่งข้อความ, แจ้งเตือน deploy status, รายงาน bug ไปยัง channel ทีม</div>
+      </div>
+      <div class="card tb r">
+        <span class="ci">🐘</span>
+        <div class="ct b">Postgres</div>
+        <div class="cd">รัน SQL query, ดู schema, analyze performance ได้โดยตรงจาก Claude</div>
+      </div>
+      <div class="card tp r">
+        <span class="ci">🎭</span>
+        <div class="ct p">Playwright</div>
+        <div class="cd">Browser automation — Claude สั่งให้ทดสอบ UI, screenshot, และ E2E test</div>
+      </div>
+      <div class="card ty r">
+        <span class="ci">📂</span>
+        <div class="ct y">Google Drive</div>
+        <div class="cd">อ่าน/เขียน Docs, Sheets, สร้าง report จากข้อมูลในโปรเจกต์</div>
+      </div>
+      <div class="card tk r">
+        <span class="ci">💚</span>
+        <div class="ct k">LINE Notify</div>
+        <div class="cd">แจ้งเตือน build/deploy result, error alert ไปยัง LINE group ทีม</div>
+      </div>
+      <div class="card tr r">
+        <span class="ci">✈️</span>
+        <div class="ct r">Telegram Bot</div>
+        <div class="cd">ส่ง alert ฉุกเฉิน, รายงาน security scan result ทาง Telegram</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =====================================================
+     SLIDE 8 — COMMON SLASH COMMANDS
+     ===================================================== -->
+<div class="slide ss" id="s8">
+  <div class="gn">08</div>
+  <div class="sh r">
+    <div class="sn"><span class="sn-s">SECTION</span><span class="sn-n">08</span></div>
+    <div class="sh-text">
+      <div class="sh-t">Common Slash Commands</div>
+      <div class="sh-s">คำสั่ง slash ที่ใช้บ่อยใน Claude Code</div>
+    </div>
+    <div class="sh-ico">⌨️</div>
+  </div>
+  <div class="sdiv"></div>
+  <div class="sb">
+    <div class="g4" style="grid-template-rows:repeat(2,1fr);height:100%;">
+      <div class="card tg r">
+        <div class="ct g" style="font-size:22px;margin-bottom:10px;">/review</div>
+        <div class="cd">รัน code review บน diff ปัจจุบัน — ตรวจ security, quality, conventions ครบ</div>
+      </div>
+      <div class="card to r">
+        <div class="ct o" style="font-size:22px;margin-bottom:10px;">/deploy</div>
+        <div class="cd">Build และ push ขึ้น staging/production ตาม pipeline ที่กำหนด</div>
+      </div>
+      <div class="card tb r">
+        <div class="ct b" style="font-size:22px;margin-bottom:10px;">/test-all</div>
+        <div class="cd">รัน test suite ทั้งหมด — unit, integration, E2E พร้อมรายงาน coverage</div>
+      </div>
+      <div class="card tp r">
+        <div class="ct p" style="font-size:22px;margin-bottom:10px;">/bootstrap</div>
+        <div class="cd">Scaffold module ใหม่ตาม boilerplate ของโปรเจกต์ — สร้างไฟล์ครบชุด</div>
+      </div>
+      <div class="card ty r">
+        <div class="ct y" style="font-size:22px;margin-bottom:10px;">/document</div>
+        <div class="cd">Auto-generate docs จาก source code — architecture.md, api-reference.md</div>
+      </div>
+      <div class="card tc r">
+        <div class="ct" style="font-size:22px;margin-bottom:10px;">/init</div>
+        <div class="cd">Auto-generate CLAUDE.md จากโครงโปรเจกต์ปัจจุบัน — สร้างทีเดียวครบ</div>
+      </div>
+      <div class="card tk r">
+        <div class="ct k" style="font-size:22px;margin-bottom:10px;">/compact</div>
+        <div class="cd">ย่อ context ประหยัด tokens — เรียกเมื่อ context ใช้ไปแล้ว 70-90%</div>
+      </div>
+      <div class="card tr r">
+        <div class="ct r" style="font-size:22px;margin-bottom:10px;">/resume</div>
+        <div class="cd">โหลด session ที่แล้วกลับมา — Claude จำบริบทได้ต่อเนื่อง</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =====================================================
+     SLIDE 9 — AGENT TEAM PATTERNS
+     ===================================================== -->
+<div class="slide ss" id="s9">
+  <div class="gn">09</div>
+  <div class="sh r">
+    <div class="sn"><span class="sn-s">SECTION</span><span class="sn-n">09</span></div>
+    <div class="sh-text">
+      <div class="sh-t">Agent Team Patterns</div>
+      <div class="sh-s">รูปแบบการทำงานของทีม Agent</div>
+    </div>
+    <div class="sh-ico">🤝</div>
+  </div>
+  <div class="sdiv"></div>
+  <div class="sb">
+    <div class="g5" style="height:100%;">
+      <div class="card tc r" style="display:flex;flex-direction:column;">
+        <span class="ci">🎼</span>
+        <div class="ct" style="font-size:19px;margin-bottom:10px;">Orchestrator</div>
+        <div class="cd" style="flex:1;">Main agent ควบคุม specialists — แบ่งงานให้ subagent แต่ละตัว แล้ว merge ผลลัพธ์</div>
+        <div style="margin-top:14px;padding:10px;background:rgba(34,211,238,0.06);border-radius:8px;font-family:var(--mono);font-size:13px;color:var(--mute);">main → A, B, C → merge</div>
+      </div>
+      <div class="card tg r" style="display:flex;flex-direction:column;">
+        <span class="ci">🔗</span>
+        <div class="ct g" style="font-size:19px;margin-bottom:10px;">Pipeline</div>
+        <div class="cd" style="flex:1;">ทำงานต่อเนื่องแบบ chain — output ของ A เป็น input ของ B ตามลำดับที่กำหนด</div>
+        <div style="margin-top:14px;padding:10px;background:rgba(74,222,128,0.06);border-radius:8px;font-family:var(--mono);font-size:13px;color:var(--mute);">A → B → C (sequential)</div>
+      </div>
+      <div class="card to r" style="display:flex;flex-direction:column;">
+        <span class="ci">🗺️</span>
+        <div class="ct o" style="font-size:19px;margin-bottom:10px;">Map-Reduce</div>
+        <div class="cd" style="flex:1;">แยกงานใหญ่เป็น chunks → ทำคู่ขนาน → รวมผล เช่น analyze 100 files พร้อมกัน</div>
+        <div style="margin-top:14px;padding:10px;background:rgba(251,146,60,0.06);border-radius:8px;font-family:var(--mono);font-size:13px;color:var(--mute);">split → parallel → merge</div>
+      </div>
+      <div class="card tp r" style="display:flex;flex-direction:column;">
+        <span class="ci">👁️</span>
+        <div class="ct p" style="font-size:19px;margin-bottom:10px;">Supervisor</div>
+        <div class="cd" style="flex:1;">Agent หนึ่งคอย monitor และตรวจสอบงานของ agents อื่น — แก้ไขถ้าผิดพลาด</div>
+        <div style="margin-top:14px;padding:10px;background:rgba(192,132,252,0.06);border-radius:8px;font-family:var(--mono);font-size:13px;color:var(--mute);">supervisor → workers</div>
+      </div>
+      <div class="card ty r" style="display:flex;flex-direction:column;">
+        <span class="ci">🐝</span>
+        <div class="ct y" style="font-size:19px;margin-bottom:10px;">Swarm</div>
+        <div class="cd" style="flex:1;">Agents เท่าๆ กันทำงานร่วมกัน ไม่มีลำดับชั้น — ดีสำหรับ exploratory tasks</div>
+        <div style="margin-top:14px;padding:10px;background:rgba(251,191,36,0.06);border-radius:8px;font-family:var(--mono);font-size:13px;color:var(--mute);">A ⟷ B ⟷ C (equal)</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =====================================================
+     SLIDE 10 — GETTING STARTED
+     ===================================================== -->
+<div class="slide ss" id="s10">
+  <div class="gn">10</div>
+  <div class="sh r">
+    <div class="sn"><span class="sn-s">SECTION</span><span class="sn-n">10</span></div>
+    <div class="sh-text">
+      <div class="sh-t">Getting Started</div>
+      <div class="sh-s">เริ่มต้นใช้งาน Claude Code ใน 6 ขั้น</div>
+    </div>
+    <div class="sh-ico">🚀</div>
+  </div>
+  <div class="sdiv"></div>
+  <div class="sb">
+    <div class="gcol23" style="height:100%;">
+      <!-- Left: steps -->
+      <div class="steps r">
+        <div class="step"><div class="stepn">1</div><div class="stept"><strong>ติดตั้ง Claude Code CLI</strong><br><code>npm i -g @anthropic-ai/claude-code</code></div></div>
+        <div class="step"><div class="stepn">2</div><div class="stept"><strong>เข้าโปรเจกต์</strong><br><code>cd your-project &amp;&amp; claude</code></div></div>
+        <div class="step"><div class="stepn">3</div><div class="stept"><strong>สร้าง CLAUDE.md อัตโนมัติ</strong> (⭐ ขั้นสำคัญที่สุด)<br><code>/init</code> — Claude จะอ่านโปรเจกต์แล้วสร้างให้</div></div>
+        <div class="step"><div class="stepn">4</div><div class="stept"><strong>สร้าง folders สำหรับ extensions</strong><br><code>mkdir -p .claude/{commands,skills,agents}</code></div></div>
+        <div class="step"><div class="stepn">5</div><div class="stept"><strong>ลงทะเบียน MCP servers</strong><br><code>nano .claude/.mcp.json</code></div></div>
+        <div class="step"><div class="stepn">6</div><div class="stept"><strong>เริ่ม build!</strong><br><code>claude</code> แล้ว Claude พร้อมทำงาน</div></div>
+      </div>
+      <!-- Right: code -->
+      <div class="r">
+        <div style="font-size:16px;font-weight:500;color:var(--mute);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px;">ตัวอย่าง .mcp.json</div>
+        <div class="cb" style="font-size:15px;line-height:1.85;margin-bottom:18px;">
+          <span class="cb-lang">json</span>
+          {<br>
+          &nbsp;&nbsp;<span class="ck">"mcpServers"</span>: {<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;<span class="ck">"github"</span>: {<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="ck">"command"</span>: <span class="cs">"npx"</span>,<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="ck">"args"</span>: [<span class="cs">"-y"</span>, <span class="cs">"@mcp/github"</span>],<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="ck">"env"</span>: { <span class="ck">"GITHUB_TOKEN"</span>: <span class="cs">"${env:GH_TOKEN}"</span> }<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;},<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;<span class="ck">"postgres"</span>: {<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="ck">"command"</span>: <span class="cs">"npx"</span>,<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="ck">"args"</span>: [<span class="cs">"-y"</span>, <span class="cs">"@mcp/postgres"</span>],<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="ck">"env"</span>: { <span class="ck">"DATABASE_URL"</span>: <span class="cs">"${env:DB_URL}"</span> }<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;}<br>
+          &nbsp;&nbsp;}<br>
+          }
+        </div>
+        <div class="tip r">
+          <span class="bi">🚀</span>
+          <span>หลัง <code style="font-family:var(--mono);font-size:15px;">/init</code> ให้ปรับแต่ง CLAUDE.md ที่สร้างมา เพิ่ม domain rules เฉพาะโปรเจกต์</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =====================================================
+     SLIDE 11 — CONTEXT MANAGEMENT
+     ===================================================== -->
+<div class="slide ss" id="s11">
+  <div class="gn">11</div>
+  <div class="sh r">
+    <div class="sn"><span class="sn-s">SECTION</span><span class="sn-n">11</span></div>
+    <div class="sh-text">
+      <div class="sh-t">Context Management</div>
+      <div class="sh-s">การจัดการ Context Window อย่าให้เต็มก่อนงานเสร็จ</div>
+    </div>
+    <div class="sh-ico">📊</div>
+  </div>
+  <div class="sdiv"></div>
+  <div class="sb">
+    <div class="gcol23" style="height:100%;">
+      <!-- Left: context bars -->
+      <div style="display:flex;flex-direction:column;gap:0;">
+        <div class="ctxbars r" style="margin-bottom:24px;">
+          <div class="ctxrow">
+            <span class="ctxlbl">0 – 50%</span>
+            <div class="ctxbar"><div class="ctxfill" style="width:50%;background:linear-gradient(90deg,#4ade80,#22d3ee);"></div></div>
+            <span class="ctxtxt" style="color:#86efac;">🟢 Work freely</span>
+          </div>
+          <div class="ctxrow">
+            <span class="ctxlbl">50 – 70%</span>
+            <div class="ctxbar"><div class="ctxfill" style="width:70%;background:linear-gradient(90deg,#22d3ee,#fbbf24);"></div></div>
+            <span class="ctxtxt" style="color:#fcd34d;">🟡 Monitor ดู token</span>
+          </div>
+          <div class="ctxrow">
+            <span class="ctxlbl">70 – 90%</span>
+            <div class="ctxbar"><div class="ctxfill" style="width:87%;background:linear-gradient(90deg,#fbbf24,#fb923c);"></div></div>
+            <span class="ctxtxt" style="color:#fdba74;">🟠 /compact ทันที</span>
+          </div>
+          <div class="ctxrow">
+            <span class="ctxlbl">90% +</span>
+            <div class="ctxbar"><div class="ctxfill" style="width:96%;background:linear-gradient(90deg,#fb923c,#f87171);"></div></div>
+            <span class="ctxtxt" style="color:#fca5a5;">🔴 Clear (บังคับ!)</span>
+          </div>
+        </div>
+        <div class="warn r">
+          <span class="bi">🚨</span>
+          <span><strong>อย่าปล่อยให้ 90%+</strong> — Claude จะตอบช้า สับสน และอาจลืม context สำคัญ</span>
+        </div>
+      </div>
+      <!-- Right: tips -->
+      <div style="display:flex;flex-direction:column;gap:16px;">
+        <div style="font-size:16px;font-weight:500;color:var(--mute);letter-spacing:0.1em;text-transform:uppercase;" class="r">เคล็ดลับประหยัด Context</div>
+        <div class="card tc r">
+          <div class="ct" style="margin-bottom:6px;">/compact ก่อนงานยาว</div>
+          <div class="cd">ย่อประวัติเก่าให้สั้นลง — ทำเมื่อเข้าสู่ 70% เพื่อให้มีพื้นที่ทำงานต่อ</div>
+        </div>
+        <div class="card tg r">
+          <div class="ct g" style="margin-bottom:6px;">ใช้ Subagents แยก Context</div>
+          <div class="cd">ส่ง sub-tasks ไปทำงานบน subagent แยก — main agent ใช้ token น้อยลงมาก</div>
+        </div>
+        <div class="card to r">
+          <div class="ct o" style="margin-bottom:6px;">Link แทน Paste</div>
+          <div class="cd">บอก Claude อ่านไฟล์แทนการ paste code 500 บรรทัดลงใน chat — ประหยัด 10×</div>
+        </div>
+        <div class="card tp r">
+          <div class="ct p" style="margin-bottom:6px;">เก็บใน CLAUDE.md / docs/</div>
+          <div class="cd">ข้อมูลถาวรให้อยู่ในไฟล์ ไม่ใช่ใน chat history ที่จะถูก compact ทิ้ง</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =====================================================
+     SLIDE 12 — SECURITY BEST PRACTICES
+     ===================================================== -->
+<div class="slide ss" id="s12">
+  <div class="gn">12</div>
+  <div class="sh r">
+    <div class="sn"><span class="sn-s">SECTION</span><span class="sn-n">12</span></div>
+    <div class="sh-text">
+      <div class="sh-t">Security Best Practices</div>
+      <div class="sh-s">ความปลอดภัยที่ต้องรู้ก่อนใช้ Claude Code จริง</div>
+    </div>
+    <div class="sh-ico">🔒</div>
+  </div>
+  <div class="sdiv"></div>
+  <div class="sb">
+    <div class="gcol23" style="height:100%;">
+      <!-- Left: table -->
+      <div class="r">
+        <table class="tb2">
+          <thead><tr><th>หัวข้อ</th><th>ทำอย่างไร</th></tr></thead>
+          <tbody>
+            <tr><td>Secrets</td><td>ไม่เก็บใน CLAUDE.md เด็ดขาด — ใช้ env vars เสมอ</td></tr>
+            <tr><td>.env.example</td><td>ใช้เป็น template สำหรับทีม (ไม่มีค่าจริง)</td></tr>
+            <tr><td>settings.local.json</td><td>ต้องอยู่ใน .gitignore เสมอ</td></tr>
+            <tr><td>PreCommit Hook</td><td>เปิด secret scanning ก่อน commit ทุกครั้ง</td></tr>
+            <tr><td>MCP Scope</td><td>ให้ permission ขั้นต่ำที่จำเป็น (least privilege)</td></tr>
+            <tr><td>Secret Rotation</td><td>เปลี่ยน secrets ทุก 90 วัน — สร้าง quarterly checklist</td></tr>
+          </tbody>
+        </table>
+        <div class="warn r" style="margin-top:18px;">
+          <span class="bi">🚨</span>
+          <span><strong>กฎเหล็ก:</strong> ถ้า secret หลุดขึ้น git ครั้งหนึ่ง — ต้อง rotate ทันที แม้ลบ commit แล้ว เพราะมีคนเก็บ history ไว้แล้ว</span>
+        </div>
+      </div>
+      <!-- Right: pre-commit code -->
+      <div class="r">
+        <div style="font-size:16px;font-weight:500;color:var(--mute);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px;">Pre-commit hook สแกน secret</div>
+        <div class="cb" style="font-size:14.5px;line-height:1.8;">
+          <span class="cb-lang">bash</span>
+          <span class="cc"># .git/hooks/pre-commit</span><br>
+          <span class="ck">PATTERNS</span>=(<br>
+          &nbsp;&nbsp;<span class="cs">'sk-[a-zA-Z0-9]{32,}'</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cc"># OpenAI</span><br>
+          &nbsp;&nbsp;<span class="cs">'AIza[0-9A-Za-z_-]{35}'</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cc"># Google</span><br>
+          &nbsp;&nbsp;<span class="cs">'AKIA[0-9A-Z]{16}'</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cc"># AWS</span><br>
+          &nbsp;&nbsp;<span class="cs">'ghp_[a-zA-Z0-9]{36}'</span> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="cc"># GitHub PAT</span><br>
+          )<br><br>
+          <span class="ck">for</span> p <span class="ck">in</span> <span class="cs">"${PATTERNS[@]}"</span>; <span class="ck">do</span><br>
+          &nbsp;&nbsp;<span class="ck">if</span> git diff --cached | grep -qE <span class="cs">"$p"</span>; <span class="ck">then</span><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;echo <span class="cs">"🚨 Secret detected! Aborting."</span><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;exit <span class="cn">1</span><br>
+          &nbsp;&nbsp;<span class="ck">fi</span><br>
+          <span class="ck">done</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =====================================================
+     SLIDE 13 — CLAUDE.MD ANTI-PATTERNS
+     ===================================================== -->
+<div class="slide ss" id="s13">
+  <div class="gn">13</div>
+  <div class="sh r">
+    <div class="sn"><span class="sn-s">SECTION</span><span class="sn-n">13</span></div>
+    <div class="sh-text">
+      <div class="sh-t">CLAUDE.md Anti-Patterns</div>
+      <div class="sh-s">5 อย่างที่ทำให้ CLAUDE.md ใช้ไม่ได้ผล</div>
+    </div>
+    <div class="sh-ico">❌</div>
+  </div>
+  <div class="sdiv"></div>
+  <div class="sb">
+    <div class="gcol23" style="height:100%;">
+      <!-- Left: table -->
+      <div class="r">
+        <table class="tb2">
+          <thead><tr><th>#</th><th>Anti-pattern</th><th>ปัญหา</th><th>แก้ยังไง</th></tr></thead>
+          <tbody>
+            <tr><td style="color:var(--red);">01</td><td><strong style="color:var(--text);">500+ บรรทัด</strong></td><td>Context bloat — ช้าและสับสน</td><td>แตกเป็นไฟล์ใน docs/ แล้ว link</td></tr>
+            <tr><td style="color:var(--red);">02</td><td><strong style="color:var(--text);">"Write good code"</strong></td><td>กว้างเกินไป Claude ไม่รู้ทำอะไร</td><td>เขียนเป็นกฎเฉพาะ + ตัวอย่าง code</td></tr>
+            <tr><td style="color:var(--red);">03</td><td><strong style="color:var(--text);">Duplicate docs</strong></td><td>แก้ทีต้องไล่หลายที่</td><td>Link ไปยัง source — ห้าม copy</td></tr>
+            <tr><td style="color:var(--red);">04</td><td><strong style="color:var(--text);">ไม่มี test guidance</strong></td><td>Claude ข้ามการเขียน test</td><td>ระบุ framework + coverage + pattern</td></tr>
+            <tr><td style="color:var(--red);">05</td><td><strong style="color:var(--text);">ไม่มี error patterns</strong></td><td>handle error ไม่สม่ำเสมอ</td><td>ใส่ตัวอย่าง try-catch + log format</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <!-- Right: good vs bad -->
+      <div class="r">
+        <div style="font-size:16px;font-weight:500;color:var(--mute);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px;">Bad vs Good</div>
+        <div class="cb" style="font-size:14px;line-height:1.8;">
+          <span class="cb-lang">markdown</span>
+          <span class="cc">❌ BAD: "Write good code"</span><br>
+          <span class="cc">❌ BAD: "Be careful with security"</span><br>
+          <span class="cc">❌ BAD: "Test things properly"</span><br><br>
+          <span class="cs">✅ GOOD: ระบุเฉพาะเจาะจง</span><br>
+          - ใช้ PDO prepared statements เสมอ<br>
+          - เช็ค RBAC ทุก endpoint: <span class="cv">$user->can('...')</span><br>
+          - ทุก function ต้องมี test ครอบคลุม:<br>
+          &nbsp;&nbsp;- Happy path (1 case)<br>
+          &nbsp;&nbsp;- Edge cases (3+: empty, null, max)<br>
+          &nbsp;&nbsp;- Error case (1+)<br>
+          - Coverage ≥ 80% (fail CI ถ้าต่ำกว่า)<br>
+          <br>
+          <span class="cc">❌ BAD: We use Jest.</span><br>
+          <span class="cs">✅ GOOD: Vitest 1.x (ไม่ใช่ Jest!)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =====================================================
+     SLIDE 14 — DEBUGGING & LOGGING
+     ===================================================== -->
+<div class="slide ss" id="s14">
+  <div class="gn">14</div>
+  <div class="sh r">
+    <div class="sn"><span class="sn-s">SECTION</span><span class="sn-n">14</span></div>
+    <div class="sh-text">
+      <div class="sh-t">Debugging &amp; Logging</div>
+      <div class="sh-s">แก้บั๊กและตรวจการทำงานของ Claude Code</div>
+    </div>
+    <div class="sh-ico">🔍</div>
+  </div>
+  <div class="sdiv"></div>
+  <div class="sb">
+    <div class="gcol32" style="height:100%;">
+      <!-- Left: table + tips -->
+      <div style="display:flex;flex-direction:column;gap:20px;">
+        <div class="r">
+          <table class="tb2">
+            <thead><tr><th>คำสั่ง / Hook</th><th>ใช้เมื่อ</th></tr></thead>
+            <tbody>
+              <tr><td>--verbose</td><td>เปิด trace log ของทุก tool call</td></tr>
+              <tr><td>/cost</td><td>ดู token spend ปัจจุบัน + top consumers</td></tr>
+              <tr><td>/resume</td><td>เล่น session ที่ล้มเหลวกลับมาใหม่</td></tr>
+              <tr><td>Notification hook</td><td>ส่ง alert เมื่อ tool call ล้มเหลว</td></tr>
+              <tr><td>~/.claude/logs/</td><td>ดู hook logs ย้อนหลัง</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="info r">
+          <span class="bi">ℹ️</span>
+          <span>ถ้า Skill ไม่ trigger ให้ตรวจ <strong>description</strong> ใน SKILL.md — Claude ใช้ description ตัดสินใจว่าจะใช้ skill หรือไม่</span>
+        </div>
+      </div>
+      <!-- Right: code -->
+      <div class="r">
+        <div style="font-size:16px;font-weight:500;color:var(--mute);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px;">Debug commands</div>
+        <div class="cb" style="font-size:15px;line-height:1.85;">
+          <span class="cb-lang">bash</span>
+          <span class="cc"># เปิด verbose mode — เห็น tool call ทั้งหมด</span><br>
+          claude --verbose<br><br>
+          <span class="cc"># ดู token spend</span><br>
+          /cost<br><br>
+          <span class="cc"># Resume session ที่ล้มเหลว</span><br>
+          claude --resume session_abc123<br><br>
+          <span class="cc"># ตรวจ hook ทำงานไหม</span><br>
+          chmod +x scripts/precommit.sh<br>
+          ./scripts/precommit.sh  <span class="cc"># ทดสอบรันเอง</span><br><br>
+          <span class="cc"># ดู MCP server logs</span><br>
+          cat ~/.claude/mcp-logs/github-2026.log<br><br>
+          <span class="cc"># Restart + test MCP</span><br>
+          claude --restart<br>
+          npx -y @mcp/github --test
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- =====================================================
+     SLIDE 15 — PRO TIPS
+     ===================================================== -->
+<div class="slide ss" id="s15">
+  <div class="gn">15</div>
+  <div class="sh r">
+    <div class="sn"><span class="sn-s">SECTION</span><span class="sn-n">15</span></div>
+    <div class="sh-text">
+      <div class="sh-t">Pro Tips</div>
+      <div class="sh-s">เคล็ดลับระดับมือโปรจากคนใช้จริง</div>
+    </div>
+    <div class="sh-ico">⭐</div>
+  </div>
+  <div class="sdiv"></div>
+  <div class="sb" style="display:flex;flex-direction:column;gap:22px;">
+    <div class="g3 r" style="flex:1;">
+      <div class="card tg">
+        <span class="ci">🐝</span>
+        <div class="ct g">Subagents = Parallel Research</div>
+        <div class="cd">ให้ subagent ทำ research หลายเรื่องพร้อมกัน — เร็วกว่าทำเรียงลำดับ 3× เช่น compare 3 payment gateways พร้อมกัน</div>
+      </div>
+      <div class="card tc">
+        <span class="ci">📏</span>
+        <div class="ct">CLAUDE.md ≤ 500 บรรทัด</div>
+        <div class="cd">เกินกว่านี้ context จะบวม — แตกเป็น <code style="font-family:var(--mono);color:var(--cyan-s);font-size:14px;">docs/</code> แล้ว reference ด้วย relative path</div>
+      </div>
+      <div class="card tr">
+        <span class="ci">🚫</span>
+        <div class="ct r">settings.local.json → .gitignore</div>
+        <div class="cd">ห้าม commit ข้อมูลส่วนตัวขึ้น git เด็ดขาด — ตรวจ .gitignore ก่อน push ทุกครั้ง</div>
+      </div>
+      <div class="card tb">
+        <span class="ci">📚</span>
+        <div class="ct b">Skills &gt; Long Prompts</div>
+        <div class="cd">คำสั่งซับซ้อนให้เขียนเป็น skill ไม่ใช่ prompt ยาวๆ ใน chat — นำกลับมาใช้ได้ทุกโปรเจกต์</div>
+      </div>
+      <div class="card to">
+        <span class="ci">⚡</span>
+        <div class="ct o">Hooks = Deterministic, Skills = AI</div>
+        <div class="cd">Hooks คือ shell scripts ทำงานตายตัว / Skills คือ AI ตัดสินใจตาม context — ใช้ให้ถูกบทบาท</div>
+      </div>
+      <div class="card tp">
+        <span class="ci">🪄</span>
+        <div class="ct p">/init = Auto CLAUDE.md</div>
+        <div class="cd">ให้ Claude สร้าง CLAUDE.md ให้ก่อนเสมอ แล้วค่อยปรับเพิ่ม domain rules — ไม่ต้องเริ่มจากศูนย์</div>
+      </div>
+    </div>
+    <div class="tip r" style="flex-shrink:0;">
+      <span class="bi">🎓</span>
+      <span><strong>BUGpairoj Signature Pattern:</strong> สร้าง baseline plugin ที่ bundle skills + commands + agents มาตรฐาน — โปรเจกต์ใหม่แค่ copy 5 folders แล้วได้ stack ครบ (PDO, RBAC, CSRF, LINE, Buddhist Era, glassmorphism UI)</span>
+    </div>
+  </div>
+</div>
+
+<!-- =====================================================
+     SLIDE 16 — CLOSING / SUMMARY
+     ===================================================== -->
+<div class="slide ss" id="s16">
+  <div class="gn" style="font-size:200px;bottom:10px;">✓</div>
+  <div class="sh r">
+    <div class="sn" style="background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(251,146,60,0.15));border-color:rgba(34,211,238,0.4);">
+      <span class="sn-s" style="color:var(--cyan);">ALL</span>
+      <span class="sn-n" style="font-size:26px;">15</span>
+    </div>
+    <div class="sh-text">
+      <div class="sh-t">ครบทั้ง 15 Sections</div>
+      <div class="sh-s">สรุปภาพรวม Claude Code Project Structure</div>
+    </div>
+    <div class="sh-ico">🎉</div>
+  </div>
+  <div class="sdiv"></div>
+  <div class="sb">
+    <div class="g5" style="grid-template-rows:repeat(3,1fr);height:100%;">
+      <div class="card tc r" style="padding:16px 20px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mute);margin-bottom:4px;">01</div><div style="font-size:15px;font-weight:500;color:var(--text);">Project Overview</div><div style="font-size:13px;color:var(--dim);">ภาพรวมโปรเจกต์</div></div>
+      <div class="card tg r" style="padding:16px 20px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mute);margin-bottom:4px;">02</div><div style="font-size:15px;font-weight:500;color:var(--text);">Key Components</div><div style="font-size:13px;color:var(--dim);">องค์ประกอบหลัก</div></div>
+      <div class="card to r" style="padding:16px 20px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mute);margin-bottom:4px;">03</div><div style="font-size:15px;font-weight:500;color:var(--text);">CLAUDE.md Essentials</div><div style="font-size:13px;color:var(--dim);">สิ่งที่ต้องมี</div></div>
+      <div class="card tb r" style="padding:16px 20px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mute);margin-bottom:4px;">04</div><div style="font-size:15px;font-weight:500;color:var(--text);">Extension Types</div><div style="font-size:13px;color:var(--dim);">ประเภทการขยาย</div></div>
+      <div class="card tp r" style="padding:16px 20px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mute);margin-bottom:4px;">05</div><div style="font-size:15px;font-weight:500;color:var(--text);">Hook Events</div><div style="font-size:13px;color:var(--dim);">เหตุการณ์ที่ดักจับ</div></div>
+      <div class="card ty r" style="padding:16px 20px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mute);margin-bottom:4px;">06</div><div style="font-size:15px;font-weight:500;color:var(--text);">Skill Structure</div><div style="font-size:13px;color:var(--dim);">โครงสร้าง Skill</div></div>
+      <div class="card tc r" style="padding:16px 20px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mute);margin-bottom:4px;">07</div><div style="font-size:15px;font-weight:500;color:var(--text);">Popular MCP Servers</div><div style="font-size:13px;color:var(--dim);">MCP ยอดนิยม</div></div>
+      <div class="card tg r" style="padding:16px 20px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mute);margin-bottom:4px;">08</div><div style="font-size:15px;font-weight:500;color:var(--text);">Slash Commands</div><div style="font-size:13px;color:var(--dim);">คำสั่งที่ใช้บ่อย</div></div>
+      <div class="card to r" style="padding:16px 20px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mute);margin-bottom:4px;">09</div><div style="font-size:15px;font-weight:500;color:var(--text);">Agent Patterns</div><div style="font-size:13px;color:var(--dim);">รูปแบบทีม Agent</div></div>
+      <div class="card tb r" style="padding:16px 20px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mute);margin-bottom:4px;">10</div><div style="font-size:15px;font-weight:500;color:var(--text);">Getting Started</div><div style="font-size:13px;color:var(--dim);">เริ่มต้น 6 ขั้น</div></div>
+      <div class="card tp r" style="padding:16px 20px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mute);margin-bottom:4px;">11</div><div style="font-size:15px;font-weight:500;color:var(--text);">Context Management</div><div style="font-size:13px;color:var(--dim);">จัดการ Context</div></div>
+      <div class="card tr r" style="padding:16px 20px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mute);margin-bottom:4px;">12</div><div style="font-size:15px;font-weight:500;color:var(--text);">Security Practices</div><div style="font-size:13px;color:var(--dim);">ความปลอดภัย</div></div>
+      <div class="card ty r" style="padding:16px 20px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mute);margin-bottom:4px;">13</div><div style="font-size:15px;font-weight:500;color:var(--text);">Anti-Patterns</div><div style="font-size:13px;color:var(--dim);">สิ่งที่ไม่ควรทำ</div></div>
+      <div class="card tc r" style="padding:16px 20px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mute);margin-bottom:4px;">14</div><div style="font-size:15px;font-weight:500;color:var(--text);">Debugging &amp; Logging</div><div style="font-size:13px;color:var(--dim);">แก้บั๊ก &amp; log</div></div>
+      <div class="card tg r" style="padding:16px 20px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mute);margin-bottom:4px;">15</div><div style="font-size:15px;font-weight:500;color:var(--text);">Pro Tips</div><div style="font-size:13px;color:var(--dim);">เคล็ดลับมือโปร</div></div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /deck-stage -->
+</div><!-- /deck-viewport -->
+
+<script>
+/* === STAGE SCALING === */
+function scaleStage() {
+  const vw = window.innerWidth, vh = window.innerHeight;
+  const scale = Math.min(vw / 1920, vh / 1080);
+  const x = (vw - 1920 * scale) / 2;
+  const y = (vh - 1080 * scale) / 2;
+  document.getElementById('stage').style.transform =
+    'translate(' + x + 'px,' + y + 'px) scale(' + scale + ')';
+}
+scaleStage();
+window.addEventListener('resize', scaleStage);
+
+/* === NAVIGATION === */
+const slides = document.querySelectorAll('.slide');
+const pb = document.getElementById('pb');
+let cur = 0;
+
+function goTo(n) {
+  if (n < 0 || n >= slides.length) return;
+  slides[cur].classList.remove('active');
+  cur = n;
+  slides[cur].classList.add('active');
+  pb.style.transform = 'scaleX(' + ((cur + 1) / slides.length) + ')';
+  document.getElementById('cur').textContent = String(cur + 1).padStart(2, '0');
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ' || e.key === 'PageDown') {
+    e.preventDefault(); goTo(cur + 1);
+  } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'PageUp') {
+    e.preventDefault(); goTo(cur - 1);
+  } else if (e.key === 'Home') { goTo(0); }
+  else if (e.key === 'End') { goTo(slides.length - 1); }
+  else if (e.key === 'f' || e.key === 'F') {
+    document.fullscreenElement ? document.exitFullscreen() : document.documentElement.requestFullscreen();
+  }
+});
+
+/* Touch swipe */
+var tx = 0;
+document.addEventListener('touchstart', function(e){ tx = e.touches[0].clientX; }, {passive:true});
+document.addEventListener('touchend', function(e){
+  var dx = e.changedTouches[0].clientX - tx;
+  if (Math.abs(dx) > 50) goTo(cur + (dx < 0 ? 1 : -1));
+}, {passive:true});
+
+/* Mousewheel */
+var wt = 0;
+document.addEventListener('wheel', function(e){
+  var now = Date.now();
+  if (now - wt < 600) return;
+  wt = now;
+  goTo(cur + (e.deltaY > 0 ? 1 : -1));
+}, {passive:true});
+
+/* Init */
+document.getElementById('tot').textContent = String(slides.length).padStart(2, '0');
+goTo(0);
+
+/* === INLINE EDITING === */
+var editMode = false;
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'e' || e.key === 'E') {
+    if (document.activeElement.isContentEditable) return;
+    editMode = !editMode;
+    document.querySelectorAll('.slide.active [class]').forEach(function(el) {
+      el.contentEditable = editMode ? 'true' : 'false';
+    });
+    document.body.style.cursor = editMode ? 'text' : '';
+  }
+  if ((e.ctrlKey || e.metaKey) && e.key === 's' && editMode) {
+    e.preventDefault();
+    /* Optionally save to localStorage here */
+  }
+});
+</script>
+</body>
+</html>
