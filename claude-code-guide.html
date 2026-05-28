@@ -53,7 +53,7 @@ img,video,canvas,svg{max-width:100%;max-height:100%;}
 #pb{position:fixed;top:0;left:0;right:0;height:3px;z-index:9999;background:linear-gradient(90deg,var(--cyan),var(--orange));transform-origin:left;transform:scaleX(0);transition:transform 0.4s var(--ease);}
 
 /* === SLIDE COUNTER === */
-#counter{position:fixed;top:16px;right:20px;z-index:9990;font-family:var(--mono);font-size:13px;color:var(--mute);background:rgba(7,11,20,0.65);border:1px solid var(--border);border-radius:6px;padding:4px 12px;}
+#counter{position:fixed;top:16px;right:20px;z-index:9990;font-family:var(--mono);font-size:17px;color:var(--mute);background:rgba(7,11,20,0.65);border:1px solid var(--border);border-radius:6px;padding:4px 12px;}
 
 /* === SLIDE TRANSITION === */
 .slide.active{animation:sIn 0.3s ease-out;}
@@ -78,15 +78,15 @@ img,video,canvas,svg{max-width:100%;max-height:100%;}
 .s0{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;}
 .s0-glow1{position:absolute;top:-220px;right:-180px;width:840px;height:840px;border-radius:50%;background:radial-gradient(circle,rgba(34,211,238,0.13) 0%,transparent 65%);pointer-events:none;}
 .s0-glow2{position:absolute;bottom:-200px;left:-200px;width:720px;height:720px;border-radius:50%;background:radial-gradient(circle,rgba(251,146,60,0.10) 0%,transparent 65%);pointer-events:none;}
-.s0-logo{width:110px;height:110px;border-radius:28px;background:linear-gradient(135deg,#fb923c,#ea580c);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;color:#fff;font-size:48px;box-shadow:0 16px 48px rgba(251,146,60,0.45);margin-bottom:40px;animation:logoIn 0.6s var(--ease);}
+.s0-logo{width:110px;height:110px;border-radius:28px;background:linear-gradient(135deg,#fb923c,#ea580c);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:700;color:#fff;font-size:52px;box-shadow:0 16px 48px rgba(251,146,60,0.45);margin-bottom:40px;animation:logoIn 0.6s var(--ease);}
 @keyframes logoIn{from{transform:scale(0.4) rotate(-12deg);opacity:0;}to{transform:none;opacity:1;}}
-.s0-title{font-size:96px;font-weight:700;letter-spacing:-0.025em;line-height:1;background:linear-gradient(135deg,#fff 25%,var(--cyan) 65%,var(--cyan-s));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:18px;animation:tIn 0.7s 0.2s var(--ease) both;}
-.s0-sub{font-size:36px;font-weight:300;color:var(--dim);margin-bottom:44px;animation:tIn 0.7s 0.38s var(--ease) both;}
+.s0-title{font-size:100px;font-weight:700;letter-spacing:-0.025em;line-height:1;background:linear-gradient(135deg,#fff 25%,var(--cyan) 65%,var(--cyan-s));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:18px;animation:tIn 0.7s 0.2s var(--ease) both;}
+.s0-sub{font-size:40px;font-weight:300;color:var(--dim);margin-bottom:44px;animation:tIn 0.7s 0.38s var(--ease) both;}
 .s0-pills{display:flex;gap:18px;justify-content:center;animation:tIn 0.7s 0.55s var(--ease) both;}
-.s0-pill{padding:12px 28px;border-radius:999px;font-size:18px;font-weight:500;border:1px solid;}
+.s0-pill{padding:12px 28px;border-radius:999px;font-size:22px;font-weight:500;border:1px solid;}
 .s0-pill.c{background:rgba(34,211,238,0.12);border-color:rgba(34,211,238,0.35);color:var(--cyan-s);}
 .s0-pill.o{background:rgba(251,146,60,0.12);border-color:rgba(251,146,60,0.35);color:#fdba74;}
-.s0-credit{position:absolute;bottom:50px;font-size:16px;color:var(--mute);animation:tIn 0.7s 0.7s var(--ease) both;}
+.s0-credit{position:absolute;bottom:50px;font-size:20px;color:var(--mute);animation:tIn 0.7s 0.7s var(--ease) both;}
 @keyframes tIn{from{transform:translateY(22px);opacity:0;}to{transform:none;opacity:1;}}
 
 /* ==============================
@@ -97,12 +97,12 @@ img,video,canvas,svg{max-width:100%;max-height:100%;}
 /* Header */
 .sh{display:flex;align-items:flex-start;gap:24px;margin-bottom:0;}
 .sn{min-width:82px;height:82px;border-radius:16px;background:var(--glass);border:1px solid var(--border-s);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;}
-.sn-s{font-family:var(--mono);font-size:11px;font-weight:500;color:var(--mute);letter-spacing:0.14em;text-transform:uppercase;}
-.sn-n{font-family:var(--mono);font-size:32px;font-weight:700;color:var(--cyan);line-height:1;}
+.sn-s{font-family:var(--mono);font-size:15px;font-weight:500;color:var(--mute);letter-spacing:0.14em;text-transform:uppercase;}
+.sn-n{font-family:var(--mono);font-size:36px;font-weight:700;color:var(--cyan);line-height:1;}
 .sh-text{flex:1;}
-.sh-t{font-size:54px;font-weight:700;letter-spacing:-0.01em;line-height:1.05;color:#fff;}
-.sh-s{font-size:20px;font-weight:300;color:var(--dim);margin-top:8px;}
-.sh-ico{font-size:68px;line-height:1;flex-shrink:0;}
+.sh-t{font-size:58px;font-weight:700;letter-spacing:-0.01em;line-height:1.05;color:#fff;}
+.sh-s{font-size:24px;font-weight:300;color:var(--dim);margin-top:8px;}
+.sh-ico{font-size:72px;line-height:1;flex-shrink:0;}
 
 /* Divider */
 .sdiv{height:2px;background:linear-gradient(90deg,var(--cyan),rgba(34,211,238,0.1) 55%,transparent);border-radius:2px;margin:24px 0 28px;}
@@ -136,57 +136,57 @@ img,video,canvas,svg{max-width:100%;max-height:100%;}
 .card.tk::after{background:var(--pink);}
 .card.ty::after{background:var(--yellow);}
 .card.tr::after{background:var(--red);}
-.ci{font-size:34px;margin-bottom:10px;display:block;}
-.ct{font-family:var(--mono);font-size:17px;font-weight:500;color:var(--cyan-s);margin-bottom:6px;line-height:1.2;}
+.ci{font-size:38px;margin-bottom:10px;display:block;}
+.ct{font-family:var(--mono);font-size:21px;font-weight:500;color:var(--cyan-s);margin-bottom:6px;line-height:1.2;}
 .ct.o{color:#fdba74;} .ct.g{color:#86efac;} .ct.b{color:#93c5fd;} .ct.p{color:#d8b4fe;} .ct.k{color:#f9a8d4;} .ct.y{color:#fcd34d;} .ct.r{color:#fca5a5;}
-.cd{font-size:17px;font-weight:300;color:var(--dim);line-height:1.5;}
+.cd{font-size:21px;font-weight:300;color:var(--dim);line-height:1.5;}
 
 /* Bullet list */
 .bl{list-style:none;display:flex;flex-direction:column;gap:14px;}
-.bl li{display:flex;align-items:flex-start;gap:14px;font-size:19px;font-weight:300;color:var(--dim);line-height:1.55;}
-.bl li::before{content:'▸';color:var(--cyan);font-size:15px;margin-top:4px;flex-shrink:0;}
+.bl li{display:flex;align-items:flex-start;gap:14px;font-size:23px;font-weight:300;color:var(--dim);line-height:1.55;}
+.bl li::before{content:'▸';color:var(--cyan);font-size:19px;margin-top:4px;flex-shrink:0;}
 .bl li strong{color:var(--text);font-weight:600;}
-.bl li code{font-family:var(--mono);color:var(--cyan-s);font-size:16px;}
+.bl li code{font-family:var(--mono);color:var(--cyan-s);font-size:20px;}
 
 /* Code block */
-.cb{background:rgba(0,0,0,0.38);border:1px solid var(--border);border-radius:12px;padding:22px 26px;font-family:var(--mono);font-size:15.5px;line-height:1.75;color:#cbd5e1;position:relative;}
-.cb-lang{position:absolute;top:9px;right:14px;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--mute);}
+.cb{background:rgba(0,0,0,0.38);border:1px solid var(--border);border-radius:12px;padding:22px 26px;font-family:var(--mono);font-size:19.5px;line-height:1.75;color:#cbd5e1;position:relative;}
+.cb-lang{position:absolute;top:9px;right:14px;font-size:14px;letter-spacing:0.12em;text-transform:uppercase;color:var(--mute);}
 .ck{color:#f472b6;} .cs{color:#86efac;} .cn{color:#fbbf24;} .cc{color:#475569;font-style:italic;} .cv{color:#67e8f9;} .cf{color:#fdba74;} .cw{color:#c084fc;}
 
 /* Table */
-.tb2{width:100%;border-collapse:separate;border-spacing:0;font-size:18px;}
-.tb2 th{text-align:left;padding:13px 20px;background:rgba(34,211,238,0.08);border-bottom:1px solid var(--border-s);font-size:13px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--cyan);}
+.tb2{width:100%;border-collapse:separate;border-spacing:0;font-size:22px;}
+.tb2 th{text-align:left;padding:13px 20px;background:rgba(34,211,238,0.08);border-bottom:1px solid var(--border-s);font-size:17px;font-weight:500;letter-spacing:0.08em;text-transform:uppercase;color:var(--cyan);}
 .tb2 th:first-child{border-radius:10px 0 0 0;} .tb2 th:last-child{border-radius:0 10px 0 0;}
 .tb2 td{padding:12px 20px;border-bottom:1px solid var(--border);color:var(--dim);font-weight:300;line-height:1.5;}
-.tb2 td:first-child{font-family:var(--mono);color:var(--cyan-s);font-size:15px;white-space:nowrap;}
+.tb2 td:first-child{font-family:var(--mono);color:var(--cyan-s);font-size:19px;white-space:nowrap;}
 .tb2 tr:last-child td{border-bottom:none;}
 .tb2 td strong{color:var(--text);font-weight:500;}
 
 /* Tip / Warn / Info */
-.tip,.warn,.info{border-radius:10px;border-left:3px solid;padding:16px 20px;font-size:17px;font-weight:300;line-height:1.6;display:flex;gap:14px;align-items:flex-start;}
+.tip,.warn,.info{border-radius:10px;border-left:3px solid;padding:16px 20px;font-size:21px;font-weight:300;line-height:1.6;display:flex;gap:14px;align-items:flex-start;}
 .tip{background:rgba(74,222,128,0.07);border-color:var(--green);color:#bbf7d0;}
 .warn{background:rgba(248,113,113,0.07);border-color:var(--red);color:#fecaca;}
 .info{background:rgba(96,165,250,0.07);border-color:var(--blue);color:#bfdbfe;}
-.tip .bi,.warn .bi,.info .bi{font-size:22px;flex-shrink:0;margin-top:1px;}
+.tip .bi,.warn .bi,.info .bi{font-size:26px;flex-shrink:0;margin-top:1px;}
 
 /* Context bars */
 .ctxbars{display:flex;flex-direction:column;gap:20px;}
 .ctxrow{display:flex;align-items:center;gap:18px;}
-.ctxlbl{width:110px;font-family:var(--mono);font-size:15px;color:var(--mute);}
+.ctxlbl{width:110px;font-family:var(--mono);font-size:19px;color:var(--mute);}
 .ctxbar{flex:1;height:26px;background:rgba(0,0,0,0.3);border-radius:13px;overflow:hidden;}
 .ctxfill{height:100%;border-radius:13px;}
-.ctxtxt{width:280px;font-size:17px;font-weight:300;}
+.ctxtxt{width:280px;font-size:21px;font-weight:300;}
 
 /* Step list */
 .steps{display:flex;flex-direction:column;gap:13px;}
 .step{display:flex;align-items:flex-start;gap:18px;padding:14px 20px;background:var(--glass);border:1px solid var(--border);border-radius:12px;}
-.stepn{min-width:34px;height:34px;border-radius:8px;background:var(--cyan);color:#000;font-weight:700;font-family:var(--mono);font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
-.stept{font-size:18px;font-weight:300;color:var(--dim);line-height:1.5;}
+.stepn{min-width:34px;height:34px;border-radius:8px;background:var(--cyan);color:#000;font-weight:700;font-family:var(--mono);font-size:19px;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px;}
+.stept{font-size:22px;font-weight:300;color:var(--dim);line-height:1.5;}
 .stept strong{color:var(--text);font-weight:500;}
-.stept code{font-family:var(--mono);color:var(--cyan-s);font-size:15px;}
+.stept code{font-family:var(--mono);color:var(--cyan-s);font-size:19px;}
 
 /* Badge inline */
-.bdg{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;letter-spacing:0.05em;border-radius:999px;padding:4px 14px;border:1px solid;}
+.bdg{display:inline-flex;align-items:center;gap:6px;font-size:17px;font-weight:500;letter-spacing:0.05em;border-radius:999px;padding:4px 14px;border:1px solid;}
 .bdg.c{background:rgba(34,211,238,0.12);border-color:rgba(34,211,238,0.3);color:var(--cyan-s);}
 .bdg.o{background:rgba(251,146,60,0.12);border-color:rgba(251,146,60,0.3);color:#fdba74;}
 .bdg.g{background:rgba(74,222,128,0.12);border-color:rgba(74,222,128,0.3);color:#86efac;}
@@ -255,8 +255,8 @@ img,video,canvas,svg{max-width:100%;max-height:100%;}
       </div>
       <!-- Right: file tree -->
       <div class="r">
-        <div style="font-size:16px;font-weight:500;color:var(--mute);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:18px;">โครงสร้างโปรเจกต์</div>
-        <div class="cb" style="font-size:16px;line-height:2;">
+        <div style="font-size:20px;font-weight:500;color:var(--mute);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:18px;">โครงสร้างโปรเจกต์</div>
+        <div class="cb" style="font-size:20px;line-height:2;">
           <span class="cv">my-project/</span><br>
           ├── <span class="cs">CLAUDE.md</span>          <span class="cc"># Project Memory — อ่านทุก session</span><br>
           ├── <span class="cw">.claude/</span>           <span class="cc"># Claude configuration folder</span><br>
@@ -343,7 +343,7 @@ img,video,canvas,svg{max-width:100%;max-height:100%;}
       <!-- Left: what to include -->
       <div style="display:flex;flex-direction:column;gap:18px;">
         <div class="r">
-          <div style="font-size:16px;font-weight:500;color:var(--mute);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px;">ต้องมีใน CLAUDE.md</div>
+          <div style="font-size:20px;font-weight:500;color:var(--mute);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px;">ต้องมีใน CLAUDE.md</div>
           <ul class="bl" style="gap:12px;">
             <li><strong>Tech Stack</strong> — PHP 8.2, MySQL 8, Tailwind CSS (ระบุ version ด้วย)</li>
             <li><strong>Conventions</strong> — ใช้ PDO prepared statements, CSRF token ทุก form</li>
@@ -355,13 +355,13 @@ img,video,canvas,svg{max-width:100%;max-height:100%;}
         </div>
         <div class="tip r">
           <span class="bi">💡</span>
-          <span>เก็บ CLAUDE.md <strong>ต่ำกว่า 500 บรรทัด</strong> — ถ้ายาวกว่านี้ให้แตกไปไว้ใน <code style="font-family:var(--mono);font-size:15px;">docs/</code> แล้ว link มา</span>
+          <span>เก็บ CLAUDE.md <strong>ต่ำกว่า 500 บรรทัด</strong> — ถ้ายาวกว่านี้ให้แตกไปไว้ใน <code style="font-family:var(--mono);font-size:19px;">docs/</code> แล้ว link มา</span>
         </div>
       </div>
       <!-- Right: code example -->
       <div class="r">
-        <div style="font-size:16px;font-weight:500;color:var(--mute);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px;">ตัวอย่าง CLAUDE.md</div>
-        <div class="cb" style="font-size:15px;line-height:1.8;">
+        <div style="font-size:20px;font-weight:500;color:var(--mute);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px;">ตัวอย่าง CLAUDE.md</div>
+        <div class="cb" style="font-size:19px;line-height:1.8;">
           <span class="cb-lang">markdown</span>
           <span class="ck"># Project: MedRecord v1.0</span><br><br>
           <span class="ck">## Tech Stack</span><br>
@@ -403,7 +403,7 @@ img,video,canvas,svg{max-width:100%;max-height:100%;}
       <div class="card tg r">
         <span class="ci">⌨️</span>
         <div class="ct g">Slash Commands</div>
-        <div class="cd" style="font-size:18px;line-height:1.6;">
+        <div class="cd" style="font-size:22px;line-height:1.6;">
           <strong style="color:var(--text)">Manual trigger</strong> — ผู้ใช้พิมพ์ <code style="font-family:var(--mono);color:var(--cyan-s);">/cmd</code> เพื่อเรียกใช้<br>
           เขียนเป็นไฟล์ <code style="font-family:var(--mono);color:var(--cyan-s);">.md</code> ใน <code style="font-family:var(--mono);color:var(--cyan-s);">.claude/commands/</code><br>
           ใช้กับงานที่ทำซ้ำๆ เช่น /review, /deploy, /test-all
@@ -412,7 +412,7 @@ img,video,canvas,svg{max-width:100%;max-height:100%;}
       <div class="card tb r">
         <span class="ci">🎯</span>
         <div class="ct b">Skills</div>
-        <div class="cd" style="font-size:18px;line-height:1.6;">
+        <div class="cd" style="font-size:22px;line-height:1.6;">
           <strong style="color:var(--text)">Auto-trigger</strong> — Claude ตัดสินใจเองตาม context<br>
           โครงสร้างซับซ้อน: SKILL.md + scripts/ + references/ + assets/<br>
           เหมาะกับ workflow ที่ต้องการ reference หลายชิ้น
@@ -421,7 +421,7 @@ img,video,canvas,svg{max-width:100%;max-height:100%;}
       <div class="card tp r">
         <span class="ci">🤖</span>
         <div class="ct p">Agents (Subagents)</div>
-        <div class="cd" style="font-size:18px;line-height:1.6;">
+        <div class="cd" style="font-size:22px;line-height:1.6;">
           <strong style="color:var(--text)">Parallel AI instances</strong> — Claude อีกตัวที่มี context แยก<br>
           นิยามด้วย <code style="font-family:var(--mono);color:var(--cyan-s);">.yml</code> ใน <code style="font-family:var(--mono);color:var(--cyan-s);">.claude/agents/</code><br>
           ใช้สำหรับ code-review, security-audit, devops
@@ -430,7 +430,7 @@ img,video,canvas,svg{max-width:100%;max-height:100%;}
       <div class="card ty r">
         <span class="ci">🔌</span>
         <div class="ct y">Plugins</div>
-        <div class="cd" style="font-size:18px;line-height:1.6;">
+        <div class="cd" style="font-size:22px;line-height:1.6;">
           <strong style="color:var(--text)">Deep system extension</strong> — ขยายความสามารถระดับ core<br>
           ลงทะเบียนใน <code style="font-family:var(--mono);color:var(--cyan-s);">settings.json → plugins[]</code><br>
           เหมาะกับ team tools ที่ใช้ข้ามโปรเจกต์
@@ -476,8 +476,8 @@ img,video,canvas,svg{max-width:100%;max-height:100%;}
       </div>
       <!-- Right: code example -->
       <div class="r">
-        <div style="font-size:16px;font-weight:500;color:var(--mute);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px;">settings.json</div>
-        <div class="cb" style="font-size:15px;line-height:1.8;">
+        <div style="font-size:20px;font-weight:500;color:var(--mute);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px;">settings.json</div>
+        <div class="cb" style="font-size:19px;line-height:1.8;">
           <span class="cb-lang">json</span>
           {<br>
           &nbsp;&nbsp;<span class="ck">"hooks"</span>: {<br>
@@ -516,8 +516,8 @@ img,video,canvas,svg{max-width:100%;max-height:100%;}
       <!-- Left: folder structure -->
       <div style="display:flex;flex-direction:column;gap:20px;">
         <div class="r">
-          <div style="font-size:16px;font-weight:500;color:var(--mute);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px;">โครงสร้าง Skill</div>
-          <div class="cb" style="font-size:16px;line-height:2.1;">
+          <div style="font-size:20px;font-weight:500;color:var(--mute);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px;">โครงสร้าง Skill</div>
+          <div class="cb" style="font-size:20px;line-height:2.1;">
             <span class="cw">.claude/skills/code-review/</span><br>
             ├── <span class="cs">SKILL.md</span>       <span class="cc"># Instructions + metadata</span><br>
             ├── <span class="cf">scripts/</span>       <span class="cc"># Shell/Python scripts</span><br>
@@ -535,8 +535,8 @@ img,video,canvas,svg{max-width:100%;max-height:100%;}
       </div>
       <!-- Right: SKILL.md example -->
       <div class="r">
-        <div style="font-size:16px;font-weight:500;color:var(--mute);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px;">SKILL.md frontmatter</div>
-        <div class="cb" style="font-size:15px;line-height:1.8;margin-bottom:16px;">
+        <div style="font-size:20px;font-weight:500;color:var(--mute);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px;">SKILL.md frontmatter</div>
+        <div class="cb" style="font-size:19px;line-height:1.8;margin-bottom:16px;">
           <span class="cb-lang">yaml</span>
           <span class="cc">---</span><br>
           <span class="ck">name</span>: <span class="cs">code-review</span><br>
@@ -637,35 +637,35 @@ img,video,canvas,svg{max-width:100%;max-height:100%;}
   <div class="sb">
     <div class="g4" style="grid-template-rows:repeat(2,1fr);height:100%;">
       <div class="card tg r">
-        <div class="ct g" style="font-size:22px;margin-bottom:10px;">/review</div>
+        <div class="ct g" style="font-size:26px;margin-bottom:10px;">/review</div>
         <div class="cd">รัน code review บน diff ปัจจุบัน — ตรวจ security, quality, conventions ครบ</div>
       </div>
       <div class="card to r">
-        <div class="ct o" style="font-size:22px;margin-bottom:10px;">/deploy</div>
+        <div class="ct o" style="font-size:26px;margin-bottom:10px;">/deploy</div>
         <div class="cd">Build และ push ขึ้น staging/production ตาม pipeline ที่กำหนด</div>
       </div>
       <div class="card tb r">
-        <div class="ct b" style="font-size:22px;margin-bottom:10px;">/test-all</div>
+        <div class="ct b" style="font-size:26px;margin-bottom:10px;">/test-all</div>
         <div class="cd">รัน test suite ทั้งหมด — unit, integration, E2E พร้อมรายงาน coverage</div>
       </div>
       <div class="card tp r">
-        <div class="ct p" style="font-size:22px;margin-bottom:10px;">/bootstrap</div>
+        <div class="ct p" style="font-size:26px;margin-bottom:10px;">/bootstrap</div>
         <div class="cd">Scaffold module ใหม่ตาม boilerplate ของโปรเจกต์ — สร้างไฟล์ครบชุด</div>
       </div>
       <div class="card ty r">
-        <div class="ct y" style="font-size:22px;margin-bottom:10px;">/document</div>
+        <div class="ct y" style="font-size:26px;margin-bottom:10px;">/document</div>
         <div class="cd">Auto-generate docs จาก source code — architecture.md, api-reference.md</div>
       </div>
       <div class="card tc r">
-        <div class="ct" style="font-size:22px;margin-bottom:10px;">/init</div>
+        <div class="ct" style="font-size:26px;margin-bottom:10px;">/init</div>
         <div class="cd">Auto-generate CLAUDE.md จากโครงโปรเจกต์ปัจจุบัน — สร้างทีเดียวครบ</div>
       </div>
       <div class="card tk r">
-        <div class="ct k" style="font-size:22px;margin-bottom:10px;">/compact</div>
+        <div class="ct k" style="font-size:26px;margin-bottom:10px;">/compact</div>
         <div class="cd">ย่อ context ประหยัด tokens — เรียกเมื่อ context ใช้ไปแล้ว 70-90%</div>
       </div>
       <div class="card tr r">
-        <div class="ct r" style="font-size:22px;margin-bottom:10px;">/resume</div>
+        <div class="ct r" style="font-size:26px;margin-bottom:10px;">/resume</div>
         <div class="cd">โหลด session ที่แล้วกลับมา — Claude จำบริบทได้ต่อเนื่อง</div>
       </div>
     </div>
@@ -690,33 +690,33 @@ img,video,canvas,svg{max-width:100%;max-height:100%;}
     <div class="g5" style="height:100%;">
       <div class="card tc r" style="display:flex;flex-direction:column;">
         <span class="ci">🎼</span>
-        <div class="ct" style="font-size:19px;margin-bottom:10px;">Orchestrator</div>
+        <div class="ct" style="font-size:23px;margin-bottom:10px;">Orchestrator</div>
         <div class="cd" style="flex:1;">Main agent ควบคุม specialists — แบ่งงานให้ subagent แต่ละตัว แล้ว merge ผลลัพธ์</div>
-        <div style="margin-top:14px;padding:10px;background:rgba(34,211,238,0.06);border-radius:8px;font-family:var(--mono);font-size:13px;color:var(--mute);">main → A, B, C → merge</div>
+        <div style="margin-top:14px;padding:10px;background:rgba(34,211,238,0.06);border-radius:8px;font-family:var(--mono);font-size:17px;color:var(--mute);">main → A, B, C → merge</div>
       </div>
       <div class="card tg r" style="display:flex;flex-direction:column;">
         <span class="ci">🔗</span>
-        <div class="ct g" style="font-size:19px;margin-bottom:10px;">Pipeline</div>
+        <div class="ct g" style="font-size:23px;margin-bottom:10px;">Pipeline</div>
         <div class="cd" style="flex:1;">ทำงานต่อเนื่องแบบ chain — output ของ A เป็น input ของ B ตามลำดับที่กำหนด</div>
-        <div style="margin-top:14px;padding:10px;background:rgba(74,222,128,0.06);border-radius:8px;font-family:var(--mono);font-size:13px;color:var(--mute);">A → B → C (sequential)</div>
+        <div style="margin-top:14px;padding:10px;background:rgba(74,222,128,0.06);border-radius:8px;font-family:var(--mono);font-size:17px;color:var(--mute);">A → B → C (sequential)</div>
       </div>
       <div class="card to r" style="display:flex;flex-direction:column;">
         <span class="ci">🗺️</span>
-        <div class="ct o" style="font-size:19px;margin-bottom:10px;">Map-Reduce</div>
+        <div class="ct o" style="font-size:23px;margin-bottom:10px;">Map-Reduce</div>
         <div class="cd" style="flex:1;">แยกงานใหญ่เป็น chunks → ทำคู่ขนาน → รวมผล เช่น analyze 100 files พร้อมกัน</div>
-        <div style="margin-top:14px;padding:10px;background:rgba(251,146,60,0.06);border-radius:8px;font-family:var(--mono);font-size:13px;color:var(--mute);">split → parallel → merge</div>
+        <div style="margin-top:14px;padding:10px;background:rgba(251,146,60,0.06);border-radius:8px;font-family:var(--mono);font-size:17px;color:var(--mute);">split → parallel → merge</div>
       </div>
       <div class="card tp r" style="display:flex;flex-direction:column;">
         <span class="ci">👁️</span>
-        <div class="ct p" style="font-size:19px;margin-bottom:10px;">Supervisor</div>
+        <div class="ct p" style="font-size:23px;margin-bottom:10px;">Supervisor</div>
         <div class="cd" style="flex:1;">Agent หนึ่งคอย monitor และตรวจสอบงานของ agents อื่น — แก้ไขถ้าผิดพลาด</div>
-        <div style="margin-top:14px;padding:10px;background:rgba(192,132,252,0.06);border-radius:8px;font-family:var(--mono);font-size:13px;color:var(--mute);">supervisor → workers</div>
+        <div style="margin-top:14px;padding:10px;background:rgba(192,132,252,0.06);border-radius:8px;font-family:var(--mono);font-size:17px;color:var(--mute);">supervisor → workers</div>
       </div>
       <div class="card ty r" style="display:flex;flex-direction:column;">
         <span class="ci">🐝</span>
-        <div class="ct y" style="font-size:19px;margin-bottom:10px;">Swarm</div>
+        <div class="ct y" style="font-size:23px;margin-bottom:10px;">Swarm</div>
         <div class="cd" style="flex:1;">Agents เท่าๆ กันทำงานร่วมกัน ไม่มีลำดับชั้น — ดีสำหรับ exploratory tasks</div>
-        <div style="margin-top:14px;padding:10px;background:rgba(251,191,36,0.06);border-radius:8px;font-family:var(--mono);font-size:13px;color:var(--mute);">A ⟷ B ⟷ C (equal)</div>
+        <div style="margin-top:14px;padding:10px;background:rgba(251,191,36,0.06);border-radius:8px;font-family:var(--mono);font-size:17px;color:var(--mute);">A ⟷ B ⟷ C (equal)</div>
       </div>
     </div>
   </div>
@@ -749,8 +749,8 @@ img,video,canvas,svg{max-width:100%;max-height:100%;}
       </div>
       <!-- Right: code -->
       <div class="r">
-        <div style="font-size:16px;font-weight:500;color:var(--mute);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px;">ตัวอย่าง .mcp.json</div>
-        <div class="cb" style="font-size:15px;line-height:1.85;margin-bottom:18px;">
+        <div style="font-size:20px;font-weight:500;color:var(--mute);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px;">ตัวอย่าง .mcp.json</div>
+        <div class="cb" style="font-size:19px;line-height:1.85;margin-bottom:18px;">
           <span class="cb-lang">json</span>
           {<br>
           &nbsp;&nbsp;<span class="ck">"mcpServers"</span>: {<br>
@@ -769,7 +769,7 @@ img,video,canvas,svg{max-width:100%;max-height:100%;}
         </div>
         <div class="tip r">
           <span class="bi">🚀</span>
-          <span>หลัง <code style="font-family:var(--mono);font-size:15px;">/init</code> ให้ปรับแต่ง CLAUDE.md ที่สร้างมา เพิ่ม domain rules เฉพาะโปรเจกต์</span>
+          <span>หลัง <code style="font-family:var(--mono);font-size:19px;">/init</code> ให้ปรับแต่ง CLAUDE.md ที่สร้างมา เพิ่ม domain rules เฉพาะโปรเจกต์</span>
         </div>
       </div>
     </div>
@@ -823,7 +823,7 @@ img,video,canvas,svg{max-width:100%;max-height:100%;}
       </div>
       <!-- Right: tips -->
       <div style="display:flex;flex-direction:column;gap:16px;">
-        <div style="font-size:16px;font-weight:500;color:var(--mute);letter-spacing:0.1em;text-transform:uppercase;" class="r">เคล็ดลับประหยัด Context</div>
+        <div style="font-size:20px;font-weight:500;color:var(--mute);letter-spacing:0.1em;text-transform:uppercase;" class="r">เคล็ดลับประหยัด Context</div>
         <div class="card tc r">
           <div class="ct" style="margin-bottom:6px;">/compact ก่อนงานยาว</div>
           <div class="cd">ย่อประวัติเก่าให้สั้นลง — ทำเมื่อเข้าสู่ 70% เพื่อให้มีพื้นที่ทำงานต่อ</div>
@@ -881,8 +881,8 @@ img,video,canvas,svg{max-width:100%;max-height:100%;}
       </div>
       <!-- Right: pre-commit code -->
       <div class="r">
-        <div style="font-size:16px;font-weight:500;color:var(--mute);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px;">Pre-commit hook สแกน secret</div>
-        <div class="cb" style="font-size:14.5px;line-height:1.8;">
+        <div style="font-size:20px;font-weight:500;color:var(--mute);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px;">Pre-commit hook สแกน secret</div>
+        <div class="cb" style="font-size:18.5px;line-height:1.8;">
           <span class="cb-lang">bash</span>
           <span class="cc"># .git/hooks/pre-commit</span><br>
           <span class="ck">PATTERNS</span>=(<br>
@@ -934,8 +934,8 @@ img,video,canvas,svg{max-width:100%;max-height:100%;}
       </div>
       <!-- Right: good vs bad -->
       <div class="r">
-        <div style="font-size:16px;font-weight:500;color:var(--mute);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px;">Bad vs Good</div>
-        <div class="cb" style="font-size:14px;line-height:1.8;">
+        <div style="font-size:20px;font-weight:500;color:var(--mute);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px;">Bad vs Good</div>
+        <div class="cb" style="font-size:18px;line-height:1.8;">
           <span class="cb-lang">markdown</span>
           <span class="cc">❌ BAD: "Write good code"</span><br>
           <span class="cc">❌ BAD: "Be careful with security"</span><br>
@@ -994,8 +994,8 @@ img,video,canvas,svg{max-width:100%;max-height:100%;}
       </div>
       <!-- Right: code -->
       <div class="r">
-        <div style="font-size:16px;font-weight:500;color:var(--mute);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px;">Debug commands</div>
-        <div class="cb" style="font-size:15px;line-height:1.85;">
+        <div style="font-size:20px;font-weight:500;color:var(--mute);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:14px;">Debug commands</div>
+        <div class="cb" style="font-size:19px;line-height:1.85;">
           <span class="cb-lang">bash</span>
           <span class="cc"># เปิด verbose mode — เห็น tool call ทั้งหมด</span><br>
           claude --verbose<br><br>
@@ -1041,7 +1041,7 @@ img,video,canvas,svg{max-width:100%;max-height:100%;}
       <div class="card tc">
         <span class="ci">📏</span>
         <div class="ct">CLAUDE.md ≤ 500 บรรทัด</div>
-        <div class="cd">เกินกว่านี้ context จะบวม — แตกเป็น <code style="font-family:var(--mono);color:var(--cyan-s);font-size:14px;">docs/</code> แล้ว reference ด้วย relative path</div>
+        <div class="cd">เกินกว่านี้ context จะบวม — แตกเป็น <code style="font-family:var(--mono);color:var(--cyan-s);font-size:18px;">docs/</code> แล้ว reference ด้วย relative path</div>
       </div>
       <div class="card tr">
         <span class="ci">🚫</span>
@@ -1079,7 +1079,7 @@ img,video,canvas,svg{max-width:100%;max-height:100%;}
   <div class="sh r">
     <div class="sn" style="background:linear-gradient(135deg,rgba(34,211,238,0.2),rgba(251,146,60,0.15));border-color:rgba(34,211,238,0.4);">
       <span class="sn-s" style="color:var(--cyan);">ALL</span>
-      <span class="sn-n" style="font-size:26px;">15</span>
+      <span class="sn-n" style="font-size:30px;">15</span>
     </div>
     <div class="sh-text">
       <div class="sh-t">ครบทั้ง 15 Sections</div>
@@ -1090,21 +1090,21 @@ img,video,canvas,svg{max-width:100%;max-height:100%;}
   <div class="sdiv"></div>
   <div class="sb">
     <div class="g5" style="grid-template-rows:repeat(3,1fr);height:100%;">
-      <div class="card tc r" style="padding:16px 20px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mute);margin-bottom:4px;">01</div><div style="font-size:15px;font-weight:500;color:var(--text);">Project Overview</div><div style="font-size:13px;color:var(--dim);">ภาพรวมโปรเจกต์</div></div>
-      <div class="card tg r" style="padding:16px 20px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mute);margin-bottom:4px;">02</div><div style="font-size:15px;font-weight:500;color:var(--text);">Key Components</div><div style="font-size:13px;color:var(--dim);">องค์ประกอบหลัก</div></div>
-      <div class="card to r" style="padding:16px 20px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mute);margin-bottom:4px;">03</div><div style="font-size:15px;font-weight:500;color:var(--text);">CLAUDE.md Essentials</div><div style="font-size:13px;color:var(--dim);">สิ่งที่ต้องมี</div></div>
-      <div class="card tb r" style="padding:16px 20px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mute);margin-bottom:4px;">04</div><div style="font-size:15px;font-weight:500;color:var(--text);">Extension Types</div><div style="font-size:13px;color:var(--dim);">ประเภทการขยาย</div></div>
-      <div class="card tp r" style="padding:16px 20px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mute);margin-bottom:4px;">05</div><div style="font-size:15px;font-weight:500;color:var(--text);">Hook Events</div><div style="font-size:13px;color:var(--dim);">เหตุการณ์ที่ดักจับ</div></div>
-      <div class="card ty r" style="padding:16px 20px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mute);margin-bottom:4px;">06</div><div style="font-size:15px;font-weight:500;color:var(--text);">Skill Structure</div><div style="font-size:13px;color:var(--dim);">โครงสร้าง Skill</div></div>
-      <div class="card tc r" style="padding:16px 20px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mute);margin-bottom:4px;">07</div><div style="font-size:15px;font-weight:500;color:var(--text);">Popular MCP Servers</div><div style="font-size:13px;color:var(--dim);">MCP ยอดนิยม</div></div>
-      <div class="card tg r" style="padding:16px 20px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mute);margin-bottom:4px;">08</div><div style="font-size:15px;font-weight:500;color:var(--text);">Slash Commands</div><div style="font-size:13px;color:var(--dim);">คำสั่งที่ใช้บ่อย</div></div>
-      <div class="card to r" style="padding:16px 20px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mute);margin-bottom:4px;">09</div><div style="font-size:15px;font-weight:500;color:var(--text);">Agent Patterns</div><div style="font-size:13px;color:var(--dim);">รูปแบบทีม Agent</div></div>
-      <div class="card tb r" style="padding:16px 20px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mute);margin-bottom:4px;">10</div><div style="font-size:15px;font-weight:500;color:var(--text);">Getting Started</div><div style="font-size:13px;color:var(--dim);">เริ่มต้น 6 ขั้น</div></div>
-      <div class="card tp r" style="padding:16px 20px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mute);margin-bottom:4px;">11</div><div style="font-size:15px;font-weight:500;color:var(--text);">Context Management</div><div style="font-size:13px;color:var(--dim);">จัดการ Context</div></div>
-      <div class="card tr r" style="padding:16px 20px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mute);margin-bottom:4px;">12</div><div style="font-size:15px;font-weight:500;color:var(--text);">Security Practices</div><div style="font-size:13px;color:var(--dim);">ความปลอดภัย</div></div>
-      <div class="card ty r" style="padding:16px 20px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mute);margin-bottom:4px;">13</div><div style="font-size:15px;font-weight:500;color:var(--text);">Anti-Patterns</div><div style="font-size:13px;color:var(--dim);">สิ่งที่ไม่ควรทำ</div></div>
-      <div class="card tc r" style="padding:16px 20px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mute);margin-bottom:4px;">14</div><div style="font-size:15px;font-weight:500;color:var(--text);">Debugging &amp; Logging</div><div style="font-size:13px;color:var(--dim);">แก้บั๊ก &amp; log</div></div>
-      <div class="card tg r" style="padding:16px 20px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mute);margin-bottom:4px;">15</div><div style="font-size:15px;font-weight:500;color:var(--text);">Pro Tips</div><div style="font-size:13px;color:var(--dim);">เคล็ดลับมือโปร</div></div>
+      <div class="card tc r" style="padding:16px 20px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mute);margin-bottom:4px;">01</div><div style="font-size:19px;font-weight:500;color:var(--text);">Project Overview</div><div style="font-size:17px;color:var(--dim);">ภาพรวมโปรเจกต์</div></div>
+      <div class="card tg r" style="padding:16px 20px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mute);margin-bottom:4px;">02</div><div style="font-size:19px;font-weight:500;color:var(--text);">Key Components</div><div style="font-size:17px;color:var(--dim);">องค์ประกอบหลัก</div></div>
+      <div class="card to r" style="padding:16px 20px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mute);margin-bottom:4px;">03</div><div style="font-size:19px;font-weight:500;color:var(--text);">CLAUDE.md Essentials</div><div style="font-size:17px;color:var(--dim);">สิ่งที่ต้องมี</div></div>
+      <div class="card tb r" style="padding:16px 20px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mute);margin-bottom:4px;">04</div><div style="font-size:19px;font-weight:500;color:var(--text);">Extension Types</div><div style="font-size:17px;color:var(--dim);">ประเภทการขยาย</div></div>
+      <div class="card tp r" style="padding:16px 20px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mute);margin-bottom:4px;">05</div><div style="font-size:19px;font-weight:500;color:var(--text);">Hook Events</div><div style="font-size:17px;color:var(--dim);">เหตุการณ์ที่ดักจับ</div></div>
+      <div class="card ty r" style="padding:16px 20px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mute);margin-bottom:4px;">06</div><div style="font-size:19px;font-weight:500;color:var(--text);">Skill Structure</div><div style="font-size:17px;color:var(--dim);">โครงสร้าง Skill</div></div>
+      <div class="card tc r" style="padding:16px 20px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mute);margin-bottom:4px;">07</div><div style="font-size:19px;font-weight:500;color:var(--text);">Popular MCP Servers</div><div style="font-size:17px;color:var(--dim);">MCP ยอดนิยม</div></div>
+      <div class="card tg r" style="padding:16px 20px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mute);margin-bottom:4px;">08</div><div style="font-size:19px;font-weight:500;color:var(--text);">Slash Commands</div><div style="font-size:17px;color:var(--dim);">คำสั่งที่ใช้บ่อย</div></div>
+      <div class="card to r" style="padding:16px 20px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mute);margin-bottom:4px;">09</div><div style="font-size:19px;font-weight:500;color:var(--text);">Agent Patterns</div><div style="font-size:17px;color:var(--dim);">รูปแบบทีม Agent</div></div>
+      <div class="card tb r" style="padding:16px 20px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mute);margin-bottom:4px;">10</div><div style="font-size:19px;font-weight:500;color:var(--text);">Getting Started</div><div style="font-size:17px;color:var(--dim);">เริ่มต้น 6 ขั้น</div></div>
+      <div class="card tp r" style="padding:16px 20px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mute);margin-bottom:4px;">11</div><div style="font-size:19px;font-weight:500;color:var(--text);">Context Management</div><div style="font-size:17px;color:var(--dim);">จัดการ Context</div></div>
+      <div class="card tr r" style="padding:16px 20px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mute);margin-bottom:4px;">12</div><div style="font-size:19px;font-weight:500;color:var(--text);">Security Practices</div><div style="font-size:17px;color:var(--dim);">ความปลอดภัย</div></div>
+      <div class="card ty r" style="padding:16px 20px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mute);margin-bottom:4px;">13</div><div style="font-size:19px;font-weight:500;color:var(--text);">Anti-Patterns</div><div style="font-size:17px;color:var(--dim);">สิ่งที่ไม่ควรทำ</div></div>
+      <div class="card tc r" style="padding:16px 20px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mute);margin-bottom:4px;">14</div><div style="font-size:19px;font-weight:500;color:var(--text);">Debugging &amp; Logging</div><div style="font-size:17px;color:var(--dim);">แก้บั๊ก &amp; log</div></div>
+      <div class="card tg r" style="padding:16px 20px;"><div style="font-family:var(--mono);font-size:12px;color:var(--mute);margin-bottom:4px;">15</div><div style="font-size:19px;font-weight:500;color:var(--text);">Pro Tips</div><div style="font-size:17px;color:var(--dim);">เคล็ดลับมือโปร</div></div>
     </div>
   </div>
 </div>
