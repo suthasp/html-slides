@@ -29,6 +29,24 @@
   }
 
   body {
+    position: relative;
+  }
+
+  /* Vapour background canvas */
+  #vapor-bg {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.38;
+  }
+
+  /* Content wrapper sits above canvas */
+  .content-wrap {
+    position: relative;
+    z-index: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -251,6 +269,10 @@
 </head>
 <body>
 
+<canvas id="vapor-bg"></canvas>
+
+<div class="content-wrap">
+
   <header class="header">
     <div class="header-logo">
       <span class="logo-dot red"></span>
@@ -447,6 +469,213 @@
   </div>
 
   <footer>TOC-RST &nbsp;·&nbsp; True Corporation &amp; DTAC &nbsp;·&nbsp; 2026</footer>
+
+</div><!-- /content-wrap -->
+
+<script>
+/* ============================================================
+   VAPOUR TEXT EFFECT — vanilla Canvas JS
+   Ported from vapour-text-effect React component (21st.dev)
+   ============================================================ */
+(function () {
+  const canvas = document.getElementById('vapor-bg');
+  const ctx    = canvas.getContext('2d');
+
+  /* --- config --- */
+  const TEXTS            = ['CNO', 'RST'];
+  const FONT_FAMILY      = "'Kanit', sans-serif";
+  const FONT_SIZE        = 130;        // design-px (before dpr scale)
+  const FONT_WEIGHT      = 700;
+  const COLOR            = { r: 0, g: 174, b: 239 };   // brand cyan
+  const SPREAD           = 5;
+  const DENSITY          = 5;
+  const VAPORIZE_MS      = 2200;
+  const FADE_IN_MS       = 1100;
+  const WAIT_MS          = 600;
+
+  /* --- runtime state --- */
+  const dpr = Math.min((window.devicePixelRatio || 1) * 1.5, 3);
+  let particles      = [];
+  let textBounds     = null;
+  let curIdx         = 0;
+  let state          = 'fadingIn';
+  let vapProg        = 0;
+  let fadeOp         = 0;
+  let lastT          = performance.now();
+
+  /* --- helpers --- */
+  function calcSpread(sz) {
+    const pts = [{s:20,v:0.2},{s:50,v:0.5},{s:100,v:1.5}];
+    if (sz <= pts[0].s) return pts[0].v;
+    if (sz >= pts[2].s) return pts[2].v;
+    let i = 0;
+    while (i < 2 && pts[i+1].s < sz) i++;
+    return pts[i].v + (sz - pts[i].s) * (pts[i+1].v - pts[i].v) / (pts[i+1].s - pts[i].s);
+  }
+  const VAPORIZE_SPREAD  = calcSpread(FONT_SIZE) * SPREAD;
+  const T_DENSITY        = Math.min(Math.max((DENSITY / 10) * 0.7 + 0.3, 0.3), 1);
+
+  /* --- build particles from current text --- */
+  function buildParticles() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const fs = FONT_SIZE * dpr;
+    ctx.font          = `${FONT_WEIGHT} ${fs}px ${FONT_FAMILY}`;
+    ctx.textAlign     = 'center';
+    ctx.textBaseline  = 'middle';
+    ctx.fillStyle     = `rgba(${COLOR.r},${COLOR.g},${COLOR.b},1)`;
+
+    const text = TEXTS[curIdx];
+    const cx   = canvas.width  / 2;
+    const cy   = canvas.height / 2;
+    ctx.fillText(text, cx, cy);
+
+    const m = ctx.measureText(text);
+    textBounds = { left: cx - m.width/2, right: cx + m.width/2, width: m.width };
+
+    const img   = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data  = img.data;
+    const sr    = Math.max(1, Math.round(dpr / 3));
+    particles   = [];
+
+    for (let py = 0; py < canvas.height; py += sr) {
+      for (let px = 0; px < canvas.width; px += sr) {
+        const i  = (py * canvas.width + px) * 4;
+        const a  = data[i + 3];
+        if (a > 0) {
+          const oa = (a / 255) * (sr / dpr);
+          particles.push({
+            x: px, y: py, ox: px, oy: py,
+            r: data[i], g: data[i+1], b: data[i+2],
+            op: oa, oa,
+            vx: 0, vy: 0, speed: 0, quick: false,
+          });
+        }
+      }
+    }
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+
+  /* --- particle physics --- */
+  function updateParticles(vapX, dt) {
+    let done = true;
+    particles.forEach(p => {
+      if (p.ox > vapX) { done = false; return; }   // not yet reached
+      if (p.speed === 0) {
+        const ang = Math.random() * Math.PI * 2;
+        p.speed = (Math.random() + 0.5) * VAPORIZE_SPREAD;
+        p.vx = Math.cos(ang) * p.speed;
+        p.vy = Math.sin(ang) * p.speed;
+        p.quick = Math.random() > T_DENSITY;
+      }
+      if (p.quick) {
+        p.op = Math.max(0, p.op - dt);
+      } else {
+        const dx   = p.ox - p.x, dy = p.oy - p.y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        const damp = Math.max(0.95, 1 - dist / (100 * VAPORIZE_SPREAD));
+        const rs   = VAPORIZE_SPREAD * 3;
+        p.vx = (p.vx + (Math.random()-.5)*rs + dx*.002) * damp;
+        p.vy = (p.vy + (Math.random()-.5)*rs + dy*.002) * damp;
+        const mv = VAPORIZE_SPREAD * 2;
+        const cv = Math.sqrt(p.vx*p.vx + p.vy*p.vy);
+        if (cv > mv) { p.vx *= mv/cv; p.vy *= mv/cv; }
+        p.x += p.vx * dt * 20;
+        p.y += p.vy * dt * 10;
+        p.op = Math.max(0, p.op - dt * 0.25 * (2000 / VAPORIZE_MS));
+      }
+      if (p.op > 0.01) done = false;
+    });
+    return done;
+  }
+
+  function renderParticles() {
+    ctx.save();
+    ctx.scale(dpr, dpr);
+    particles.forEach(p => {
+      if (p.op > 0) {
+        ctx.fillStyle = `rgba(${p.r},${p.g},${p.b},${p.op})`;
+        ctx.fillRect(p.x / dpr, p.y / dpr, 1, 1);
+      }
+    });
+    ctx.restore();
+  }
+
+  function resetParticles() {
+    particles.forEach(p => {
+      p.x = p.ox; p.y = p.oy;
+      p.op = p.oa; p.speed = 0; p.vx = 0; p.vy = 0;
+    });
+  }
+
+  /* --- animation loop --- */
+  function tick(now) {
+    const dt = Math.min((now - lastT) / 1000, 0.05);
+    lastT = now;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (!particles.length) { requestAnimationFrame(tick); return; }
+
+    switch (state) {
+      case 'static':
+      case 'waiting':
+        renderParticles();
+        break;
+
+      case 'vaporizing': {
+        vapProg += dt * 100 / (VAPORIZE_MS / 1000);
+        const prog  = Math.min(100, vapProg);
+        const vapX  = textBounds.left + textBounds.width * prog / 100;
+        const done  = updateParticles(vapX, dt);
+        renderParticles();
+        if (vapProg >= 100 && done) {
+          curIdx = (curIdx + 1) % TEXTS.length;
+          fadeOp = 0;
+          state  = 'fadingIn';
+          buildParticles();
+        }
+        break;
+      }
+
+      case 'fadingIn': {
+        fadeOp += dt * 1000 / FADE_IN_MS;
+        ctx.save();
+        ctx.scale(dpr, dpr);
+        particles.forEach(p => {
+          p.x = p.ox; p.y = p.oy;
+          const op = Math.min(fadeOp, 1) * p.oa;
+          ctx.fillStyle = `rgba(${p.r},${p.g},${p.b},${op})`;
+          ctx.fillRect(p.x / dpr, p.y / dpr, 1, 1);
+        });
+        ctx.restore();
+        if (fadeOp >= 1) {
+          state = 'waiting';
+          setTimeout(() => {
+            vapProg = 0;
+            resetParticles();
+            state = 'vaporizing';
+          }, WAIT_MS);
+        }
+        break;
+      }
+    }
+    requestAnimationFrame(tick);
+  }
+
+  /* --- resize --- */
+  function resize() {
+    canvas.style.width  = window.innerWidth  + 'px';
+    canvas.style.height = window.innerHeight + 'px';
+    canvas.width  = Math.floor(window.innerWidth  * dpr);
+    canvas.height = Math.floor(window.innerHeight * dpr);
+    buildParticles();
+    state = 'fadingIn'; fadeOp = 0;
+  }
+
+  window.addEventListener('resize', resize);
+  resize();
+  requestAnimationFrame(tick);
+})();
+</script>
 
 </body>
 </html>
